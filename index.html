@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Vern's Estate Sale Warehouse - estate sale finds, warehouse specials, clearance items, and employee tools."
+    />
+    <title>Vern's Estate Sale Warehouse</title>
+    <meta name="theme-color" content="#171512" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Vern's" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="assets/img/app/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="assets/img/app/apple-touch-icon.png" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260602-stoplight-hours" />
+    <script src="assets/js/site-data.js" defer></script>
+    <script src="assets/js/app.js?v=20260602-stoplight-hours" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <main id="main">
+      <section class="hero section-band" id="home">
+        <div class="hero-copy">
+          <div class="hero-title-lockup">
+            <button
+              class="hero-logo-button"
+              type="button"
+              data-employee-trigger
+              aria-label="Open employee login"
+              title="Employee login"
+            >
+              <img class="hero-mobile-logo" src="assets/img/logo-vern-option-2.png" alt="" aria-hidden="true" />
+            </button>
+            <h1>
+              <span class="hero-title-vern">Vern's</span>
+              <span class="hero-title-rest">Estate Sale Warehouse</span>
+            </h1>
+          </div>
+          <div class="hero-actions">
+            <a class="btn hero-action-button" href="#photos">
+              <span class="hero-action-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M8.2 5.5 9.8 3h4.4l1.6 2.5H20a2 2 0 0 1 2 2v10.8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7.5a2 2 0 0 1 2-2zm3.8 3a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 2.5a1.7 1.7 0 1 1 0 3.4 1.7 1.7 0 0 1 0-3.4z"/></svg>
+              </span>
+              <span>Sales Floor Photos</span>
+            </a>
+            <a class="btn hero-action-button" href="#sales">
+              <span class="hero-action-icon hero-estatesales-icon" aria-hidden="true">
+                <img src="assets/img/estatesales-net-logo.svg" alt="" />
+              </span>
+              <span>EstateSales.NET</span>
+            </a>
+            <a class="btn hero-action-button hero-action-clearance" href="#last-chance">
+              <span class="hero-action-icon hero-action-tag" aria-hidden="true">TAG</span>
+              <span>Clearance</span>
+            </a>
+            <button class="btn hero-action-button" type="button" data-install-app hidden>
+              <span class="hero-action-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v8.2l2.6-2.6 1.4 1.4-5 5-5-5 1.4-1.4 2.6 2.6V4a1 1 0 0 1 1-1zM5 18h14v2H5z"/></svg>
+              </span>
+              <span>Save App</span>
+            </button>
+          </div>
+          <p class="install-status" data-install-status role="status" hidden></p>
+          <dl class="quick-facts" aria-label="Warehouse quick facts">
+            <div>
+              <dt>Hours</dt>
+              <dd data-business-hours>Thu-Sat 10-5</dd>
+            </div>
+            <div>
+              <dt>Location</dt>
+              <dd>
+                <a
+                  class="hero-map-link"
+                  data-business-location
+                  data-business-directions
+                  href="https://www.google.com/maps/search/?api=1&query=Vern%27s%20Estate%20Sale%20Warehouse%20Muskegon%20MI"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Open Vern's Estate Sale Warehouse location in Google Maps"
+                >
+                  <span data-business-location-label>Muskegon area</span>
+                  <span class="hero-map-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="m3 5.4 5-2 6 2 5-2a1 1 0 0 1 1.4.9v14.3l-6.4 2.5-6-2-5 2A1 1 0 0 1 2 20.2V6.4a1 1 0 0 1 1-.9zm6 .1v12.2l4 1.3V6.8zm-2 .2-3 1.2v11.4l3-1.2zm8 1.2v12.2l3-1.2V5.7z"/></svg>
+                  </span>
+                </a>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="section-shell photo-section" id="photos">
+        <div class="section-heading">
+          <p class="eyebrow">Warehouse photo board</p>
+          <h2>Quick peeks from the floor</h2>
+        </div>
+        <div class="item-grid photo-peek-grid" data-public-gallery></div>
+        <div class="photo-category-panel" aria-label="Floor photo categories">
+          <div class="photo-filter-top">
+            <span class="photo-category-title">Category</span>
+            <p class="photo-filter-note" data-photo-result-note></p>
+          </div>
+          <div class="photo-shortcuts">
+            <span class="photo-filter-subhead" data-photo-chip-heading>Popular categories</span>
+            <div class="photo-category-buttons" data-photo-category-buttons></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-shell" id="sales">
+        <div class="estate-sales-board">
+          <aside class="estate-sales-banner" aria-label="Official EstateSales.NET profile">
+            <a class="estate-logo-link" data-estate-company-link href="#" target="_blank" rel="noopener" aria-label="Open Vern's EstateSales.NET page">
+              <img src="assets/img/estatesales-net-logo.svg" alt="EstateSales.NET" />
+            </a>
+            <div class="estate-banner-copy">
+              <span class="tag">Official page</span>
+              <h3>Photos, dates, and sale terms stay live on EstateSales.NET</h3>
+              <p data-estate-note>
+                The sale-photo button opens the current EstateSales.NET listing in a new tab.
+              </p>
+              <small data-estate-company-url></small>
+            </div>
+            <div class="estate-banner-actions">
+              <a class="btn btn-gold" data-estate-link href="#" target="_blank" rel="noopener">
+                View Current Sale Photos
+              </a>
+              <a class="btn btn-quiet" data-estate-company-link href="#" target="_blank" rel="noopener">
+                Vern's EstateSales.NET Page
+              </a>
+            </div>
+          </aside>
+          <div class="estate-sale-grid" data-estate-sales-grid></div>
+          <p class="sale-board-note" data-sale-board-note>
+            Times can move. The yellow buttons open the live EstateSales.NET listings.
+          </p>
+        </div>
+      </section>
+
+      <section class="clearance-band" id="last-chance">
+        <div class="clearance-copy">
+          <p class="eyebrow">Yellow tag markdowns</p>
+          <h2>Final-call finds move fast.</h2>
+          <p>
+            Final-call pieces move fast. Check the warehouse first, then ask staff what
+            just hit the clearance row.
+          </p>
+        </div>
+        <a class="clearance-tag-callout" href="#visit" aria-label="Get directions to Vern's last chance clearance">
+          <span class="clearance-string string-one" aria-hidden="true"></span>
+          <span class="clearance-string string-two" aria-hidden="true"></span>
+          <span class="clearance-tag-hole" aria-hidden="true"></span>
+          <span class="clearance-tag-word">Clearance</span>
+          <span class="clearance-stamp">Last Chance</span>
+          <span class="clearance-tap">Tap for directions</span>
+        </a>
+      </section>
+
+      <section class="section-shell clearance-items-section" aria-label="Clearance items">
+        <div class="section-heading compact">
+          <p class="eyebrow">Clearance items</p>
+          <h2>Marked down and ready to go</h2>
+        </div>
+        <div class="item-grid" data-clearance-grid></div>
+      </section>
+
+      <section class="visit-band" id="visit">
+        <div>
+          <p class="eyebrow">Contact, location, and hours</p>
+          <h2>Visit Vern's</h2>
+          <p data-business-address>Address placeholder - update in employee content manager.</p>
+          <div class="visit-actions">
+            <a class="btn btn-dark visit-map-button" data-business-directions href="#" target="_blank" rel="noopener">
+              <span aria-hidden="true">▰</span>
+              <span>Map Directions</span>
+            </a>
+            <a class="btn facebook-button visit-facebook-button" data-business-facebook href="#" target="_blank" rel="noopener">
+              <span class="facebook-mark" aria-hidden="true">f</span>
+              <span data-business-facebook-label>Verns Estate Sales</span>
+            </a>
+          </div>
+        </div>
+        <div class="visit-card">
+          <dl>
+            <div class="visit-detail visit-phone-detail">
+              <dt><span class="visit-detail-icon" aria-hidden="true">☎</span> Phone</dt>
+              <dd><a class="visit-phone-link" data-business-phone href="tel:+10000000000">(000) 000-0000</a></dd>
+            </div>
+            <div class="visit-detail">
+              <dt><span class="visit-detail-icon" aria-hidden="true">⌖</span> Address</dt>
+              <dd>
+                <a
+                  class="visit-address-link"
+                  data-business-address
+                  data-business-directions
+                  href="https://www.google.com/maps/search/?api=1&query=1663%20West%20Sherman%20Boulevard%2C%20Muskegon%2C%20MI%2049441"
+                  target="_blank"
+                  rel="noopener"
+                >1663 West Sherman Boulevard, Muskegon, MI 49441</a>
+              </dd>
+            </div>
+            <div class="visit-detail visit-hours-detail">
+              <dt><span class="visit-detail-icon" aria-hidden="true">◷</span> Hours</dt>
+              <dd class="visit-hours-grid" data-business-hours-full>
+                <span class="hours-chip hours-weekday"><strong>Mon-Fri</strong><span>10 AM-4 PM</span></span>
+                <span class="hours-chip hours-saturday"><strong>Sat</strong><span>9 AM-4 PM</span></span>
+                <span class="hours-chip hours-sunday"><strong>Sun</strong><span>Closed</span></span>
+              </dd>
+            </div>
+            <div class="visit-detail visit-facebook-detail">
+              <dt>Facebook</dt>
+              <dd>
+                <a class="facebook-button" data-business-facebook href="https://www.facebook.com/profile.php?id=61590076124139" target="_blank" rel="noopener">
+                  <span class="facebook-mark" aria-hidden="true">f</span>
+                  <span data-business-facebook-label>Verns Estate Sales</span>
+                </a>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="donation-bar" id="donate" aria-label="Support 1M Project">
+        <a class="donation-logo-link" href="https://1mproject.org/" target="_blank" rel="noopener" aria-label="Open 1M Project">
+          <img src="assets/img/1m-project-reference-style.svg?v=20260601-tight" alt="1M Project" />
+        </a>
+        <div class="donation-copy">
+          <p class="eyebrow">Community mission</p>
+          <h2>Support 1M Project</h2>
+          <p>
+            Help equip local believers for Gospel-centered outreach and follow-up.
+          </p>
+        </div>
+        <div class="donation-actions">
+          <a class="btn btn-gold" href="https://donate.stripe.com/bJebJ126O4IifCOa6Gbwk00" target="_blank" rel="noopener">
+            Donate Directly
+          </a>
+          <a class="btn btn-quiet" href="https://1mproject.org/support-the-mission/" target="_blank" rel="noopener">
+            Learn More
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; <span data-current-year></span> Vern's Estate Sale Warehouse.</p>
+      <p>
+        Website built and maintained by
+        <a class="footer-credit-link" href="https://www.facebook.com/profile.php?id=61590076124139" target="_blank" rel="noopener">Quick Flip</a>.
+      </p>
+    </footer>
+
+    <div class="modal-backdrop" data-login-modal hidden>
+      <section class="login-modal" role="dialog" aria-modal="true" aria-labelledby="employee-login-title">
+        <button class="icon-btn modal-close" type="button" data-close-login aria-label="Close login">×</button>
+        <h2 id="employee-login-title">Employee Login</h2>
+        <p>Enter the staff passcode.</p>
+        <form data-login-form>
+          <label for="employee-passcode">Passcode</label>
+          <input id="employee-passcode" name="passcode" type="password" inputmode="numeric" autocomplete="off" />
+          <button class="btn btn-gold" type="submit">Open employee tools</button>
+          <button class="btn btn-quiet" type="button" data-back-to-site>Back to Website</button>
+          <p class="form-message" data-login-message role="status"></p>
+        </form>
+      </section>
+    </div>
+
+    <section class="employee-panel" data-employee-panel hidden aria-label="Employee tools">
+      <header class="employee-header">
+        <div>
+          <p class="eyebrow">Employee area</p>
+          <h2>Vern's Staff Tools</h2>
+        </div>
+        <div class="employee-actions">
+          <button class="btn btn-gold" type="button" data-back-to-site>Back to Website</button>
+          <button class="btn btn-quiet" type="button" data-export-data>Export data</button>
+          <button class="btn btn-dark" type="button" data-logout>Lock</button>
+        </div>
+      </header>
+
+      <div class="employee-tabs" role="tablist" aria-label="Employee tool tabs">
+        <button class="tab-button is-active" type="button" role="tab" data-tab="pricing">Pricing</button>
+        <button class="tab-button" type="button" role="tab" data-tab="marketplace">Marketplace</button>
+        <button class="tab-button" type="button" role="tab" data-tab="dashboard">Dashboard</button>
+        <button class="tab-button" type="button" role="tab" data-tab="settings">Settings</button>
+        <button class="tab-button" type="button" role="tab" data-tab="content">Public Content</button>
+      </div>
+
+      <div class="employee-tab-panel is-active" data-tab-panel="pricing">
+        <div class="tool-grid">
+          <form class="tool-card" data-pricing-form>
+            <h3>AI thrift pricing camera</h3>
+            <label class="file-drop">
+              Take item picture
+              <input name="photo" type="file" accept="image/*" capture="environment" data-pricing-photo-input />
+            </label>
+            <div class="ai-photo-preview pricing-photo-preview">
+              <img src="assets/img/placeholder-furniture.svg" alt="Selected pricing item preview" data-pricing-preview-image />
+              <div class="price-overlay" data-pricing-clearance-overlay hidden>
+                <strong data-pricing-overlay-price>$</strong>
+                <span>Clearance</span>
+              </div>
+            </div>
+            <label>
+              Item hint
+              <input name="hint" placeholder="Optional: lamp, dresser, tools, brand, model..." />
+            </label>
+            <label>
+              Item name
+              <input name="name" required placeholder="Walnut side table" />
+            </label>
+            <label>
+              Category
+              <select name="category" required data-category-select></select>
+            </label>
+            <label>
+              Condition
+              <select name="condition" required>
+                <option value="new">New / unused</option>
+                <option value="excellent">Excellent</option>
+                <option value="good" selected>Good</option>
+                <option value="fair">Fair</option>
+                <option value="repair">Needs repair</option>
+              </select>
+            </label>
+            <div class="two-col">
+              <label>
+                AI resale / market value
+                <input name="marketValue" placeholder="$65" />
+              </label>
+              <label>
+                Estimated regular retail
+                <input name="retailValue" placeholder="$120" />
+              </label>
+            </div>
+            <div class="two-col">
+              <label>
+                Sales floor price
+                <input name="storePrice" placeholder="$20-$35" />
+              </label>
+              <label>
+                Marketplace price
+                <input name="marketPrice" placeholder="$35-$55" />
+              </label>
+            </div>
+            <label>
+              Clearance price
+              <input name="clearancePrice" placeholder="$15" />
+            </label>
+            <label>
+              Notes
+              <textarea name="notes" rows="3" placeholder="Measurements, flaws, pickup notes"></textarea>
+            </label>
+            <div class="two-col">
+              <label>
+                Status
+                <select name="status">
+                  <option value="unsold" selected>Unsold</option>
+                  <option value="sold">Sold</option>
+                </select>
+              </label>
+              <label>
+                Employee
+                <input name="employee" placeholder="Name" />
+              </label>
+            </div>
+            <label>
+              Add after pricing
+              <select name="destination" data-pricing-destination>
+                <option value="sales-floor" selected>Sales floor / priced item only</option>
+                <option value="featured">Featured hot item</option>
+                <option value="clearance">Last Chance clearance</option>
+                <option value="marketplace">Marketplace draft</option>
+                <option value="special">Warehouse special</option>
+                <option value="gallery">General floor photo</option>
+              </select>
+            </label>
+            <div class="ai-status pricing-ai-status" data-pricing-ai-status>Take a picture, then let AI price it.</div>
+            <div class="button-row">
+              <button class="btn btn-dark" type="button" data-price-photo-ai>AI price from photo</button>
+              <button class="btn btn-quiet" type="button" data-suggest-price>Local fallback</button>
+              <button class="btn btn-gold" type="submit">Save / add item</button>
+            </div>
+          </form>
+
+          <section class="tool-card">
+            <h3>Recent priced items</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Store</th>
+                    <th>Marketplace</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody data-pricing-table></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="employee-tab-panel" data-tab-panel="marketplace">
+        <div class="tool-grid">
+          <form class="tool-card" data-marketplace-form>
+            <h3>Marketplace manual-post workflow</h3>
+            <label>
+              Start from priced item
+              <select name="pricedItem" data-priced-item-select>
+                <option value="">Choose saved item or type below</option>
+              </select>
+            </label>
+            <label>
+              Item name
+              <input name="itemName" required placeholder="Vintage brass lamp" />
+            </label>
+            <div class="two-col">
+              <label>
+                Category
+                <select name="category" required data-market-category-select></select>
+              </label>
+              <label>
+                Suggested price
+                <input name="price" required placeholder="$45" />
+              </label>
+            </div>
+            <label>
+              Listing title
+              <input name="title" required />
+            </label>
+            <label>
+              Description
+              <textarea name="description" rows="6" required></textarea>
+            </label>
+            <label>
+              Save item photos
+              <input name="photos" type="file" accept="image/*" multiple />
+            </label>
+            <div class="photo-preview" data-photo-preview></div>
+            <div class="two-col">
+              <label>
+                Employee name
+                <input name="employee" placeholder="Name" />
+              </label>
+              <label>
+                Status
+                <select name="status">
+                  <option value="pending" selected>Pending</option>
+                  <option value="posted">Posted manually</option>
+                  <option value="sold">Sold</option>
+                  <option value="closed">Closed out</option>
+                </select>
+              </label>
+            </div>
+            <div class="two-col">
+              <label>
+                Posted date
+                <input name="postedDate" type="date" />
+              </label>
+              <label>
+                Sold price
+                <input name="soldPrice" placeholder="$40" />
+              </label>
+            </div>
+            <label>
+              Closed-out date
+              <input name="closedDate" type="date" />
+            </label>
+            <div class="button-row">
+              <button class="btn btn-dark" type="button" data-generate-marketplace>Generate copy</button>
+              <button class="btn btn-quiet" type="button" data-copy-title>Copy title</button>
+              <button class="btn btn-quiet" type="button" data-copy-description>Copy description</button>
+              <button class="btn btn-quiet" type="button" data-copy-price>Copy price</button>
+              <button class="btn btn-gold" type="submit">Save listing</button>
+            </div>
+            <p class="compliance-note">
+              Manual posting only. Check Meta Commerce Policies and recall status before posting.
+            </p>
+          </form>
+
+          <section class="tool-card">
+            <h3>Marketplace activity</h3>
+            <div class="status-filters" data-market-filters>
+              <button class="chip is-active" type="button" data-status-filter="all">All</button>
+              <button class="chip" type="button" data-status-filter="pending">Pending</button>
+              <button class="chip" type="button" data-status-filter="posted">Posted</button>
+              <button class="chip" type="button" data-status-filter="sold">Sold</button>
+              <button class="chip" type="button" data-status-filter="closed">Closed</button>
+            </div>
+            <div class="activity-list" data-marketplace-list></div>
+          </section>
+        </div>
+      </div>
+
+      <div class="employee-tab-panel" data-tab-panel="dashboard">
+        <section class="dashboard-grid" data-dashboard-stats></section>
+        <div class="tool-grid">
+          <section class="tool-card">
+            <h3>Employee activity</h3>
+            <div class="activity-list" data-employee-activity></div>
+          </section>
+          <form class="tool-card" data-timeoff-form>
+            <h3>Vacation / closed-out tracking</h3>
+            <label>
+              Employee
+              <input name="employee" required placeholder="Name" />
+            </label>
+            <div class="two-col">
+              <label>
+                Start
+                <input name="start" type="date" required />
+              </label>
+              <label>
+                End
+                <input name="end" type="date" required />
+              </label>
+            </div>
+            <label>
+              Notes
+              <textarea name="notes" rows="3" placeholder="Vacation, closed-out duties, warehouse notes"></textarea>
+            </label>
+            <button class="btn btn-gold" type="submit">Save tracking note</button>
+            <div class="activity-list" data-timeoff-list></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="employee-tab-panel" data-tab-panel="settings">
+        <div class="tool-grid">
+          <form class="tool-card" data-settings-form>
+            <h3>Public site and auto-sync settings</h3>
+            <label>
+              EstateSales.NET company/profile URL
+              <input name="companyUrl" placeholder="https://www.estatesales.net/companies/..." />
+            </label>
+            <label>
+              EstateSales.NET live sale URL
+              <input name="saleUrl" placeholder="https://www.estatesales.net/..." />
+            </label>
+            <label>
+              Authorized embed URL, if EstateSales.NET permits it
+              <input name="embedUrl" placeholder="Paste approved iframe src only" />
+            </label>
+            <label>
+              Address
+              <input name="address" placeholder="Warehouse address" />
+            </label>
+            <div class="two-col">
+              <label>
+                Phone
+                <input name="phone" placeholder="(000) 000-0000" />
+              </label>
+              <label>
+                Email
+                <input name="email" type="email" placeholder="hello@example.com" />
+              </label>
+            </div>
+            <label>
+              Facebook page URL
+              <input name="facebookUrl" placeholder="https://www.facebook.com/..." />
+            </label>
+            <label>
+              Hours
+              <input name="hours" placeholder="Mon-Fri 10 AM-4 PM; Sat 9 AM-4 PM; Sun Closed" />
+            </label>
+            <label>
+              Optional AI image endpoint
+              <input name="aiEndpoint" placeholder="/api/price-photo" />
+            </label>
+            <label>
+              Daily sales sync endpoint
+              <input name="salesSyncUrl" placeholder="/api/estate-sales/sync" />
+            </label>
+            <label class="checkbox-row">
+              <input name="salesAutoSync" type="checkbox" />
+              <span>Check for sale updates automatically once per day</span>
+            </label>
+            <div class="button-row">
+              <button class="btn btn-gold" type="submit">Save settings</button>
+              <button class="btn btn-dark" type="button" data-sync-sales-now>Sync sales now</button>
+            </div>
+            <p class="compliance-note" data-sales-sync-status>
+              Daily sync uses Vern's backend. EstateSales.NET page-checking stays disabled on the server unless permission is configured.
+            </p>
+          </form>
+
+          <form class="tool-card" data-pricing-settings-form>
+            <h3>Manager pricing settings</h3>
+            <label>
+              Sales floor markdown from AI market value
+              <input name="thriftMarkdownPercent" type="number" min="0" max="95" step="1" />
+            </label>
+            <label>
+              Marketplace price percent of AI market value
+              <input name="marketplacePercent" type="number" min="10" max="150" step="1" />
+            </label>
+            <label>
+              Clearance markdown from AI market value
+              <input name="clearanceMarkdownPercent" type="number" min="0" max="95" step="1" />
+            </label>
+            <label>
+              Default pricing basis
+              <select name="defaultPricingBasis">
+                <option value="market">AI resale / market value</option>
+                <option value="retail">Estimated regular retail</option>
+              </select>
+            </label>
+            <button class="btn btn-gold" type="submit">Save settings</button>
+            <p class="compliance-note">
+              Starting point matches Quick Flip thrift mode: 50% markdown. Change it here when Vern wants tighter or cheaper shelf pricing.
+            </p>
+          </form>
+        </div>
+      </div>
+
+      <div class="employee-tab-panel" data-tab-panel="content">
+        <div class="tool-grid">
+
+          <section class="tool-card">
+            <h3>EstateSales.NET sale board</h3>
+            <form class="mini-form" data-estate-sale-form>
+              <label>
+                Official EstateSales.NET sale URL
+                <input name="url" required placeholder="https://www.estatesales.net/MI/City/Zip/SaleId" />
+              </label>
+              <input name="title" required placeholder="Sale title customers will see" />
+              <div class="two-col">
+                <input name="city" placeholder="City, MI" />
+                <input name="dateSummary" placeholder="Jun 1-3, 2026" />
+              </div>
+              <input name="hours" placeholder="Mon-Tue 8:30 AM-5 PM" />
+              <label class="file-drop">
+                Main sale picture
+                <input name="mainImage" type="file" accept="image/*" />
+              </label>
+              <input name="imageUrl" placeholder="Or paste approved/local image URL" />
+              <select name="status">
+                <option value="upcoming" selected>Upcoming</option>
+                <option value="live">Live now</option>
+                <option value="past">Past</option>
+                <option value="canceled">Canceled / removed</option>
+              </select>
+              <textarea name="note" rows="2" placeholder="Short customer note. Photos stay on EstateSales.NET."></textarea>
+              <button class="btn btn-gold" type="submit">Add sale link</button>
+              <p class="compliance-note">
+                Until EstateSales.NET gives written permission or an API, staff updates these cards manually and uses the official links.
+              </p>
+            </form>
+            <div class="daily-review-box" data-sale-review-box></div>
+            <div class="activity-list" data-estate-sale-list></div>
+          </section>
+
+          <section class="tool-card">
+            <h3>AI photo publish station</h3>
+            <form class="mini-form" data-photo-item-form>
+              <label class="file-drop">
+                Take or add picture
+                <input name="photo" type="file" accept="image/*" capture="environment" data-ai-photo-input />
+              </label>
+              <div class="ai-photo-preview" data-ai-photo-preview>
+                <img src="assets/img/placeholder-clearance.svg" alt="Selected item preview" data-ai-preview-image />
+                <div class="price-overlay" data-ai-preview-overlay hidden>
+                  <strong data-ai-preview-price>$</strong>
+                  <span data-ai-preview-label>Last Chance</span>
+                </div>
+              </div>
+              <div class="ai-helper-row">
+                <button class="btn btn-dark" type="button" data-ai-suggest-photo>AI suggest item</button>
+                <span class="ai-status" data-ai-status>Upload a photo, then ask for a quick suggestion.</span>
+              </div>
+              <label>
+                AI notes or employee hint
+                <input name="aiHint" placeholder="Optional: lamp, dresser, tools, dishes..." />
+              </label>
+              <input name="title" required placeholder="Item title" />
+              <select name="category" required>
+                <option value="featured">Featured hot item</option>
+                <option value="clearance">Last Chance clearance</option>
+                <option value="special">Warehouse special photo</option>
+                <option value="gallery">General floor photo</option>
+              </select>
+              <select name="itemType" required data-photo-item-type-select></select>
+              <input name="price" placeholder="$45 or 30% off" />
+              <input name="tag" placeholder="Fresh find, Last chance, This week" />
+              <textarea name="note" rows="2" placeholder="Short customer-facing note"></textarea>
+              <input name="imageUrl" placeholder="Or paste image URL / assets/img/file.svg" />
+              <button class="btn btn-gold" type="submit">Publish to selected category</button>
+            </form>
+            <div class="activity-list" data-photo-item-list></div>
+          </section>
+
+          <section class="tool-card">
+            <h3>Warehouse specials</h3>
+            <form class="mini-form" data-special-form>
+              <input name="title" required placeholder="Special title" />
+              <input name="detail" required placeholder="Short special detail" />
+              <input name="tag" placeholder="This week" />
+              <button class="btn btn-gold" type="submit">Add special</button>
+            </form>
+            <div class="activity-list" data-special-list></div>
+          </section>
+
+          <section class="tool-card">
+            <h3>Data import / reset</h3>
+            <label>
+              Import exported JSON
+              <input type="file" accept="application/json" data-import-data />
+            </label>
+            <button class="btn btn-quiet" type="button" data-reset-defaults>Reset to starter content</button>
+            <p class="compliance-note">
+              Export regularly if this is used on shared warehouse devices. Browser
+              storage is convenient, not a permanent database.
+            </p>
+          </section>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

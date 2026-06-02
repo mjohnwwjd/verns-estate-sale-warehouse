@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" role="img" aria-labelledby="title desc">
+  <title id="title">Last chance clearance placeholder</title>
+  <desc id="desc">Bright yellow clearance tag on dark warehouse background.</desc>
+  <rect width="900" height="620" fill="#191a1a" />
+  <path d="M74 122h752v376H74z" fill="#f0c044" />
+  <path d="M74 122h752v72H74zM74 426h752v72H74z" fill="#d21f2b" opacity=".92" />
+  <circle cx="162" cy="310" r="44" fill="#191a1a" />
+  <path d="M206 122h620v376H206z" fill="#f0c044" />
+  <text x="520" y="278" fill="#191a1a" font-family="Impact, Arial Black, sans-serif" font-size="90" text-anchor="middle">LAST CHANCE</text>
+  <text x="520" y="372" fill="#191a1a" font-family="Impact, Arial Black, sans-serif" font-size="82" text-anchor="middle">CLEARANCE</text>
+  <path d="M220 440h590" stroke="#191a1a" stroke-width="12" stroke-dasharray="28 20" />
+</svg>

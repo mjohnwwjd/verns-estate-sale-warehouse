@@ -1,0 +1,15 @@
+{
+  "name": "verns-estate-sale-warehouse",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Public site and employee tools for Vern's Estate Sale Warehouse.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check assets/js/app.js",
+    "smoke": "node scripts/smoke-check.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

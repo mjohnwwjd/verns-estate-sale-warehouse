@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" role="img" aria-labelledby="title desc">
+  <title id="title">Vintage furniture placeholder</title>
+  <desc id="desc">Retro warehouse illustration of a dresser, lamp, and framed art.</desc>
+  <rect width="900" height="620" fill="#2a2d2d" />
+  <rect x="0" y="435" width="900" height="185" fill="#1b1c1c" />
+  <circle cx="710" cy="152" r="92" fill="#edbd38" opacity=".95" />
+  <rect x="120" y="248" width="430" height="214" rx="12" fill="#a96f35" />
+  <rect x="150" y="275" width="166" height="56" rx="5" fill="#d09a4c" />
+  <rect x="354" y="275" width="166" height="56" rx="5" fill="#d09a4c" />
+  <rect x="150" y="357" width="370" height="72" rx="5" fill="#d09a4c" />
+  <circle cx="295" cy="303" r="7" fill="#242424" />
+  <circle cx="375" cy="303" r="7" fill="#242424" />
+  <circle cx="335" cy="394" r="7" fill="#242424" />
+  <path d="M188 462h44v76h-44zM437 462h44v76h-44z" fill="#6e4323" />
+  <path d="M620 476h40l-22-252h-20z" fill="#d2a034" />
+  <path d="M572 226h108l-26-82h-56z" fill="#f0c044" />
+  <rect x="612" y="118" width="28" height="35" rx="12" fill="#f0c044" />
+  <rect x="110" y="92" width="240" height="114" rx="8" fill="#464c4d" stroke="#f0c044" stroke-width="10" />
+  <path d="M139 178c42-54 72-45 104-10 24-30 42-42 78-10" fill="none" stroke="#f0c044" stroke-width="10" stroke-linecap="round" />
+  <text x="450" y="560" fill="#f0c044" font-family="Impact, Arial Black, sans-serif" font-size="48" text-anchor="middle">FEATURED FIND</text>
+</svg>

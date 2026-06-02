@@ -1,0 +1,27 @@
+{
+  "name": "Vern's Estate Sale Warehouse",
+  "short_name": "Vern's",
+  "description": "Vern's Estate Sale Warehouse photos, sale links, clearance items, hours, and staff tools.",
+  "start_url": "./?app=1",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#181918",
+  "theme_color": "#171512",
+  "orientation": "portrait-primary",
+  "categories": ["shopping", "business"],
+  "icons": [
+    {
+      "src": "assets/img/app/verns-app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/img/app/verns-app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

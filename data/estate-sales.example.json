@@ -1,0 +1,28 @@
+{
+  "sales": [
+    {
+      "id": "estate-sale-spring-lake-4932078",
+      "title": "Spring Lake Estate Sale",
+      "url": "https://www.estatesales.net/MI/Spring-Lake/49456/4932078",
+      "city": "Spring Lake, MI",
+      "dateSummary": "Jun 1-3, 2026",
+      "hours": "Mon-Tue 8:30 AM-5 PM; Wed 8:30 AM-3 PM",
+      "status": "upcoming",
+      "note": "Full details and photos open on the official EstateSales.NET listing.",
+      "image": "assets/img/sale-spring-lake-horse.jpeg",
+      "lastReviewed": "2026-05-31"
+    },
+    {
+      "id": "estate-sale-muskegon-popup-4940091",
+      "title": "Muskegon POP UP SURPRISE Vintage & Antiques",
+      "url": "https://www.estatesales.net/MI/Muskegon/49442/4940091",
+      "city": "Muskegon, MI",
+      "dateSummary": "Jun 5-6, 2026",
+      "hours": "8:30 AM-5 PM",
+      "status": "upcoming",
+      "note": "Warehouse pop-up listing. Open EstateSales.NET for current photos and final times.",
+      "image": "assets/img/sale-muskegon-pop-up-tent.jpeg",
+      "lastReviewed": "2026-05-31"
+    }
+  ]
+}

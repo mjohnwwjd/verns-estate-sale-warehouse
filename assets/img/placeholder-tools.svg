@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" role="img" aria-labelledby="title desc">
+  <title id="title">Vintage tools placeholder</title>
+  <desc id="desc">Retro warehouse illustration of estate sale tools.</desc>
+  <rect width="900" height="620" fill="#303435" />
+  <path d="M0 0h900v110H0z" fill="#202223" />
+  <text x="450" y="76" fill="#f0c044" font-family="Impact, Arial Black, sans-serif" font-size="54" text-anchor="middle">TOOLS & SHOP</text>
+  <g transform="translate(150 170)">
+    <rect x="0" y="76" width="440" height="68" rx="16" fill="#f0c044" transform="rotate(-18 220 110)" />
+    <circle cx="88" cy="250" r="64" fill="none" stroke="#f0c044" stroke-width="38" />
+    <rect x="121" y="215" width="408" height="54" rx="25" fill="#b06b2d" transform="rotate(24 325 242)" />
+    <path d="M514 64c66 14 99 74 75 130l-77-42-43 79 77 42c-51 38-126 26-163-30-37-57-22-132 34-170 28-19 63-26 97-9z" fill="#d6d8d0" />
+  </g>
+  <rect x="94" y="470" width="712" height="70" fill="#202223" />
+  <text x="450" y="522" fill="#f0c044" font-family="Impact, Arial Black, sans-serif" font-size="40" text-anchor="middle">WAREHOUSE SPECIAL</text>
+</svg>

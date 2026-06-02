@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" role="img" aria-labelledby="title desc">
+  <title id="title">Vern's Estate Sale Warehouse logo</title>
+  <desc id="desc">A dark charcoal and yellow retro sign-style logo with a decorative V mark.</desc>
+  <defs>
+    <linearGradient id="paint" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#f0c044" offset="0" />
+      <stop stop-color="#d79b20" offset="1" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#050505" flood-opacity=".45" />
+    </filter>
+  </defs>
+  <rect width="720" height="520" rx="26" fill="#202223" />
+  <rect x="24" y="24" width="672" height="472" rx="16" fill="#343839" />
+  <path
+    d="M74 120c46-11 81 8 105 50 10-51 39-81 86-89-24 37-25 76-5 118l92 188 91-188c20-42 19-81-5-118 47 8 76 38 86 89 24-42 59-61 105-50-48 30-76 72-85 126-8 45-27 78-58 99-24 16-49 21-77 16l-52 106h-101l-52-106c-28 5-53 0-77-16-31-21-50-54-58-99-9-54-37-96-85-126z"
+    fill="url(#paint)"
+    filter="url(#shadow)"
+  />
+  <path
+    d="M104 249h512M104 334h512"
+    fill="none"
+    stroke="#f0c044"
+    stroke-width="17"
+    stroke-linecap="square"
+  />
+  <text
+    x="360"
+    y="307"
+    fill="#f5c84a"
+    font-family="Impact, 'Arial Black', sans-serif"
+    font-size="74"
+    text-anchor="middle"
+    letter-spacing="2"
+  >VERN'S</text>
+  <text
+    x="360"
+    y="422"
+    fill="#f5c84a"
+    font-family="Impact, 'Arial Black', sans-serif"
+    font-size="50"
+    text-anchor="middle"
+    letter-spacing="3"
+  >ESTATE SALE</text>
+  <text
+    x="360"
+    y="468"
+    fill="#f5c84a"
+    font-family="Impact, 'Arial Black', sans-serif"
+    font-size="38"
+    text-anchor="middle"
+    letter-spacing="3"
+  >WAREHOUSE</text>
+  <path
+    d="M88 174c24-2 43 7 58 27m488-27c-24-2-43 7-58 27M125 369c22 3 39-2 53-17m417 17c-22 3-39-2-53-17"
+    fill="none"
+    stroke="#f0c044"
+    stroke-width="10"
+    stroke-linecap="round"
+  />
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 112" role="img" aria-labelledby="title desc">
+  <title id="title">1M Project logo</title>
+  <desc id="desc">Orange 1M text followed by navy Project text.</desc>
+  <g fill="#d96a3a">
+    <text x="6" y="85" font-family="Arial Black, Impact, sans-serif" font-size="80" font-weight="900" letter-spacing="-7">1M</text>
+  </g>
+  <text x="142" y="85" fill="#142333" font-family="Arial Black, Impact, sans-serif" font-size="72" font-weight="900" letter-spacing="-3">PROJECT</text>
+</svg>
