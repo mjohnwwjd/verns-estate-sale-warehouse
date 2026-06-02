@@ -1853,44 +1853,28 @@ html[data-yellow-band-variant="tight"] .visit-actions {
 .facebook-mark {
   display: inline-grid;
   place-items: center;
-  flex: 0 0 1.92rem;
-  width: 1.92rem;
-  height: 1.92rem;
+  flex: 0 0 2.3rem;
+  width: 2.3rem;
+  height: 2.3rem;
 }
 
 .facebook-mark svg {
-  width: 1.92rem;
-  height: 1.92rem;
+  width: 2.3rem;
+  height: 2.3rem;
   overflow: visible;
 }
 
-.facebook-mark circle {
-  fill: #fff;
+.facebook-app-square {
+  fill: #1877f2;
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.25));
 }
 
 .facebook-mark text {
-  fill: #1877f2;
+  fill: #fff;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 30px;
+  font-size: 31px;
   font-weight: 900;
   text-anchor: middle;
-}
-
-.visit-card .facebook-button {
-  width: fit-content;
-  padding: 0.52rem 0.82rem;
-  font-weight: 900;
-}
-
-.visit-card .facebook-mark {
-  flex-basis: 1.72rem;
-  width: 1.72rem;
-  height: 1.72rem;
-}
-
-.visit-card .facebook-mark svg {
-  width: 1.72rem;
-  height: 1.72rem;
 }
 
 .visit-address-link {

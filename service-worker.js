@@ -1,4 +1,4 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260602-meet-vern-page";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260602-facebook-visit-cleanup";
 const APP_SHELL = [
   "./",
   "./index.html",
