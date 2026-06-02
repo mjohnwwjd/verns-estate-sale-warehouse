@@ -1,4 +1,4 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260602-facebook-visit-cleanup";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260602-facebook-visit-cleanup-2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -26,7 +26,7 @@ const APP_SHELL = [
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
+      .then((cache) => cacheAppShell(cache))
       .then(() => self.skipWaiting())
   );
 });
@@ -62,12 +62,22 @@ self.addEventListener("fetch", (event) => {
 async function networkFirst(request, fallbackUrl) {
   const cache = await caches.open(CACHE_NAME);
   try {
-    const response = await fetch(request);
+    const response = await fetch(new Request(request, { cache: "reload" }));
     cache.put(request, response.clone());
     return response;
   } catch {
     return (await cache.match(request)) || cache.match(fallbackUrl);
   }
+}
+
+async function cacheAppShell(cache) {
+  await Promise.all(
+    APP_SHELL.map(async (url) => {
+      const request = new Request(url, { cache: "reload" });
+      const response = await fetch(request);
+      if (response.ok) await cache.put(url, response);
+    })
+  );
 }
 
 async function cacheFirst(request) {
