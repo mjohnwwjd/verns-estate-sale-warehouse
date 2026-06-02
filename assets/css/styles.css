@@ -274,9 +274,10 @@ th {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: clamp(0.85rem, 3vw, 2rem);
-  min-height: 100svh;
+  min-height: auto;
   align-items: start;
   justify-items: center;
+  padding-block: clamp(1.45rem, 4vw, 3.4rem) clamp(1.35rem, 3vw, 2.35rem);
   background:
     linear-gradient(115deg, rgba(13, 12, 10, 0.97), rgba(43, 32, 19, 0.82)),
     radial-gradient(circle at 78% 22%, rgba(240, 192, 68, 0.5), transparent 31%),
@@ -517,6 +518,8 @@ h3 {
   box-shadow:
     0 5px 0 rgba(0, 0, 0, 0.7),
     inset 0 0 0 1px rgba(255, 248, 220, 0.06);
+  font-size: clamp(1.02rem, 1.85vw, 1.34rem);
+  font-weight: 900;
 }
 
 .hero-actions .hero-action-button:hover,
@@ -580,6 +583,11 @@ h3 {
   color: var(--gold);
 }
 
+.hero-actions a[href="meet-vern.html"] > span:last-child {
+  font-size: clamp(1.2rem, 2.4vw, 1.65rem);
+  line-height: 0.92;
+}
+
 .hero-action-tag {
   border: 2px dashed var(--red);
   background: #ffd84a;
@@ -607,6 +615,11 @@ h3 {
   color: #11100e;
 }
 
+.hero-actions .hero-action-clearance > span:last-child {
+  font-size: clamp(1.35rem, 3vw, 2.05rem);
+  line-height: 0.92;
+}
+
 .install-status {
   max-width: 560px;
   margin: 0.9rem 0 0;
@@ -624,14 +637,19 @@ h3 {
 
 .quick-facts {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 210px));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.8rem;
-  margin: 1.8rem 0 0;
+  width: min(100%, 620px);
+  margin: 1.45rem auto 0;
+  align-items: stretch;
 }
 
 .quick-facts div {
+  display: grid;
+  align-content: center;
+  min-height: 76px;
   border-left: 6px solid var(--gold);
-  padding: 0.2rem 0 0.2rem 0.8rem;
+  padding: 0.3rem 0 0.3rem 0.8rem;
 }
 
 .quick-facts a {
@@ -2465,6 +2483,7 @@ th {
     min-height: auto;
     align-items: start;
     gap: 0.75rem;
+    padding-block: clamp(1.2rem, 4vw, 1.8rem) clamp(1rem, 3vw, 1.55rem);
   }
 
   .hero-copy,
@@ -2503,11 +2522,19 @@ th {
   .hero-actions .btn {
     min-height: 44px;
     padding: 0.58rem 0.45rem;
-    font-size: 0.82rem;
+    font-size: 0.95rem;
   }
 
   .hero-actions .hero-action-button {
     min-height: 52px;
+  }
+
+  .hero-actions .hero-action-clearance > span:last-child {
+    font-size: clamp(1.15rem, 5.5vw, 1.6rem);
+  }
+
+  .hero-actions a[href="meet-vern.html"] > span:last-child {
+    font-size: clamp(1rem, 4.8vw, 1.28rem);
   }
 
   .hero-estatesales-logo {
@@ -2517,10 +2544,11 @@ th {
   .quick-facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.55rem;
-    margin-top: 0.95rem;
+    margin-top: 0.85rem;
   }
 
   .quick-facts div {
+    min-height: 68px;
     border-left-width: 4px;
     padding-left: 0.55rem;
   }
