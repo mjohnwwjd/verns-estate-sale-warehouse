@@ -837,24 +837,9 @@ dd {
   align-items: start;
 }
 
-.meet-vern-facts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.7rem;
-  margin: 1.15rem 0 0;
-}
-
-.meet-vern-facts div {
-  border-left: 5px solid var(--gold);
-  padding-left: 0.7rem;
-}
-
-.meet-vern-facts a {
-  color: var(--ink);
-  font-weight: 900;
-  text-decoration-color: rgba(183, 31, 42, 0.58);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 0.18em;
+.meet-vern-contact-card {
+  max-width: 720px;
+  margin-top: 1.15rem;
 }
 
 .meet-vern-panel {
@@ -2558,10 +2543,6 @@ th {
 
   .meet-vern-actions {
     display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .meet-vern-facts {
     grid-template-columns: 1fr;
   }
 
