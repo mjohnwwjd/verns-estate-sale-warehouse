@@ -1546,12 +1546,15 @@ html[data-yellow-band-variant="tight"] .visit-actions {
 .visit-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.85rem;
   margin-top: 1rem;
 }
 
 .visit-actions .btn {
-  min-width: 175px;
+  min-width: 205px;
+  min-height: 58px;
+  padding: 0.82rem 1rem;
+  font-size: clamp(1rem, 1.75vw, 1.16rem);
 }
 
 .visit-card dl {
@@ -1652,12 +1655,16 @@ html[data-yellow-band-variant="tight"] .visit-actions {
   gap: 0.55rem;
 }
 
+.visit-map-button {
+  gap: 0.72rem;
+}
+
 .map-mark {
   display: inline-grid;
   place-items: center;
-  flex: 0 0 2.15rem;
-  width: 2.15rem;
-  height: 2.15rem;
+  flex: 0 0 2.35rem;
+  width: 2.35rem;
+  height: 2.35rem;
   border: 2px solid #111;
   border-radius: 5px;
   background: #f4f0df;
@@ -1668,8 +1675,8 @@ html[data-yellow-band-variant="tight"] .visit-actions {
 }
 
 .map-mark svg {
-  width: 1.78rem;
-  height: 1.78rem;
+  width: 2rem;
+  height: 2rem;
 }
 
 .map-panel-one {
@@ -1695,21 +1702,29 @@ html[data-yellow-band-variant="tight"] .visit-actions {
   border: 0;
   background: #1877f2;
   color: #fff;
+  font-size: clamp(1rem, 1.75vw, 1.16rem);
   text-decoration: none;
   box-shadow: 0 5px 0 #0d4eaa;
+}
+
+.visit-facebook-button {
+  justify-content: flex-start;
+  gap: 0.78rem;
+  min-width: 236px;
+  padding-inline: 1rem 1.15rem;
 }
 
 .facebook-mark {
   display: inline-grid;
   place-items: center;
-  flex: 0 0 1.7rem;
-  width: 1.7rem;
-  height: 1.7rem;
+  flex: 0 0 1.92rem;
+  width: 1.92rem;
+  height: 1.92rem;
 }
 
 .facebook-mark svg {
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 1.92rem;
+  height: 1.92rem;
   overflow: visible;
 }
 
@@ -1719,12 +1734,26 @@ html[data-yellow-band-variant="tight"] .visit-actions {
 
 .facebook-mark path {
   fill: #1877f2;
+  transform: translateX(2px);
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .visit-card .facebook-button {
   width: fit-content;
   padding: 0.52rem 0.82rem;
   font-weight: 900;
+}
+
+.visit-card .facebook-mark {
+  flex-basis: 1.72rem;
+  width: 1.72rem;
+  height: 1.72rem;
+}
+
+.visit-card .facebook-mark svg {
+  width: 1.72rem;
+  height: 1.72rem;
 }
 
 .visit-address-link {
