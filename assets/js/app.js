@@ -443,9 +443,16 @@ function renderSettings() {
   });
   renderVisitHours(settings.hours);
 
-  const phoneLink = $("[data-business-phone]");
-  phoneLink.textContent = settings.phone;
-  phoneLink.href = `tel:${settings.phone.replace(/[^\d+]/g, "")}`;
+  $$("[data-business-phone]").forEach((phoneLink) => {
+    const phoneDigits = settings.phone.replace(/\D/g, "");
+    const phoneHref = phoneDigits.length === 10
+      ? `tel:+1${phoneDigits}`
+      : `tel:${settings.phone.replace(/[^\d+]/g, "")}`;
+    phoneLink.textContent = phoneLink.hasAttribute("data-business-phone-action")
+      ? `Call ${settings.phone}`
+      : settings.phone;
+    phoneLink.href = phoneHref;
+  });
 
   const emailLink = $("[data-business-email]");
   if (emailLink) {

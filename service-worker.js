@@ -1,7 +1,8 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260602-meet-vern-hero";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260602-meet-vern-page";
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./meet-vern.html",
   "./manifest.webmanifest",
   "./assets/css/styles.css",
   "./assets/js/site-data.js",
