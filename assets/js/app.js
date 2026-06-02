@@ -462,8 +462,8 @@ function renderSettings() {
 
   $$("[data-business-facebook]").forEach((link) => {
     const label = link.querySelector("[data-business-facebook-label]");
-    if (label) label.textContent = "Verns Estate Sales";
-    else link.textContent = "Verns Estate Sales on Facebook";
+    if (label) label.textContent = "Verns Facebook";
+    else link.textContent = "Verns Facebook";
     link.href = settings.facebookUrl || "#";
   });
 
