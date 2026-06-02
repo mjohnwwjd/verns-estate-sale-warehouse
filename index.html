@@ -16,9 +16,9 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="assets/img/app/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="assets/img/app/apple-touch-icon.png" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=20260602-estate-fb-map-polish" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260602-meet-vern-hero" />
     <script src="assets/js/site-data.js" defer></script>
-    <script src="assets/js/app.js?v=20260602-estate-fb-map-polish" defer></script>
+    <script src="assets/js/app.js?v=20260602-meet-vern-hero" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -42,30 +42,25 @@
             </h1>
           </div>
           <div class="hero-actions">
-            <a class="btn hero-action-button" href="#photos">
-              <span class="hero-action-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M8.2 5.5 9.8 3h4.4l1.6 2.5H20a2 2 0 0 1 2 2v10.8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7.5a2 2 0 0 1 2-2zm3.8 3a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 2.5a1.7 1.7 0 1 1 0 3.4 1.7 1.7 0 0 1 0-3.4z"/></svg>
-              </span>
-              <span>Sales Floor Photos</span>
+            <a class="btn hero-action-button" href="#meet-vern">
+              <span class="hero-action-icon hero-action-icon-text" aria-hidden="true">V</span>
+              <span>Meet Vern</span>
             </a>
-            <a class="btn hero-action-button" href="#sales">
-              <span class="hero-action-icon hero-estatesales-icon" aria-hidden="true">
-                <img src="assets/img/estatesales-net-logo.svg" alt="" />
-              </span>
-              <span>EstateSales.NET</span>
+            <a
+              class="btn hero-action-button hero-estatesales-button"
+              data-estate-company-link
+              href="https://www.estatesales.net/companies/MI/Muskegon/49441/16076"
+              target="_blank"
+              rel="noopener"
+              aria-label="Open Vern's EstateSales.NET page"
+            >
+              <img class="hero-estatesales-logo" src="assets/img/estatesales-net-logo.svg" alt="EstateSales.NET" />
             </a>
             <a class="btn hero-action-button hero-action-clearance" href="#last-chance">
               <span class="hero-action-icon hero-action-tag" aria-hidden="true">TAG</span>
               <span>Clearance</span>
             </a>
-            <button class="btn hero-action-button" type="button" data-install-app hidden>
-              <span class="hero-action-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v8.2l2.6-2.6 1.4 1.4-5 5-5-5 1.4-1.4 2.6 2.6V4a1 1 0 0 1 1-1zM5 18h14v2H5z"/></svg>
-              </span>
-              <span>Save App</span>
-            </button>
           </div>
-          <p class="install-status" data-install-status role="status" hidden></p>
           <dl class="quick-facts" aria-label="Warehouse quick facts">
             <div>
               <dt>Hours</dt>
@@ -97,6 +92,36 @@
             </div>
           </dl>
         </div>
+      </section>
+
+      <section class="section-shell meet-vern-section" id="meet-vern">
+        <div class="meet-vern-copy">
+          <p class="eyebrow">Meet Vern</p>
+          <h2>Practical estate-sale help with a warehouse backup plan</h2>
+          <p>
+            Vern continues the estate-sale work he built with his late partner Lin, backed by
+            an experienced crew that knows antiques, household goods, clean outs, and busy sale days.
+          </p>
+          <p>
+            Most sales are handled on-site when that is best for the family. When a house is smaller,
+            parking is tight, or a full on-site sale does not make sense, Vern can move items into a
+            combined warehouse sale, consignment setup, online auction option, or clean-out plan.
+          </p>
+          <div class="meet-vern-actions">
+            <a class="btn btn-gold" data-estate-company-link href="https://www.estatesales.net/companies/MI/Muskegon/49441/16076" target="_blank" rel="noopener">
+              Vern's EstateSales.NET Page
+            </a>
+            <a class="btn btn-dark" href="#visit">Contact Vern</a>
+          </div>
+        </div>
+        <aside class="meet-vern-panel" aria-label="What Vern offers">
+          <img src="assets/img/reference-warehouse-sign.jpg" alt="Vern's Estate Sales Warehouse sign" />
+          <ul>
+            <li>On-site estate sales when the home is the right fit.</li>
+            <li>Warehouse options for clean outs, smaller estates, and overflow.</li>
+            <li>Inventory reporting, fair checkout flow, and references available.</li>
+          </ul>
+        </aside>
       </section>
 
       <section class="section-shell photo-section" id="photos">
