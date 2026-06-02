@@ -1,4 +1,4 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260602-hero-balance";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260602-map-app-icon";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,7 @@ const APP_SHELL = [
   "./assets/js/site-data.js",
   "./assets/js/app.js",
   "./assets/img/logo-vern-option-2.png",
+  "./assets/img/maps-app-style-icon.svg",
   "./assets/img/app/verns-app-icon-192.png",
   "./assets/img/app/verns-app-icon-512.png",
   "./assets/img/app/apple-touch-icon.png",

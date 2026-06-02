@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Map">
+  <defs>
+    <clipPath id="mapClip">
+      <rect x="3" y="3" width="58" height="58" rx="13" />
+    </clipPath>
+    <linearGradient id="skyBlue" x1="13" y1="4" x2="34" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2cbcff" />
+      <stop offset="1" stop-color="#1674e9" />
+    </linearGradient>
+    <linearGradient id="arrowBlue" x1="32" y1="20" x2="32" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#58b7ff" />
+      <stop offset="1" stop-color="#1b6de8" />
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="58" height="58" rx="13" fill="#f7f4ec" />
+  <g clip-path="url(#mapClip)">
+    <rect x="3" y="3" width="58" height="58" fill="#f8f1df" />
+    <path d="M-3 8c11 8 22 8 35-1 12-9 25-8 35 1v19c-10-8-23-9-35 1-13 10-25 9-35 0z" fill="#3fc46b" />
+    <path d="M37-8c4 16 4 29 0 43-5 15-5 25 2 38h23V-8z" fill="#74dc79" />
+    <path d="M-4 42c9-9 19-12 31-7 11 5 22 4 37-5v36H-4z" fill="#ff9fd2" />
+    <path d="M-2 18c9 7 20 8 31 2 13-8 24-8 36 0" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" />
+    <path d="M39-5c3 13 3 26-1 39-4 14-4 24 1 36" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" />
+    <path d="M-5 46c10-9 20-12 31-7 12 6 24 4 40-6" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" />
+    <path d="M17-3v67" fill="none" stroke="url(#skyBlue)" stroke-width="7" />
+    <path d="M25-4v68" fill="none" stroke="#ffffff" stroke-width="4" />
+  </g>
+  <rect x="3" y="3" width="58" height="58" rx="13" fill="none" stroke="rgba(255,255,255,.72)" stroke-width="2" />
+  <circle cx="32" cy="34" r="17" fill="url(#arrowBlue)" stroke="#ffffff" stroke-width="3.5" />
+  <path d="M32 20 43 47 32 39 21 47z" fill="#ffffff" />
+</svg>
