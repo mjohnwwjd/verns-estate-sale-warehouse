@@ -848,9 +848,9 @@ function renderVisitHours(hoursText) {
   const normalized = String(hoursText || "").replace(/\s+/g, " ");
   if (/Mon-Fri/i.test(normalized) && /Sat/i.test(normalized) && /Sun/i.test(normalized)) {
     hoursWrap.replaceChildren(
-      hoursChipEl("hours-weekday", "Mon-Fri", "10 AM-4 PM"),
-      hoursChipEl("hours-saturday", "Sat", "9 AM-4 PM"),
-      hoursChipEl("hours-sunday", "Sun", "Closed")
+      hoursChipEl("hours-weekday", "Monday-Friday", "10 AM-4 PM"),
+      hoursChipEl("hours-saturday", "Saturday", "9 AM-4 PM"),
+      hoursChipEl("hours-sunday", "Sunday", "Closed")
     );
     return;
   }
