@@ -78,7 +78,7 @@ function prepareStartupScroll() {
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 
   const hash = decodeURIComponent(location.hash || "");
-  if (hash === "#last-chance") {
+  if (hash && hash !== "#home" && hash !== "#top" && hash !== "#employee") {
     history.replaceState(null, "", location.pathname + location.search);
     window.scrollTo({ top: 0 });
     return;
@@ -465,7 +465,6 @@ function renderSettings() {
   });
 
   const estateLink = $("[data-estate-link]");
-  const estateNote = $("[data-estate-note]");
   const companyUrl = getEstateCompanyUrl(settings.companyUrl);
   const liveSaleUrl = getLiveEstateSaleUrl(settings.saleUrl);
   const activeSaleUrl = liveSaleUrl || getPrimaryEstateSaleUrl();
@@ -473,27 +472,17 @@ function renderSettings() {
   $$("[data-estate-company-link]").forEach((link) => {
     link.href = companyUrl;
   });
-  $$("[data-estate-company-url]").forEach((item) => {
-    item.textContent = displayUrl(companyUrl);
-  });
-
   if (activeSaleUrl) {
     if (estateLink) {
       estateLink.href = activeSaleUrl;
       estateLink.textContent = "View Current Sale Photos";
       estateLink.removeAttribute("aria-disabled");
     }
-    if (estateNote) {
-      estateNote.textContent = "The sale-photo button opens the current EstateSales.NET listing in a new tab.";
-    }
   } else {
     if (estateLink) {
       estateLink.href = companyUrl;
       estateLink.textContent = "Open EstateSales.NET Page";
       estateLink.removeAttribute("aria-disabled");
-    }
-    if (estateNote) {
-      estateNote.textContent = "No live sale URL is saved yet, so this opens Vern's official EstateSales.NET company page.";
     }
   }
 
