@@ -361,6 +361,7 @@ function openEmployeePanel() {
   const panel = $("[data-employee-panel]");
   panel.hidden = false;
   document.body.classList.add("employee-open");
+  $("[data-tab-panel].is-active")?.scrollTo({ top: 0 });
 }
 
 function closeEmployeePanel() {
@@ -411,6 +412,7 @@ function bindEmployeeTabs() {
       $$("[data-tab]").forEach((item) => item.classList.toggle("is-active", item === button));
       $$("[data-tab-panel]").forEach((panel) => {
         panel.classList.toggle("is-active", panel.dataset.tabPanel === tab);
+        if (panel.dataset.tabPanel === tab) panel.scrollTop = 0;
       });
     });
   });
