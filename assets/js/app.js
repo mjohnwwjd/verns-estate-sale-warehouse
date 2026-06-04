@@ -3,7 +3,7 @@ const EMPLOYEE_SESSION_KEY = "vernsEmployeeUnlocked";
 const PASSCODE = "3939";
 const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Muskegon/49441/16076";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-05-31-facebook-showcase-2";
+const DEMO_CONTENT_VERSION = "2026-06-03-today-floor-photos";
 const CONTACT_INFO_VERSION = "2026-06-01-monday-hours";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -30,7 +30,8 @@ const PHOTO_CATEGORY_FILTERS = [
   { value: "collectibles", label: "Collectibles", icon: "*", keywords: ["collectible", "collectibles", "vintage", "brass", "figurine", "antique", "estate"] },
   { value: "scratch-dent", label: "Scratch/Dent", icon: "!", keywords: ["scratch", "dent", "as-is", "repair", "project", "needs work"] }
 ];
-const POPULAR_PHOTO_FILTERS = ["all", "furniture", "lamps", "tools", "electronics", "seasonal"];
+const POPULAR_PHOTO_FILTERS = ["all", "furniture", "glassware", "tools", "clocks", "sporting"];
+const PUBLIC_GALLERY_ALL_LIMIT = 3;
 
 let state = loadState();
 let marketplaceFilter = "all";
@@ -684,27 +685,51 @@ function renderPublicGallery() {
   const items = state.photoItems
     .filter((item) => item.category !== "clearance")
     .filter((item) => photoItemMatchesFilter(item, publicGalleryFilter));
-  grid.replaceChildren(...items.slice(0, 3).map(renderPublicItemCard));
+  const visibleItems = publicGalleryFilter === "all" ? items.slice(0, PUBLIC_GALLERY_ALL_LIMIT) : items;
+  grid.classList.toggle("is-expanded-category", publicGalleryFilter !== "all");
+  grid.replaceChildren(...visibleItems.map(renderPublicItemCard));
   const note = $("[data-photo-result-note]");
   if (!note) return;
   const active = getPhotoCategory(publicGalleryFilter);
   const activeLabel = publicGalleryFilter === "all" ? "All categories" : active.label;
-  const visibleCount = Math.min(items.length, 3);
+  const visibleCount = visibleItems.length;
   if (!items.length) {
     note.textContent = `No floor peeks in ${activeLabel}.`;
+  } else if (publicGalleryFilter === "all") {
+    note.textContent = `Showing ${visibleCount}${items.length > visibleCount ? ` of ${items.length}` : ""} floor peeks. Pick a category to open more photos.`;
   } else {
-    note.textContent = `Showing ${visibleCount}${items.length > 3 ? ` of ${items.length}` : ""} floor peek${visibleCount === 1 ? "" : "s"} in ${activeLabel}.`;
+    note.textContent = `Showing all ${visibleCount} floor peek${visibleCount === 1 ? "" : "s"} in ${activeLabel}.`;
   }
 }
 
 function renderPublicItemCard(item) {
   const card = articleEl("item-card");
+  const itemType = photoItemType(item);
+  const category = getPhotoCategory(itemType);
+  const linksToCategory = item.category !== "clearance" && category?.value && category.value !== "all";
+  if (linksToCategory) {
+    card.classList.add("is-category-link");
+    card.dataset.photoCardFilter = category.value;
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", `Open ${category.label} floor photos`);
+    card.title = `Open ${category.label} floor photos`;
+    card.addEventListener("click", () => setPhotoFilter(category.value));
+    card.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      setPhotoFilter(category.value);
+    });
+  }
   card.append(
     itemImageWithOverlay(item),
     divEl("meta-line", [spanEl("tag", photoItemTypeLabel(item)), item.price ? pEl("price", item.price) : document.createTextNode("")]),
     headingEl("h3", item.title),
     pEl("", item.note || item.tag || "")
   );
+  if (linksToCategory) {
+    card.append(spanEl("card-category-link", `View ${category.label}`));
+  }
   return card;
 }
 

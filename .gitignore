@@ -2,3 +2,5 @@
 .env.local
 data/estate-sales-cache.json
 node_modules/
+assets/img/today-staging/
+tmp/

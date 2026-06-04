@@ -1,10 +1,11 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260602-photo-hero-local-2";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260604-expanded-photo-categories";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./meet-vern.html",
   "./manifest.webmanifest",
   "./assets/css/styles.css",
+  "./assets/js/today-photo-items.js",
   "./assets/js/site-data.js",
   "./assets/js/app.js",
   "./assets/img/logo-vern-option-2.png",

@@ -1,3 +1,5 @@
+const todayPhotoItems = Array.isArray(window.VERNS_TODAY_PHOTO_ITEMS) ? window.VERNS_TODAY_PHOTO_ITEMS : [];
+
 window.VERNS_STARTER_DATA = {
   settings: {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
@@ -6,7 +8,7 @@ window.VERNS_STARTER_DATA = {
     address: "1663 West Sherman Boulevard, Muskegon, MI 49441",
     phone: "(616) 638-3873",
     email: "",
-    facebookUrl: "https://www.facebook.com/profile.php?id=61590076124139",
+    facebookUrl: "https://www.facebook.com/profile.php?id=61590219587739",
     hours: "Mon-Fri 10 AM-4 PM; Sat 9 AM-4 PM; Sun Closed",
     shortHours: "Mon-Fri 10-4; Sat 9-4",
     location: "Muskegon, MI",
@@ -16,7 +18,7 @@ window.VERNS_STARTER_DATA = {
     lastSalesSyncAt: "",
     contactInfoVersion: "2026-06-01-monday-hours",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
-    demoContentVersion: "2026-05-31-facebook-showcase-2",
+    demoContentVersion: "2026-06-03-today-floor-photos",
     thriftMarkdownPercent: 50,
     marketplacePercent: 90,
     clearanceMarkdownPercent: 75,
@@ -98,6 +100,7 @@ window.VERNS_STARTER_DATA = {
     }
   ],
   photoItems: [
+    ...todayPhotoItems,
     {
       id: "starter-photo-clearance-1",
       category: "clearance",
