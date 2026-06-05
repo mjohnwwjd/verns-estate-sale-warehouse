@@ -1449,7 +1449,10 @@ dd {
   border-radius: 10px;
   background:
     linear-gradient(135deg, #e9a720 0%, #ffd24b 36%, #f3b022 100%);
+  border: 0;
   color: var(--ink);
+  cursor: pointer;
+  font: inherit;
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
@@ -1558,6 +1561,36 @@ dd {
   font-size: 0.8rem;
   font-weight: 950;
   letter-spacing: 0.05em;
+}
+
+.clearance-items-section[hidden] {
+  display: none !important;
+}
+
+.clearance-items-section {
+  background: #fff8dc;
+}
+
+.clearance-section-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.clearance-section-header .section-heading {
+  margin: 0;
+}
+
+.clearance-hide-button {
+  flex: 0 0 auto;
+}
+
+.hero-action-clearance.is-open,
+.clearance-tag-callout.is-open {
+  outline: 4px solid rgba(183, 31, 42, 0.38);
+  outline-offset: 4px;
 }
 
 .section-shell.photo-section {
@@ -2926,6 +2959,15 @@ th {
 
   .clearance-stamp {
     font-size: clamp(1.05rem, 5vw, 1.45rem);
+  }
+
+  .clearance-section-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .clearance-hide-button {
+    width: 100%;
   }
 
   .employee-header {

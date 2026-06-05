@@ -18,7 +18,7 @@ window.VERNS_STARTER_DATA = {
     lastSalesSyncAt: "",
     contactInfoVersion: "2026-06-04-norton-shores-daily-hours",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
-    demoContentVersion: "2026-06-05-clearance-trim",
+    demoContentVersion: "2026-06-05-clearance-drawer",
     thriftMarkdownPercent: 50,
     marketplacePercent: 90,
     clearanceMarkdownPercent: 75,

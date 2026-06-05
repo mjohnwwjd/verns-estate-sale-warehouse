@@ -16,10 +16,10 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="assets/img/app/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="assets/img/app/apple-touch-icon.png" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=20260605-clearance-trim" />
-    <script src="assets/js/today-photo-items.js?v=20260605-clearance-trim" defer></script>
-    <script src="assets/js/site-data.js?v=20260605-clearance-trim" defer></script>
-    <script src="assets/js/app.js?v=20260605-clearance-trim" defer></script>
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260605-clearance-drawer" />
+    <script src="assets/js/today-photo-items.js?v=20260605-clearance-drawer" defer></script>
+    <script src="assets/js/site-data.js?v=20260605-clearance-drawer" defer></script>
+    <script src="assets/js/app.js?v=20260605-clearance-drawer" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -62,7 +62,13 @@
             >
               <img class="hero-estatesales-logo" src="assets/img/estatesales-net-logo.svg" alt="EstateSales.NET" />
             </a>
-            <a class="btn hero-action-button hero-action-clearance" href="#last-chance">
+            <a
+              class="btn hero-action-button hero-action-clearance"
+              href="#last-chance"
+              data-clearance-open
+              aria-controls="clearance-items"
+              aria-expanded="false"
+            >
               <span class="hero-action-icon hero-action-tag" aria-hidden="true">TAG</span>
               <span>Clearance</span>
             </a>
@@ -148,20 +154,32 @@
             just hit the clearance row.
           </p>
         </div>
-        <a class="clearance-tag-callout" href="#visit" aria-label="Get directions to Vern's last chance clearance">
+        <button
+          class="clearance-tag-callout"
+          type="button"
+          data-clearance-toggle
+          aria-controls="clearance-items"
+          aria-expanded="false"
+          aria-label="Show Vern's last chance clearance items"
+        >
           <span class="clearance-string string-one" aria-hidden="true"></span>
           <span class="clearance-string string-two" aria-hidden="true"></span>
           <span class="clearance-tag-hole" aria-hidden="true"></span>
           <span class="clearance-tag-word">Clearance</span>
           <span class="clearance-stamp">Last Chance</span>
-          <span class="clearance-tap">Tap for directions</span>
-        </a>
+          <span class="clearance-tap">Tap to view markdowns</span>
+        </button>
       </section>
 
-      <section class="section-shell clearance-items-section" aria-label="Clearance items">
-        <div class="section-heading compact">
-          <p class="eyebrow">Clearance items</p>
-          <h2>Marked down and ready to go</h2>
+      <section class="section-shell clearance-items-section" id="clearance-items" data-clearance-items-section aria-label="Clearance items" hidden>
+        <div class="clearance-section-header">
+          <div class="section-heading compact">
+            <p class="eyebrow">Clearance items</p>
+            <h2>Marked down and ready to go</h2>
+          </div>
+          <button class="btn btn-dark clearance-hide-button" type="button" data-clearance-hide>
+            Hide Clearance Items
+          </button>
         </div>
         <div class="item-grid" data-clearance-grid></div>
       </section>
