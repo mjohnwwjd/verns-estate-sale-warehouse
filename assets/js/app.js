@@ -3,7 +3,7 @@ const EMPLOYEE_SESSION_KEY = "vernsEmployeeUnlocked";
 const PASSCODE = "3939";
 const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Muskegon/49441/16076";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-06-05-clearance-drawer";
+const DEMO_CONTENT_VERSION = "2026-06-05-clearance-gate";
 const CONTACT_INFO_VERSION = "2026-06-04-norton-shores-daily-hours";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -238,16 +238,13 @@ function renderAll() {
 function bindPublicControls() {
   window.addEventListener("hashchange", settleHashScroll);
   document.addEventListener("click", handleHashLinkClick);
-  $$("[data-clearance-toggle]").forEach((button) => button.addEventListener("click", () => toggleClearanceShelf()));
-  $$("[data-clearance-open]").forEach((link) => {
+  $$("[data-clearance-jump]").forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
-      if (location.hash !== "#last-chance") {
-        history.pushState(null, "", `${location.pathname}${location.search}#last-chance`);
-      }
-      openClearanceShelf({ scroll: true });
+      jumpToClearanceGate();
     });
   });
+  $$("[data-clearance-toggle]").forEach((button) => button.addEventListener("click", () => toggleClearanceShelf()));
   $$("[data-clearance-hide]").forEach((button) => button.addEventListener("click", () => closeClearanceShelf({ scroll: true })));
 }
 
@@ -313,12 +310,6 @@ function handleHashLinkClick(event) {
   if (!isPageHash(hash) || hash === "#employee") return;
 
   event.preventDefault();
-  if (hash === "#last-chance") {
-    if (location.hash !== hash) history.pushState(null, "", `${location.pathname}${location.search}${hash}`);
-    openClearanceShelf({ scroll: true });
-    return;
-  }
-
   if (location.hash === hash) {
     settleHashScroll();
   } else {
@@ -432,7 +423,6 @@ function closeEmployeePanel() {
 function settleHashScroll() {
   const hash = decodeURIComponent(location.hash || "");
   if (!hash || hash === "#employee") return;
-  if (hash === "#last-chance") openClearanceShelf({ scroll: false });
 
   const run = () => {
     if (hash === "#home" || hash === "#top") {
@@ -460,6 +450,19 @@ function scrollTargetBelowHeader(target) {
   const headerOffset = headerStyle?.position === "sticky" ? header.getBoundingClientRect().height + 24 : 0;
   const top = target.getBoundingClientRect().top + window.scrollY - headerOffset;
   window.scrollTo({ top: Math.max(0, top) });
+}
+
+function jumpToClearanceGate() {
+  closeClearanceShelf({ scroll: false });
+  if (location.hash !== "#last-chance") {
+    history.pushState(null, "", `${location.pathname}${location.search}#last-chance`);
+  }
+  const band = $("#last-chance");
+  if (!band) return;
+  const run = () => scrollTargetBelowHeader(band);
+  requestAnimationFrame(run);
+  window.setTimeout(run, 100);
+  window.setTimeout(run, 300);
 }
 
 function toggleClearanceShelf() {
@@ -492,7 +495,7 @@ function closeClearanceShelf({ scroll = false } = {}) {
 }
 
 function updateClearanceToggleState() {
-  $$("[data-clearance-toggle], [data-clearance-open]").forEach((control) => {
+  $$("[data-clearance-toggle]").forEach((control) => {
     control.setAttribute("aria-expanded", String(clearanceShelfOpen));
     control.classList.toggle("is-open", clearanceShelfOpen);
   });

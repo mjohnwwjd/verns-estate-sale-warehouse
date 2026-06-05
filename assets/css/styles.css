@@ -1409,6 +1409,7 @@ dd {
 }
 
 .clearance-copy,
+.clearance-gate,
 .clearance-tag-callout {
   position: relative;
   z-index: 1;
@@ -1437,7 +1438,16 @@ dd {
   font-weight: 900;
 }
 
+.clearance-gate {
+  display: grid;
+  gap: clamp(0.65rem, 1.4vw, 0.95rem);
+  justify-items: center;
+  max-width: 760px;
+  margin-left: auto;
+}
+
 .clearance-tag-callout {
+  width: 100%;
   min-height: clamp(165px, 22vw, 245px);
   display: grid;
   align-content: center;
@@ -1451,7 +1461,7 @@ dd {
     linear-gradient(135deg, #e9a720 0%, #ffd24b 36%, #f3b022 100%);
   border: 0;
   color: var(--ink);
-  cursor: pointer;
+  cursor: default;
   font: inherit;
   text-align: center;
   text-decoration: none;
@@ -1468,9 +1478,9 @@ dd {
 
 .clearance-tag-callout:hover,
 .clearance-tag-callout:focus-visible {
-  transform: translateY(-2px) rotate(-2.2deg);
+  transform: rotate(-2.2deg);
   box-shadow:
-    20px 23px 22px rgba(82, 51, 3, 0.34),
+    18px 20px 20px rgba(82, 51, 3, 0.28),
     inset 0 2px 0 rgba(255, 255, 255, 0.26),
     inset 0 -5px 0 rgba(128, 72, 3, 0.14);
 }
@@ -1563,6 +1573,26 @@ dd {
   letter-spacing: 0.05em;
 }
 
+.clearance-enter-button {
+  width: min(100%, 460px);
+  min-height: 58px;
+  border: 3px solid var(--ink);
+  color: var(--gold);
+  font-size: clamp(1.15rem, 2.1vw, 1.55rem);
+  text-align: center;
+  box-shadow:
+    0 7px 0 rgba(24, 25, 24, 0.28),
+    inset 0 1px 0 rgba(255, 248, 220, 0.12);
+}
+
+.clearance-enter-button:hover,
+.clearance-enter-button:focus-visible,
+.clearance-enter-button.is-open {
+  background: #27231c;
+  color: #ffd84a;
+  transform: translateY(-2px);
+}
+
 .clearance-items-section[hidden] {
   display: none !important;
 }
@@ -1587,8 +1617,7 @@ dd {
   flex: 0 0 auto;
 }
 
-.hero-action-clearance.is-open,
-.clearance-tag-callout.is-open {
+.clearance-enter-button.is-open {
   outline: 4px solid rgba(183, 31, 42, 0.38);
   outline-offset: 4px;
 }
@@ -1826,15 +1855,42 @@ dd {
 }
 
 .visit-band {
+  position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 460px);
   gap: 1rem;
   align-items: center;
   padding-block: clamp(1.6rem, 3.4vw, 2.7rem);
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 36%),
-    var(--gold);
-  color: var(--ink);
+    linear-gradient(100deg, rgba(15, 13, 10, 0.94) 0%, rgba(22, 18, 13, 0.82) 48%, rgba(16, 13, 10, 0.64) 100%),
+    url("../img/reference-warehouse-sign.jpg") center / cover no-repeat;
+  color: var(--paper);
+  overflow: hidden;
+}
+
+.visit-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(240, 192, 68, 0.13), transparent 34%),
+    repeating-linear-gradient(0deg, rgba(255, 248, 220, 0.035) 0 1px, transparent 1px 9px);
+  pointer-events: none;
+}
+
+.visit-band .eyebrow {
+  color: var(--gold);
+}
+
+.visit-band h2 {
+  color: var(--gold);
+}
+
+.visit-band > div > p:not(.eyebrow) {
+  color: #fff8dc;
+  font-weight: 900;
 }
 
 html[data-yellow-band-variant="tight"] .clearance-band {
@@ -2927,6 +2983,11 @@ th {
     max-width: none;
   }
 
+  .clearance-gate {
+    max-width: none;
+    margin-left: 0;
+  }
+
   .clearance-band h2 {
     max-width: 15ch;
   }
@@ -2942,7 +3003,7 @@ th {
 
   .clearance-tag-callout:hover,
   .clearance-tag-callout:focus-visible {
-    transform: translateY(-2px) rotate(-1.2deg);
+    transform: rotate(-1.2deg);
   }
 
   .clearance-tag-word {
