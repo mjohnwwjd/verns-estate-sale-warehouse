@@ -18,7 +18,7 @@ window.VERNS_STARTER_DATA = {
     lastSalesSyncAt: "",
     contactInfoVersion: "2026-06-04-norton-shores-daily-hours",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
-    demoContentVersion: "2026-06-05-clearance-prices",
+    demoContentVersion: "2026-06-05-clearance-trim",
     thriftMarkdownPercent: 50,
     marketplacePercent: 90,
     clearanceMarkdownPercent: 75,
@@ -100,18 +100,7 @@ window.VERNS_STARTER_DATA = {
     }
   ],
   photoItems: [
-    ...todayPhotoItems,
-    {
-      id: "starter-photo-clearance-1",
-      category: "clearance",
-      itemType: "scratch-dent",
-      title: "Last Chance clearance table",
-      price: "$5-$45",
-      tag: "Last chance",
-      note: "Yellow-tag markdowns on lamps, decor, baskets, dishes, and small finds.",
-      image: "assets/img/demo/demo-last-chance-clearance.jpeg",
-      createdAt: "2026-05-31T00:00:00.000Z"
-    }
+    ...todayPhotoItems
   ],
   pricedItems: [],
   marketplace: [],

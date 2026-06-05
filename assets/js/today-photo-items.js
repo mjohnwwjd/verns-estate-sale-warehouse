@@ -88,23 +88,11 @@ window.VERNS_TODAY_PHOTO_ITEMS = [
     "category": "clearance",
     "itemType": "scratch-dent",
     "sourceCategory": "clearance",
-    "title": "Tall cabinet",
+    "title": "Narnia wardrobe",
     "price": "$225",
     "tag": "Last chance",
-    "note": "Clearance tall cabinet.",
+    "note": "Clearance Narnia wardrobe.",
     "image": "assets/img/floor-photos/2026-06-05/clearance/img-4376.jpg",
-    "createdAt": "2026-06-05T12:00:00.000Z"
-  },
-  {
-    "id": "clearance-2026-06-05-img-4377",
-    "category": "clearance",
-    "itemType": "scratch-dent",
-    "sourceCategory": "clearance",
-    "title": "Tall cabinet",
-    "price": "$225",
-    "tag": "Last chance",
-    "note": "Clearance tall cabinet interior photo.",
-    "image": "assets/img/floor-photos/2026-06-05/clearance/img-4377.jpg",
     "createdAt": "2026-06-05T12:00:00.000Z"
   },
   {
@@ -117,18 +105,6 @@ window.VERNS_TODAY_PHOTO_ITEMS = [
     "tag": "Last chance",
     "note": "Clearance Howard Miller clock.",
     "image": "assets/img/floor-photos/2026-06-05/clearance/img-4378.jpg",
-    "createdAt": "2026-06-05T12:00:00.000Z"
-  },
-  {
-    "id": "clearance-2026-06-05-img-4379",
-    "category": "clearance",
-    "itemType": "scratch-dent",
-    "sourceCategory": "clearance",
-    "title": "Howard Miller clock",
-    "price": "$150",
-    "tag": "Last chance",
-    "note": "Clearance Howard Miller clock detail photo.",
-    "image": "assets/img/floor-photos/2026-06-05/clearance/img-4379.jpg",
     "createdAt": "2026-06-05T12:00:00.000Z"
   },
   {

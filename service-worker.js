@@ -1,4 +1,4 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260605-clearance-prices";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260605-clearance-trim";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -19,7 +19,6 @@ const APP_SHELL = [
   "./assets/img/sale-muskegon-pop-up-tent.jpeg",
   "./assets/img/demo/demo-mid-century-dresser.jpeg",
   "./assets/img/demo/demo-tools-table.jpeg",
-  "./assets/img/demo/demo-last-chance-clearance.jpeg",
   "./assets/img/demo/demo-glass-collectibles.jpeg",
   "./assets/img/demo/demo-warehouse-furniture-aisle.jpeg",
   "./assets/img/1m-project-reference-style.svg"

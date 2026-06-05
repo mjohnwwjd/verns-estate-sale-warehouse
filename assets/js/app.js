@@ -3,7 +3,7 @@ const EMPLOYEE_SESSION_KEY = "vernsEmployeeUnlocked";
 const PASSCODE = "3939";
 const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Muskegon/49441/16076";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-06-05-clearance-prices";
+const DEMO_CONTENT_VERSION = "2026-06-05-clearance-trim";
 const CONTACT_INFO_VERSION = "2026-06-04-norton-shores-daily-hours";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -34,6 +34,7 @@ const PHOTO_CATEGORY_FILTERS = [
 const POPULAR_PHOTO_FILTERS = ["all", "furniture", "glassware", "tools", "clocks", "sporting"];
 const PUBLIC_GALLERY_ALL_LIMIT = 3;
 const DEPRECATED_PHOTO_ITEM_IDS = new Set([
+  "starter-photo-clearance-1",
   "starter-photo-gallery-1",
   "starter-photo-special-1",
   "starter-photo-featured-1",
