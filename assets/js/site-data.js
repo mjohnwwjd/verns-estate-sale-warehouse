@@ -5,20 +5,20 @@ window.VERNS_STARTER_DATA = {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
     saleUrl: "",
     embedUrl: "",
-    address: "1663 West Sherman Boulevard, Muskegon, MI 49441",
+    address: "1663 West Sherman Boulevard, Norton Shores, MI 49441",
     phone: "(616) 638-3873",
     email: "",
     facebookUrl: "https://www.facebook.com/profile.php?id=61590219587739",
-    hours: "Mon-Fri 10 AM-4 PM; Sat 9 AM-4 PM; Sun Closed",
-    shortHours: "Mon-Fri 10-4; Sat 9-4",
-    location: "Muskegon, MI",
+    hours: "Every day 9 AM-5 PM",
+    shortHours: "Daily 9-5",
+    location: "Norton Shores, MI",
     aiEndpoint: "/api/price-photo",
     salesSyncUrl: "/api/estate-sales/sync",
     salesAutoSync: true,
     lastSalesSyncAt: "",
-    contactInfoVersion: "2026-06-01-monday-hours",
+    contactInfoVersion: "2026-06-04-norton-shores-daily-hours",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
-    demoContentVersion: "2026-06-03-today-floor-photos",
+    demoContentVersion: "2026-06-05-clearance-prices",
     thriftMarkdownPercent: 50,
     marketplacePercent: 90,
     clearanceMarkdownPercent: 75,
@@ -39,9 +39,9 @@ window.VERNS_STARTER_DATA = {
     },
     {
       id: "estate-sale-muskegon-popup-4940091",
-      title: "Muskegon POP UP SURPRISE Vintage & Antiques",
+      title: "Norton Shores POP UP SURPRISE Vintage & Antiques",
       url: "https://www.estatesales.net/MI/Muskegon/49442/4940091",
-      city: "Muskegon, MI",
+      city: "Norton Shores, MI",
       dateSummary: "Jun 5-6, 2026",
       hours: "8:30 AM-5 PM",
       status: "upcoming",
@@ -111,50 +111,6 @@ window.VERNS_STARTER_DATA = {
       note: "Yellow-tag markdowns on lamps, decor, baskets, dishes, and small finds.",
       image: "assets/img/demo/demo-last-chance-clearance.jpeg",
       createdAt: "2026-05-31T00:00:00.000Z"
-    },
-    {
-      id: "starter-photo-gallery-1",
-      category: "gallery",
-      itemType: "glassware",
-      title: "Glassware and collectibles",
-      price: "",
-      tag: "Floor photo",
-      note: "A shoppable table of vintage glass, brass, framed art, and small decor.",
-      image: "assets/img/demo/demo-glass-collectibles.jpeg",
-      createdAt: "2026-05-31T00:00:00.000Z"
-    },
-    {
-      id: "starter-photo-special-1",
-      category: "gallery",
-      itemType: "tools",
-      title: "Garage and tool table",
-      price: "$8-$75",
-      tag: "Floor photo",
-      note: "A practical table of hand tools, hardware, and garage basics.",
-      image: "assets/img/demo/demo-tools-table.jpeg",
-      createdAt: "2026-05-31T00:00:00.000Z"
-    },
-    {
-      id: "starter-photo-featured-1",
-      category: "gallery",
-      itemType: "furniture",
-      title: "Styled dresser vignette",
-      price: "$125",
-      tag: "Floor photo",
-      note: "Warm wood, brass pulls, lamps, art, and decor staged for the floor.",
-      image: "assets/img/demo/demo-mid-century-dresser.jpeg",
-      createdAt: "2026-05-31T00:00:00.000Z"
-    },
-    {
-      id: "starter-photo-gallery-2",
-      category: "gallery",
-      itemType: "furniture",
-      title: "Warehouse furniture aisle",
-      price: "",
-      tag: "Floor photo",
-      note: "A filled-out row of chairs, tables, lamps, framed art, and shelving.",
-      image: "assets/img/demo/demo-warehouse-furniture-aisle.jpeg",
-      createdAt: "2026-05-31T00:00:00.000Z"
     }
   ],
   pricedItems: [],
@@ -204,6 +160,12 @@ window.VERNS_PRICE_GUIDE = {
     store: [3, 35],
     market: [8, 55],
     titlePrefix: "Kitchen"
+  },
+  appliances: {
+    label: "Appliances",
+    store: [15, 120],
+    market: [30, 220],
+    titlePrefix: "Appliance"
   },
   homegoods: {
     label: "Home goods",
@@ -284,7 +246,7 @@ window.VERNS_PRICE_GUIDE = {
     titlePrefix: "Auto"
   },
   "scratch-dent": {
-    label: "Scratch / dent",
+    label: "Clearance",
     store: [2, 30],
     market: [5, 55],
     titlePrefix: "As-is"

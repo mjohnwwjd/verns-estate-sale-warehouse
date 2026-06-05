@@ -17,6 +17,30 @@ const OPENAI_TIMEOUT_MS = Number(process.env.OPENAI_TIMEOUT_MS || 25000);
 const ESTATESALES_SYNC_ENABLED = /^true$/i.test(process.env.ESTATESALES_SYNC_ENABLED || "");
 const ESTATESALES_COMPANY_URL = process.env.ESTATESALES_COMPANY_URL || DEFAULT_COMPANY_URL;
 const MAX_BODY_BYTES = 8 * 1024 * 1024;
+const PRICING_CATEGORIES = [
+  "furniture",
+  "decor",
+  "lamps",
+  "tools",
+  "glassware",
+  "collectibles",
+  "housewares",
+  "appliances",
+  "homegoods",
+  "clothing",
+  "exercise",
+  "medical",
+  "kids",
+  "electronics",
+  "clocks",
+  "jewelry",
+  "books",
+  "outdoor",
+  "sporting",
+  "seasonal",
+  "auto",
+  "scratch-dent"
+];
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -206,7 +230,7 @@ async function pricePhoto(images, fields) {
         "Use general resale knowledge only; do not claim live access to EstateSales.NET, eBay, Facebook Marketplace, or retail databases. " +
         `Employee hint: ${fields.hint || "none"}. Category selected by employee: ${fields.category || "none"}. Condition selected by employee: ${fields.condition || "good"}. ` +
         "Return ONLY valid JSON with these keys: itemName, category, condition, marketValue, retailValue, estimatedLow, estimatedHigh, confidence, priceBasis, notes, marketplaceTitle, marketplaceDescription. " +
-        "category must be one of furniture, decor, tools, collectibles, housewares, clothing, electronics, jewelry, books, outdoor. " +
+        `category must be one of ${PRICING_CATEGORIES.join(", ")}. ` +
         "condition must be one of new, excellent, good, fair, repair. " +
         "Use numbers only for marketValue, retailValue, estimatedLow, and estimatedHigh. " +
         "marketValue means likely local resale value. retailValue means estimated original/new retail if knowable. Keep notes short and practical for store staff."
@@ -264,7 +288,7 @@ async function pricePhoto(images, fields) {
 }
 
 function normalizePricingResult(result, settings, meta = {}) {
-  const category = allowedCategory(result.category);
+  const category = allowedCategory(result.category, result.itemName, result.marketplaceTitle, result.notes);
   const condition = allowedCondition(result.condition);
   const fallbackRange = fallbackRangeFor(category, condition);
   const marketValue = positiveNumber(result.marketValue) || positiveNumber(result.likelySellingPrice) || average(fallbackRange);
@@ -296,7 +320,7 @@ function normalizePricingResult(result, settings, meta = {}) {
 }
 
 function fallbackPricing(base, settings, startedAt) {
-  const category = allowedCategory(base.category);
+  const category = allowedCategory(base.category, base.itemName, base.notes);
   const condition = allowedCondition(base.condition);
   const range = fallbackRangeFor(category, condition);
   return normalizePricingResult({
@@ -327,14 +351,26 @@ function fallbackRangeFor(category, condition) {
   const ranges = {
     furniture: [25, 180],
     decor: [8, 45],
+    lamps: [8, 55],
     tools: [6, 75],
+    glassware: [3, 40],
     collectibles: [5, 90],
     housewares: [3, 35],
+    appliances: [15, 120],
+    homegoods: [5, 50],
     clothing: [3, 30],
+    exercise: [8, 70],
+    medical: [8, 65],
+    kids: [4, 45],
     electronics: [10, 90],
+    clocks: [8, 65],
     jewelry: [4, 60],
     books: [1, 18],
-    outdoor: [8, 80]
+    outdoor: [8, 80],
+    sporting: [5, 65],
+    seasonal: [3, 45],
+    auto: [5, 60],
+    "scratch-dent": [2, 30]
   };
   const multipliers = { new: 1.25, excellent: 1.12, good: 1, fair: 0.72, repair: 0.42 };
   const range = ranges[category] || ranges.furniture;
@@ -455,8 +491,12 @@ function sendText(res, statusCode, contentType, content) {
 }
 
 function hasUsableOpenAiKey() {
-  const key = String(OPENAI_API_KEY || "").trim();
-  return /^sk-[A-Za-z0-9_-]{20,}$/.test(key) && !key.includes("YOUR_") && !key.includes("HERE");
+  return looksLikeOpenAiKey(OPENAI_API_KEY);
+}
+
+function looksLikeOpenAiKey(value) {
+  const key = String(value || "").trim();
+  return key.startsWith("sk-") && key.length >= 40 && !/YOUR_|HERE|placeholder|example|changeme/i.test(key);
 }
 
 function uploadedImageToVisionImage(image) {
@@ -508,9 +548,61 @@ function publicError(error) {
   return String(error?.message || "Server error").slice(0, 300);
 }
 
-function allowedCategory(value) {
-  const clean = String(value || "").toLowerCase();
-  return ["furniture", "decor", "tools", "collectibles", "housewares", "clothing", "electronics", "jewelry", "books", "outdoor"].includes(clean) ? clean : "furniture";
+function allowedCategory(value, ...context) {
+  const direct = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, "-")
+    .replace(/\s*&\s*/g, "-")
+    .replace(/\s*\/\s*/g, "-")
+    .replace(/\s+/g, "-");
+  const aliases = {
+    "home-decor": "decor",
+    "home-goods": "homegoods",
+    "small-appliances": "appliances",
+    "small-appliance": "appliances",
+    "books-media": "books",
+    media: "books",
+    "kids-baby": "kids",
+    baby: "kids",
+    "sporting-goods": "sporting",
+    sports: "sporting",
+    "medical-mobility": "medical",
+    mobility: "medical",
+    "tools-garage": "tools",
+    garage: "tools",
+    clearance: "scratch-dent",
+    "as-is": "scratch-dent",
+    "scratch/dent": "scratch-dent",
+    "outdoor-garden": "outdoor"
+  };
+  const directCategory = aliases[direct] || direct;
+  if (PRICING_CATEGORIES.includes(directCategory)) return directCategory;
+
+  const text = [value, ...context].filter(Boolean).join(" ").toLowerCase();
+  const rules = [
+    { category: "electronics", pattern: /\b(electronics?|radio|stereo|receiver|speaker|subwoofer|turntable|television|tv|camera|lens|vcr|dvd|cd player|laptop|tablet|phone|monitor|printer|console|gaming|remote|amp|amplifier)\b/ },
+    { category: "tools", pattern: /\b(tool|tools|drill|saw|wrench|socket|clamp|compressor|ladder|garage|hardware|workbench)\b/ },
+    { category: "furniture", pattern: /\b(furniture|dresser|chair|table|cabinet|desk|sofa|couch|shelf|shelves|nightstand|bed|crib)\b/ },
+    { category: "lamps", pattern: /\b(lamp|lamps|lighting|light fixture|shade|chandelier|sconce)\b/ },
+    { category: "glassware", pattern: /\b(glass|glassware|crystal|vase|goblet|decanter|china|pyrex)\b/ },
+    { category: "appliances", pattern: /\b(appliance|appliances|refrigerator|fridge|freezer|washer|dryer|microwave|dehumidifier)\b/ },
+    { category: "housewares", pattern: /\b(housewares|dish|dishes|cookware|pan|pot|kitchen|utensil|sewing machine)\b/ },
+    { category: "homegoods", pattern: /\b(homegoods|home goods|decor|basket|frame|mirror|art|wall hanging|rug|blanket)\b/ },
+    { category: "clothing", pattern: /\b(clothing|clothes|shirt|jacket|coat|shoe|shoes|boots|linen|linens|purse|bag)\b/ },
+    { category: "books", pattern: /\b(book|books|record|records|vinyl|dvd|cd|media|magazine)\b/ },
+    { category: "exercise", pattern: /\b(exercise|fitness|weights|dumbbell|treadmill|workout|elliptical)\b/ },
+    { category: "medical", pattern: /\b(medical|walker|cane|wheelchair|mobility|health|shower chair)\b/ },
+    { category: "kids", pattern: /\b(kid|kids|baby|toy|toys|child|children|stroller|crib|high chair)\b/ },
+    { category: "clocks", pattern: /\b(clock|clocks|watch|timepiece|mantel clock|wall clock)\b/ },
+    { category: "jewelry", pattern: /\b(jewelry|jewellery|necklace|bracelet|ring|earrings|watch|accessories)\b/ },
+    { category: "sporting", pattern: /\b(sport|sporting|golf|bike|bicycle|fishing|camping|ball|baseball|hockey|tennis)\b/ },
+    { category: "seasonal", pattern: /\b(seasonal|holiday|christmas|halloween|easter|patio|summer|winter)\b/ },
+    { category: "auto", pattern: /\b(auto|car|truck|automotive|tire|tires|motor oil|floor mats)\b/ },
+    { category: "collectibles", pattern: /\b(collectible|collectibles|vintage|antique|figurine|brass|coin|stamp|memorabilia)\b/ },
+    { category: "scratch-dent", pattern: /\b(scratch|dent|as-is|repair|parts|project|needs work|broken)\b/ }
+  ];
+  return rules.find((rule) => rule.pattern.test(text))?.category || "furniture";
 }
 
 function allowedCondition(value) {
@@ -609,7 +701,9 @@ function loadLocalEnv() {
     const lines = fs.readFileSync(envPath, "utf8").split(/\r?\n/);
     lines.forEach((line) => {
       const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)=(.*)\s*$/);
-      if (!match || process.env[match[1]]) return;
+      if (!match) return;
+      const existingValue = process.env[match[1]];
+      if (existingValue && (match[1] !== "OPENAI_API_KEY" || looksLikeOpenAiKey(existingValue))) return;
       process.env[match[1]] = match[2].replace(/^["']|["']$/g, "");
     });
   }

@@ -3,8 +3,8 @@ const EMPLOYEE_SESSION_KEY = "vernsEmployeeUnlocked";
 const PASSCODE = "3939";
 const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Muskegon/49441/16076";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-06-03-today-floor-photos";
-const CONTACT_INFO_VERSION = "2026-06-01-monday-hours";
+const DEMO_CONTENT_VERSION = "2026-06-05-clearance-prices";
+const CONTACT_INFO_VERSION = "2026-06-04-norton-shores-daily-hours";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
   "estate-sale-muskegon-popup-4940091": "assets/img/sale-muskegon-pop-up-tent.jpeg"
@@ -16,22 +16,32 @@ const PHOTO_CATEGORY_FILTERS = [
   { value: "tools", label: "Tools", icon: "wrench", keywords: ["tool", "tools", "drill", "saw", "wrench", "garage", "hardware", "clamp"] },
   { value: "glassware", label: "Glassware", icon: "G", keywords: ["glass", "glassware", "vase", "crystal", "bowl", "amber", "china"] },
   { value: "housewares", label: "Housewares", icon: "H", keywords: ["housewares", "dish", "dishes", "kitchen", "pan", "cookware", "bowl", "utensil"] },
+  { value: "appliances", label: "Appliances", icon: "AP", keywords: ["appliance", "appliances", "refrigerator", "freezer", "washer", "dryer", "microwave"] },
   { value: "homegoods", label: "Home Goods", icon: "HG", keywords: ["decor", "home", "homegoods", "basket", "frame", "art", "mirror", "vintage decor"] },
   { value: "clothing", label: "Clothing", icon: "C", keywords: ["clothing", "clothes", "shirt", "jacket", "linen", "linens", "coat", "shoe"] },
   { value: "books", label: "Books", icon: "B", keywords: ["book", "books", "media", "record", "vinyl", "dvd", "cd"] },
   { value: "exercise", label: "Exercise", icon: "EX", keywords: ["exercise", "fitness", "weights", "bike", "treadmill", "workout"] },
-  { value: "medical", label: "Medical", icon: "+", keywords: ["medical", "walker", "cane", "wheelchair", "health", "mobility"] },
-  { value: "kids", label: "Kids", icon: "K", keywords: ["kids", "kid", "toy", "toys", "crib", "baby", "child", "children"] },
+  { value: "medical", label: "Medical / Mobility", icon: "+", keywords: ["medical", "walker", "cane", "wheelchair", "health", "mobility"] },
+  { value: "kids", label: "Kids / Toys", icon: "K", keywords: ["kids", "kid", "toy", "toys", "crib", "baby", "child", "children"] },
   { value: "electronics", label: "Electronics", icon: "EL", keywords: ["electronics", "radio", "tv", "stereo", "speaker", "camera", "tested"] },
   { value: "clocks", label: "Clocks", icon: "CL", keywords: ["clock", "clocks", "watch", "timepiece"] },
   { value: "sporting", label: "Sporting Goods", icon: "SP", keywords: ["sport", "sporting", "golf", "bike", "fishing", "camping", "ball"] },
   { value: "seasonal", label: "Seasonal", icon: "SN", keywords: ["seasonal", "holiday", "christmas", "halloween", "patio", "summer", "winter"] },
   { value: "auto", label: "Auto", icon: "AU", keywords: ["auto", "car", "truck", "automotive", "garage", "tire"] },
   { value: "collectibles", label: "Collectibles", icon: "*", keywords: ["collectible", "collectibles", "vintage", "brass", "figurine", "antique", "estate"] },
-  { value: "scratch-dent", label: "Scratch/Dent", icon: "!", keywords: ["scratch", "dent", "as-is", "repair", "project", "needs work"] }
+  { value: "scratch-dent", label: "Clearance", icon: "TAG", keywords: ["clearance", "yellow", "markdown", "scratch", "dent", "as-is", "repair", "project", "needs work"] }
 ];
 const POPULAR_PHOTO_FILTERS = ["all", "furniture", "glassware", "tools", "clocks", "sporting"];
 const PUBLIC_GALLERY_ALL_LIMIT = 3;
+const DEPRECATED_PHOTO_ITEM_IDS = new Set([
+  "starter-photo-gallery-1",
+  "starter-photo-special-1",
+  "starter-photo-featured-1",
+  "starter-photo-gallery-2",
+  "today-2026-06-03-img-4163",
+  "today-2026-06-03-img-4164",
+  "today-2026-06-03-img-4165"
+]);
 
 let state = loadState();
 let marketplaceFilter = "all";
@@ -114,18 +124,18 @@ function normalizeState(nextState) {
   const rawSettings = nextState.settings || {};
   const settings = { ...starter.settings, ...rawSettings };
   if (rawSettings.contactInfoVersion !== CONTACT_INFO_VERSION) {
-    settings.address = isOldPlaceholder(rawSettings.address) ? starter.settings.address : settings.address;
+    settings.address = isOldAddress(rawSettings.address) ? starter.settings.address : settings.address;
     settings.phone = isOldPlaceholder(rawSettings.phone) ? starter.settings.phone : settings.phone;
     settings.email = isOldPlaceholder(rawSettings.email) ? starter.settings.email : settings.email;
     settings.facebookUrl = rawSettings.facebookUrl || starter.settings.facebookUrl;
     settings.hours = isOldHours(rawSettings.hours) ? starter.settings.hours : settings.hours;
     settings.shortHours = isOldShortHours(rawSettings.shortHours) ? starter.settings.shortHours : settings.shortHours;
-    settings.location = !rawSettings.location || rawSettings.location === "Muskegon area" ? starter.settings.location : settings.location;
+    settings.location = isOldLocation(rawSettings.location) ? starter.settings.location : settings.location;
     settings.contactInfoVersion = CONTACT_INFO_VERSION;
   }
   let featured = Array.isArray(nextState.featured) ? nextState.featured : starter.featured;
   let specials = Array.isArray(nextState.specials) ? nextState.specials : starter.specials;
-  let photoItems = Array.isArray(nextState.photoItems) ? nextState.photoItems : starter.photoItems;
+  let photoItems = removeDeprecatedPhotoItems(Array.isArray(nextState.photoItems) ? nextState.photoItems : starter.photoItems);
   let estateSales = mergeStarterSaleImages(Array.isArray(nextState.estateSales) ? nextState.estateSales : starter.estateSales, starter.estateSales);
   if (rawSettings.saleImageAssignmentVersion !== SALE_IMAGE_ASSIGNMENT_VERSION) {
     estateSales = applySaleImageAssignments(estateSales);
@@ -135,6 +145,7 @@ function normalizeState(nextState) {
     featured = mergeSeedById(featured, starter.featured);
     specials = mergeSeedById(specials, starter.specials);
     photoItems = mergeSeedById(photoItems, starter.photoItems);
+    photoItems = removeDeprecatedPhotoItems(photoItems);
     settings.demoContentVersion = DEMO_CONTENT_VERSION;
   }
 
@@ -150,8 +161,16 @@ function normalizeState(nextState) {
   };
 }
 
+function removeDeprecatedPhotoItems(items) {
+  return items.filter((item) => !DEPRECATED_PHOTO_ITEM_IDS.has(item.id));
+}
+
 function isOldPlaceholder(value) {
   return !value || /placeholder|hello@example|\(000\)/i.test(String(value));
+}
+
+function isOldAddress(value) {
+  return isOldPlaceholder(value) || /Muskegon/i.test(String(value || ""));
 }
 
 function isOldHours(value) {
@@ -159,14 +178,21 @@ function isOldHours(value) {
     || value === "Thu-Sat 10 AM-5 PM"
     || value === "Tuesday-Saturday, 10 AM-5 PM"
     || value === "Thursday-Saturday, 10 AM-5 PM"
-    || value === "Tue-Fri 10 AM-4 PM; Sat 9 AM-4 PM; Sun-Mon Closed";
+    || value === "Tue-Fri 10 AM-4 PM; Sat 9 AM-4 PM; Sun-Mon Closed"
+    || value === "Mon-Fri 10 AM-4 PM; Sat 9 AM-4 PM; Sun Closed";
 }
 
 function isOldShortHours(value) {
   return !value
     || value === "Thu-Sat 10-5"
     || value === "Tue-Fri 10-4; Sat 9-4"
-    || value === "Tue-Fri 10 AM-4 PM; Sat 9 AM-4 PM; Sun-Mon Closed";
+    || value === "Tue-Fri 10 AM-4 PM; Sat 9 AM-4 PM; Sun-Mon Closed"
+    || value === "Mon-Fri 10-4; Sat 9-4";
+}
+
+function isOldLocation(value) {
+  const clean = String(value || "").trim();
+  return !clean || clean === "Muskegon area" || clean === "Muskegon, MI";
 }
 
 function applySaleImageAssignments(sales) {
@@ -292,6 +318,16 @@ function setPhotoFilter(value) {
   if (!getPhotoCategory(value)) return;
   publicGalleryFilter = value;
   renderPublicGallery();
+  scrollPhotoSectionTop();
+}
+
+function scrollPhotoSectionTop() {
+  const section = $("#photos");
+  const target = section ? $(".section-heading", section) || section : null;
+  if (!target) return;
+  requestAnimationFrame(() => {
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 }
 
 function bindEmployeeAccess() {
@@ -439,8 +475,8 @@ function renderSettings() {
   $("[data-current-year]").textContent = new Date().getFullYear();
   $("[data-business-hours]").textContent = settings.shortHours || settings.hours;
   const locationLabel = $("[data-business-location-label]");
-  if (locationLabel) locationLabel.textContent = settings.location || "Muskegon area";
-  else $("[data-business-location]").textContent = settings.location || "Muskegon area";
+  if (locationLabel) locationLabel.textContent = settings.location || "Norton Shores, MI";
+  else $("[data-business-location]").textContent = settings.location || "Norton Shores, MI";
   $$("[data-business-address]").forEach((item) => {
     item.textContent = settings.address;
   });
@@ -528,7 +564,7 @@ function renderSettings() {
 }
 
 function directionsUrl(address) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || "Vern's Estate Sale Warehouse Muskegon MI")}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || "Vern's Estate Sale Warehouse Norton Shores MI")}`;
 }
 
 function isEstateSalesUrl(value) {
@@ -687,7 +723,7 @@ function renderPublicGallery() {
     .filter((item) => photoItemMatchesFilter(item, publicGalleryFilter));
   const visibleItems = publicGalleryFilter === "all" ? items.slice(0, PUBLIC_GALLERY_ALL_LIMIT) : items;
   grid.classList.toggle("is-expanded-category", publicGalleryFilter !== "all");
-  grid.replaceChildren(...visibleItems.map(renderPublicItemCard));
+  grid.replaceChildren(...(visibleItems.length ? visibleItems.map(renderPublicItemCard) : [renderComingSoonCategoryCard(getPhotoCategory(publicGalleryFilter))]));
   const note = $("[data-photo-result-note]");
   if (!note) return;
   const active = getPhotoCategory(publicGalleryFilter);
@@ -706,7 +742,12 @@ function renderPublicItemCard(item) {
   const card = articleEl("item-card");
   const itemType = photoItemType(item);
   const category = getPhotoCategory(itemType);
-  const linksToCategory = item.category !== "clearance" && category?.value && category.value !== "all";
+  const linksToCategory = publicGalleryFilter === "all" && item.category !== "clearance" && category?.value && category.value !== "all";
+  const categoryLabel = photoItemTypeLabel(item);
+  const title = item.title || categoryLabel;
+  const displayTitle = normalizeCardTitle(title) === normalizeCardTitle(categoryLabel)
+    ? "Floor photo"
+    : title;
   if (linksToCategory) {
     card.classList.add("is-category-link");
     card.dataset.photoCardFilter = category.value;
@@ -723,13 +764,34 @@ function renderPublicItemCard(item) {
   }
   card.append(
     itemImageWithOverlay(item),
-    divEl("meta-line", [spanEl("tag", photoItemTypeLabel(item)), item.price ? pEl("price", item.price) : document.createTextNode("")]),
-    headingEl("h3", item.title),
+    divEl("meta-line", [spanEl("tag", categoryLabel), item.price && item.category !== "clearance" ? pEl("price", item.price) : document.createTextNode("")]),
+    headingEl("h3", displayTitle),
     pEl("", item.note || item.tag || "")
   );
   if (linksToCategory) {
     card.append(spanEl("card-category-link", `View ${category.label}`));
   }
+  return card;
+}
+
+function normalizeCardTitle(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function renderComingSoonCategoryCard(category) {
+  const card = articleEl("item-card coming-soon-card");
+  const label = category?.label || "Floor photos";
+  card.append(
+    divEl("item-image-wrap coming-soon-image", [
+      spanEl("coming-soon-mark", "+")
+    ]),
+    divEl("meta-line", [spanEl("tag", label)]),
+    headingEl("h3", `${label} coming soon`),
+    pEl("", "More floor photos will be added here as staff tags new items.")
+  );
   return card;
 }
 
@@ -869,6 +931,12 @@ function renderVisitHours(hoursText) {
   if (!hoursWrap) return;
 
   const normalized = String(hoursText || "").replace(/\s+/g, " ");
+  if (/every day|daily/i.test(normalized) && /9\s*(AM)?-?5\s*PM/i.test(normalized)) {
+    hoursWrap.replaceChildren(
+      hoursChipEl("hours-everyday", "Every day", "9 AM-5 PM")
+    );
+    return;
+  }
   if (/Mon-Fri/i.test(normalized) && /Sat/i.test(normalized) && /Sun/i.test(normalized)) {
     hoursWrap.replaceChildren(
       hoursChipEl("hours-weekday", "Monday-Friday", "10 AM-4 PM"),
@@ -908,7 +976,7 @@ function resetPricingPhotoPreview() {
     preview.alt = "Selected pricing item preview";
   }
   const status = $("[data-pricing-ai-status]");
-  if (status) status.textContent = "Take a picture, then let AI price it.";
+  if (status) status.textContent = "Take a picture, then let AI fill the form.";
   const overlay = $("[data-pricing-clearance-overlay]");
   if (overlay) overlay.hidden = true;
 }
@@ -932,6 +1000,24 @@ async function pricePhotoWithAi(form) {
 
   status.textContent = "Reading the photo and building thrift prices...";
   const endpoint = state.settings.aiEndpoint || "/api/price-photo";
+  const endpointWarning = aiEndpointWarning(endpoint);
+  if (endpointWarning) {
+    const fallback = localPricingSuggestion({
+      hint: form.hint.value,
+      category: form.category.value,
+      condition: form.condition.value
+    });
+    pricingAiSuggestion = {
+      ...fallback,
+      source: "local-fallback",
+      notes: endpointWarning,
+      priceBasis: "Local fallback because the AI endpoint is not reachable from this page."
+    };
+    applyPricingSuggestion(form, pricingAiSuggestion);
+    status.textContent = endpointWarning;
+    return;
+  }
+
   const payload = new FormData();
   payload.append("hint", form.hint.value.trim());
   payload.append("category", form.category.value);
@@ -951,7 +1037,7 @@ async function pricePhotoWithAi(form) {
     pricingAiSuggestion = data.result || data;
     applyPricingSuggestion(form, pricingAiSuggestion);
     status.textContent = pricingAiSuggestion.source === "fallback"
-      ? "Local fallback price added. Verify before tagging."
+      ? backendFallbackMessage(pricingAiSuggestion)
       : "AI price added. Staff should verify condition before tagging.";
   } catch (error) {
     const fallback = localPricingSuggestion({
@@ -959,15 +1045,64 @@ async function pricePhotoWithAi(form) {
       category: form.category.value,
       condition: form.condition.value
     });
-    pricingAiSuggestion = { ...fallback, source: "local-fallback", notes: error.message };
+    const message = readableAiPricingError(error);
+    pricingAiSuggestion = {
+      ...fallback,
+      source: "local-fallback",
+      notes: message,
+      priceBasis: "Local fallback because the AI endpoint did not answer."
+    };
     applyPricingSuggestion(form, pricingAiSuggestion);
-    status.textContent = "AI endpoint was not available, so I used a local fallback price.";
+    status.textContent = message;
   }
 }
 
+function aiEndpointWarning(endpoint) {
+  if (window.location.protocol === "file:" && String(endpoint || "").startsWith("/")) {
+    return "AI pricing needs the Vern server link, not the raw file. Local fallback filled the form for now.";
+  }
+  return "";
+}
+
+function readableAiPricingError(error) {
+  const message = String(error?.message || "");
+  if (/Failed to fetch|NetworkError|Load failed/i.test(message)) {
+    return "AI pricing could not reach the Vern server. Local fallback filled the form for now.";
+  }
+  if (/not found|404/i.test(message)) {
+    return "AI pricing is not available on this page link yet. Local fallback filled the form for now.";
+  }
+  if (/OPENAI_API_KEY/i.test(message)) {
+    return "The Vern server is running, but the AI key is not configured there. Local fallback filled the form for now.";
+  }
+  if (/timed out|timeout|AbortError/i.test(message)) {
+    return "AI pricing timed out. Local fallback filled the form; try one clear photo again.";
+  }
+  return message || "AI pricing was unavailable. Local fallback filled the form for now.";
+}
+
+function backendFallbackMessage(suggestion) {
+  if (/OPENAI_API_KEY/i.test(suggestion.notes || "")) {
+    return "The Vern server is running, but the AI key is not configured there. Local fallback filled the form.";
+  }
+  if (/unreadable|Retake|No readable image/i.test(`${suggestion.notes || ""} ${suggestion.priceBasis || ""}`)) {
+    return "The photo was not readable enough, so local fallback filled the form. Try one clearer picture.";
+  }
+  return "Backend fallback price added. Staff should verify before tagging.";
+}
+
 function applyPricingSuggestion(form, suggestion) {
+  const normalizedCategory = normalizePricingCategory(
+    suggestion.category,
+    suggestion.itemName,
+    suggestion.title,
+    suggestion.marketplaceTitle,
+    suggestion.notes,
+    form.hint?.value
+  );
+  if (normalizedCategory) suggestion.category = normalizedCategory;
   form.name.value = suggestion.itemName || suggestion.title || form.name.value || "Estate sale warehouse item";
-  if (suggestion.category && window.VERNS_PRICE_GUIDE[suggestion.category]) form.category.value = suggestion.category;
+  if (normalizedCategory && window.VERNS_PRICE_GUIDE[normalizedCategory]) form.category.value = normalizedCategory;
   if (suggestion.condition) form.condition.value = normalizedConditionValue(suggestion.condition);
   form.marketValue.value = moneyValue(suggestion.marketValue || suggestion.likelySellingPrice || suggestion.estimatedHigh);
   form.retailValue.value = moneyValue(suggestion.retailValue || suggestion.originalRetailValue);
@@ -982,15 +1117,74 @@ function applyPricingSuggestion(form, suggestion) {
   updatePricingOverlayPreview(form);
 }
 
+function normalizePricingCategory(...values) {
+  const direct = String(values[0] || "")
+    .trim()
+    .toLowerCase()
+    .replace(/_/g, "-")
+    .replace(/\s*&\s*/g, "-")
+    .replace(/\s*\/\s*/g, "-")
+    .replace(/\s+/g, "-");
+  const directAliases = {
+    "home-decor": "decor",
+    "home-goods": "homegoods",
+    "books-media": "books",
+    "media": "books",
+    "small-appliances": "appliances",
+    "small-appliance": "appliances",
+    "kids-baby": "kids",
+    "baby": "kids",
+    "sporting-goods": "sporting",
+    "sports": "sporting",
+    "medical-mobility": "medical",
+    "mobility": "medical",
+    "tools-garage": "tools",
+    "garage": "tools",
+    "clearance": "scratch-dent",
+    "scratch-dent": "scratch-dent",
+    "scratch/dent": "scratch-dent",
+    "as-is": "scratch-dent",
+    "outdoor-garden": "outdoor"
+  };
+  const directCategory = directAliases[direct] || direct;
+  if (window.VERNS_PRICE_GUIDE[directCategory]) return directCategory;
+
+  const text = values.filter(Boolean).join(" ").toLowerCase();
+  const rules = [
+    { category: "electronics", pattern: /\b(electronics?|radio|stereo|receiver|speaker|subwoofer|turntable|television|tv|camera|lens|vcr|dvd|cd player|laptop|tablet|phone|monitor|printer|console|gaming|remote|amp|amplifier)\b/ },
+    { category: "tools", pattern: /\b(tool|tools|drill|saw|wrench|socket|clamp|compressor|ladder|garage|hardware|workbench)\b/ },
+    { category: "furniture", pattern: /\b(furniture|dresser|chair|table|cabinet|desk|sofa|couch|shelf|shelves|nightstand|bed|crib)\b/ },
+    { category: "lamps", pattern: /\b(lamp|lamps|lighting|light fixture|shade|chandelier|sconce)\b/ },
+    { category: "glassware", pattern: /\b(glass|glassware|crystal|vase|goblet|decanter|china|pyrex)\b/ },
+    { category: "appliances", pattern: /\b(appliance|appliances|refrigerator|fridge|freezer|washer|dryer|microwave|dehumidifier)\b/ },
+    { category: "housewares", pattern: /\b(housewares|dish|dishes|cookware|pan|pot|kitchen|utensil|sewing machine)\b/ },
+    { category: "homegoods", pattern: /\b(homegoods|home goods|decor|basket|frame|mirror|art|wall hanging|rug|blanket)\b/ },
+    { category: "clothing", pattern: /\b(clothing|clothes|shirt|jacket|coat|shoe|shoes|boots|linen|linens|purse|bag)\b/ },
+    { category: "books", pattern: /\b(book|books|record|records|vinyl|dvd|cd|media|magazine)\b/ },
+    { category: "exercise", pattern: /\b(exercise|fitness|weights|dumbbell|treadmill|workout|elliptical)\b/ },
+    { category: "medical", pattern: /\b(medical|walker|cane|wheelchair|mobility|health|shower chair)\b/ },
+    { category: "kids", pattern: /\b(kid|kids|baby|toy|toys|child|children|stroller|crib|high chair)\b/ },
+    { category: "clocks", pattern: /\b(clock|clocks|watch|timepiece|mantel clock|wall clock)\b/ },
+    { category: "jewelry", pattern: /\b(jewelry|jewellery|necklace|bracelet|ring|earrings|watch|accessories)\b/ },
+    { category: "sporting", pattern: /\b(sport|sporting|golf|bike|bicycle|fishing|camping|ball|baseball|hockey|tennis)\b/ },
+    { category: "seasonal", pattern: /\b(seasonal|holiday|christmas|halloween|easter|patio|summer|winter)\b/ },
+    { category: "auto", pattern: /\b(auto|car|truck|automotive|tire|tires|motor oil|floor mats)\b/ },
+    { category: "collectibles", pattern: /\b(collectible|collectibles|vintage|antique|figurine|brass|coin|stamp|memorabilia)\b/ },
+    { category: "scratch-dent", pattern: /\b(scratch|dent|as-is|repair|parts|project|needs work|broken)\b/ }
+  ];
+  return rules.find((rule) => rule.pattern.test(text))?.category || "furniture";
+}
+
 function localPricingSuggestion({ hint, category, condition }) {
-  const guide = window.VERNS_PRICE_GUIDE[category] || window.VERNS_PRICE_GUIDE.furniture;
+  const normalizedCategory = normalizePricingCategory(category, hint) || "furniture";
+  const guide = window.VERNS_PRICE_GUIDE[normalizedCategory] || window.VERNS_PRICE_GUIDE.furniture;
   const multiplier = window.VERNS_CONDITION_MULTIPLIERS[condition] || 1;
   const low = Math.max(1, Math.round(guide.market[0] * multiplier));
   const high = Math.max(low + 1, Math.round(guide.market[1] * multiplier));
   const marketValue = Math.round((low + high) / 2);
   return buildPricingSuggestion({
     itemName: hint || `${guide.label} item`,
-    category,
+    category: normalizedCategory,
     condition,
     marketValue,
     retailValue: Math.round(marketValue * 1.6),
@@ -1001,6 +1195,7 @@ function localPricingSuggestion({ hint, category, condition }) {
 }
 
 function buildPricingSuggestion(raw) {
+  const category = normalizePricingCategory(raw.category, raw.itemName, raw.notes) || "furniture";
   const marketValue = Number(raw.marketValue || raw.likelySellingPrice || raw.estimatedHigh) || 0;
   const retailValue = Number(raw.retailValue || raw.originalRetailValue) || 0;
   const basisValue = state.settings.defaultPricingBasis === "retail" && retailValue > 0 ? retailValue : marketValue;
@@ -1009,6 +1204,7 @@ function buildPricingSuggestion(raw) {
   const clearanceMarkdown = clampPercent(state.settings.clearanceMarkdownPercent, 75);
   return {
     ...raw,
+    category,
     marketValue,
     retailValue,
     storePrice: roundPrice(basisValue * (1 - thriftMarkdown / 100)),
@@ -1044,6 +1240,7 @@ function publishPricedItem(item, destination) {
   state.photoItems.unshift({
     id: createId("photo"),
     category: photoCategory,
+    itemType: item.category,
     title: item.name,
     price: destination === "clearance" ? item.clearancePrice || item.storePrice : item.storePrice,
     tag: destination === "clearance" ? "Last chance" : destination === "featured" ? "Fresh find" : destination === "special" ? "Warehouse special" : "Floor photo",

@@ -16,10 +16,10 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="assets/img/app/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="assets/img/app/apple-touch-icon.png" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=20260604-photo-card-links" />
-    <script src="assets/js/today-photo-items.js?v=20260603-floor-photos" defer></script>
-    <script src="assets/js/site-data.js?v=20260603-floor-photos" defer></script>
-    <script src="assets/js/app.js?v=20260604-expanded-photo-categories" defer></script>
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260604-norton-shores-hours" />
+    <script src="assets/js/today-photo-items.js?v=20260605-clearance-prices" defer></script>
+    <script src="assets/js/site-data.js?v=20260604-norton-shores-hours" defer></script>
+    <script src="assets/js/app.js?v=20260604-norton-shores-hours" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -70,7 +70,7 @@
           <dl class="quick-facts" aria-label="Warehouse quick facts">
             <div>
               <dt>Hours</dt>
-              <dd data-business-hours>Thu-Sat 10-5</dd>
+              <dd data-business-hours>Daily 9-5</dd>
             </div>
             <div>
               <dt>Location</dt>
@@ -79,12 +79,12 @@
                   class="hero-map-link"
                   data-business-location
                   data-business-directions
-                  href="https://www.google.com/maps/search/?api=1&query=Vern%27s%20Estate%20Sale%20Warehouse%20Muskegon%20MI"
+                  href="https://www.google.com/maps/search/?api=1&query=Vern%27s%20Estate%20Sale%20Warehouse%20Norton%20Shores%20MI"
                   target="_blank"
                   rel="noopener"
                   aria-label="Open Vern's Estate Sale Warehouse location in Google Maps"
                 >
-                  <span data-business-location-label>Muskegon area</span>
+                  <span data-business-location-label>Norton Shores, MI</span>
                   <span class="hero-map-icon map-mark" aria-hidden="true">
                     <img src="assets/img/maps-app-style-icon.svg" alt="" />
                   </span>
@@ -202,18 +202,16 @@
                   class="visit-address-link"
                   data-business-address
                   data-business-directions
-                  href="https://www.google.com/maps/search/?api=1&query=1663%20West%20Sherman%20Boulevard%2C%20Muskegon%2C%20MI%2049441"
+                  href="https://www.google.com/maps/search/?api=1&query=1663%20West%20Sherman%20Boulevard%2C%20Norton%20Shores%2C%20MI%2049441"
                   target="_blank"
                   rel="noopener"
-                >1663 West Sherman Boulevard, Muskegon, MI 49441</a>
+                >1663 West Sherman Boulevard, Norton Shores, MI 49441</a>
               </dd>
             </div>
             <div class="visit-detail visit-hours-detail">
               <dt><span class="visit-detail-icon" aria-hidden="true">◷</span> Hours</dt>
               <dd class="visit-hours-grid" data-business-hours-full>
-                <span class="hours-chip hours-weekday"><strong>Monday-Friday</strong><span>10 AM-4 PM</span></span>
-                <span class="hours-chip hours-saturday"><strong>Saturday</strong><span>9 AM-4 PM</span></span>
-                <span class="hours-chip hours-sunday"><strong>Sunday</strong><span>Closed</span></span>
+                <span class="hours-chip hours-everyday"><strong>Every day</strong><span>9 AM-5 PM</span></span>
               </dd>
             </div>
           </dl>
@@ -222,7 +220,7 @@
 
       <section class="donation-bar" id="donate" aria-label="Support 1M Project">
         <a class="donation-logo-link" href="https://1mproject.org/" target="_blank" rel="noopener" aria-label="Open 1M Project">
-          <img src="assets/img/1m-project-reference-style.svg?v=20260601-tight" alt="1M Project" />
+          <img src="assets/img/1m-project-reference-style.svg?v=20260604-logo-style" alt="1M Project" />
         </a>
         <div class="donation-copy">
           <p class="eyebrow">Community mission</p>
@@ -289,8 +287,16 @@
         <div class="tool-grid">
           <form class="tool-card" data-pricing-form>
             <h3>AI thrift pricing camera</h3>
-            <label class="file-drop">
-              Take item picture
+            <label class="file-drop pricing-camera-drop">
+              <span class="pricing-camera-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M8.6 5 10.2 3h3.6l1.6 2H19a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h3.6Zm3.4 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0-2a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" />
+                </svg>
+              </span>
+              <span class="pricing-camera-copy">
+                <strong>Take item picture</strong>
+                <small>Use one clear photo; AI will name, categorize, and price it.</small>
+              </span>
               <input name="photo" type="file" accept="image/*" capture="environment" data-pricing-photo-input />
             </label>
             <div class="ai-photo-preview pricing-photo-preview">
@@ -299,6 +305,13 @@
                 <strong data-pricing-overlay-price>$</strong>
                 <span>Clearance</span>
               </div>
+            </div>
+            <div class="pricing-ai-action-stack">
+              <button class="btn btn-dark pricing-ai-primary-button" type="button" data-price-photo-ai>
+                <span class="pricing-ai-badge" aria-hidden="true">AI</span>
+                <span>Price from photo</span>
+              </button>
+              <div class="ai-status pricing-ai-status" data-pricing-ai-status>Take a picture, then let AI fill the form.</div>
             </div>
             <label>
               Item hint
@@ -374,9 +387,7 @@
                 <option value="gallery">General floor photo</option>
               </select>
             </label>
-            <div class="ai-status pricing-ai-status" data-pricing-ai-status>Take a picture, then let AI price it.</div>
             <div class="button-row">
-              <button class="btn btn-dark" type="button" data-price-photo-ai>AI price from photo</button>
               <button class="btn btn-quiet" type="button" data-suggest-price>Local fallback</button>
               <button class="btn btn-gold" type="submit">Save / add item</button>
             </div>
@@ -562,7 +573,7 @@
             </label>
             <label>
               Hours
-              <input name="hours" placeholder="Mon-Fri 10 AM-4 PM; Sat 9 AM-4 PM; Sun Closed" />
+              <input name="hours" placeholder="Every day 9 AM-5 PM" />
             </label>
             <label>
               Optional AI image endpoint
