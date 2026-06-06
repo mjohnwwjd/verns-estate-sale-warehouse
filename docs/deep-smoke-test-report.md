@@ -9,6 +9,7 @@ Date: 2026-06-06
 - `npm run smoke` passed.
 - Local rendered browser smoke used `http://127.0.0.1:18097/?v=20260606-deep-smoke`.
 - Follow-up EstateSales.NET button smoke used `http://127.0.0.1:18098/?v=20260606-upcoming-sale`.
+- Staff login/dashboard smoke used `http://127.0.0.1:18100/?v=20260606-sale-ended-staff-login`.
 
 ## Static Smoke Coverage
 
@@ -34,6 +35,26 @@ Date: 2026-06-06
 - Asset cache tags verified:
   - Deep staff/link pass: `20260606-deep-smoke`
   - EstateSales.NET sale-link follow-up: `20260606-upcoming-sale`
+  - Sale-ended plus staff-login follow-up: `20260606-sale-ended-staff-login`
+
+## Staff Login And Dashboard Follow-up
+
+- Employee login now requires username and passcode.
+- Any non-manager username with the staff passcode lands on Dashboard and is scoped to that name.
+- `mike` and `vern` are manager usernames with the existing staff passcode.
+- Regular employee test:
+  - Logged in as `sarah`.
+  - Dashboard opened automatically.
+  - Staff name and employee fields auto-filled as `Sarah`.
+  - Employee fields were locked for Sarah.
+  - Manager, Settings, and Public Content controls were hidden.
+  - Saved one priced item and Sarah's dashboard showed `1 Priced`.
+- Manager test:
+  - Logged in as `mike`.
+  - Header showed `Signed in as Mike · Manager`.
+  - Manager, Settings, and Public Content controls were visible.
+  - Manager view showed Sarah in the roster with `1 saved action`.
+  - Sarah detail showed the priced item she saved.
 
 ## EstateSales.NET Button Follow-up
 
@@ -81,3 +102,8 @@ Date: 2026-06-06
 - Updated public EstateSales.NET buttons to prefer the active sale listing over the company profile.
 - Set the active sale URL to the Norton Shores/Muskegon listing.
 - Bumped homepage, Meet Vern, and service worker cache tags to `20260606-upcoming-sale`.
+- Added username + passcode staff login with session identity.
+- Auto-filled staff/employee fields from the signed-in profile.
+- Scoped regular employee activity lists to their own name.
+- Added manager-only roster access for `mike` and `vern`.
+- Added photo publishing to employee production counts.

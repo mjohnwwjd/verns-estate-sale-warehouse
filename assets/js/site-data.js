@@ -3,7 +3,7 @@ const todayPhotoItems = Array.isArray(window.VERNS_TODAY_PHOTO_ITEMS) ? window.V
 window.VERNS_STARTER_DATA = {
   settings: {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
-    saleUrl: "https://www.estatesales.net/MI/Muskegon/49442/4940091",
+    saleUrl: "",
     embedUrl: "",
     address: "1663 West Sherman Boulevard, Norton Shores, MI 49441",
     phone: "(616) 638-3873",
@@ -18,7 +18,7 @@ window.VERNS_STARTER_DATA = {
     lastSalesSyncAt: "",
     contactInfoVersion: "2026-06-05-hero-facts",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
-    demoContentVersion: "2026-06-05-clearance-gate",
+    demoContentVersion: "2026-06-06-sale-ended",
     thriftMarkdownPercent: 50,
     marketplacePercent: 90,
     clearanceMarkdownPercent: 75,
@@ -44,8 +44,8 @@ window.VERNS_STARTER_DATA = {
       city: "Norton Shores, MI",
       dateSummary: "Jun 5-6, 2026",
       hours: "8:30 AM-5 PM",
-      status: "live",
-      note: "Warehouse pop-up listing. Open EstateSales.NET for current photos and final times.",
+      status: "ended",
+      note: "This pop-up sale has ended. Leftover merchandise moves to Vern's Estate Sale Warehouse, so stop by the store for fresh finds.",
       image: "assets/img/sale-muskegon-pop-up-tent.jpeg",
       lastReviewed: "2026-05-31"
     }

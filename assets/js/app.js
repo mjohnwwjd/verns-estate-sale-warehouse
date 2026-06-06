@@ -1,13 +1,20 @@
 const STORAGE_KEY = "vernsWebsiteStateV1";
 const EMPLOYEE_SESSION_KEY = "vernsEmployeeUnlocked";
+const EMPLOYEE_PROFILE_KEY = "vernsEmployeeProfile";
 const STAFF_NAME_KEY = "vernsStaffName";
 const MANAGER_SESSION_KEY = "vernsManagerUnlocked";
 const PASSCODE = "3939";
 const MANAGER_PASSCODE = PASSCODE;
+const MANAGER_USERNAMES = new Set(["mike", "vern"]);
+const STAFF_ACCOUNT_LABELS = {
+  mike: "Mike",
+  vern: "Vern"
+};
 const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Muskegon/49441/16076";
-const DEFAULT_ESTATE_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
+const DEFAULT_ESTATE_SALE_URL = "";
+const ENDED_POPUP_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-06-06-upcoming-sale-link";
+const DEMO_CONTENT_VERSION = "2026-06-06-sale-ended";
 const CONTACT_INFO_VERSION = "2026-06-05-hero-facts";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -156,7 +163,9 @@ function normalizeState(nextState) {
     estateSales = mergeSeedById(estateSales, starter.estateSales);
     photoItems = mergeSeedById(photoItems, starter.photoItems);
     photoItems = removeDeprecatedPhotoItems(photoItems);
-    if (!getLiveEstateSaleUrl(rawSettings.saleUrl)) settings.saleUrl = starter.settings.saleUrl || DEFAULT_ESTATE_SALE_URL;
+    if (!getLiveEstateSaleUrl(rawSettings.saleUrl) || isEndedPopUpSaleUrl(rawSettings.saleUrl)) {
+      settings.saleUrl = starter.settings.saleUrl || DEFAULT_ESTATE_SALE_URL;
+    }
     settings.demoContentVersion = DEMO_CONTENT_VERSION;
   }
 
@@ -234,6 +243,7 @@ function saveState() {
 }
 
 function renderAll() {
+  syncSignedInEmployeeToUi();
   renderSettings();
   renderEstateSales();
   renderClearance();
@@ -245,6 +255,7 @@ function renderAll() {
   renderCalendarEvents();
   renderContentLists();
   renderPricingSettings();
+  syncSignedInEmployeeToUi();
 }
 
 function bindPublicControls() {
@@ -360,6 +371,8 @@ function bindEmployeeAccess() {
 
   $("[data-employee-trigger]")?.addEventListener("click", () => {
     sessionStorage.removeItem(EMPLOYEE_SESSION_KEY);
+    sessionStorage.removeItem(EMPLOYEE_PROFILE_KEY);
+    sessionStorage.removeItem(MANAGER_SESSION_KEY);
     if (location.hash !== "#employee") {
       history.pushState(null, "", `${location.pathname}${location.search}#employee`);
     }
@@ -375,19 +388,26 @@ function bindEmployeeAccess() {
   $("[data-login-form]")?.addEventListener("submit", (event) => {
     event.preventDefault();
     const form = event.currentTarget;
-    const passcode = new FormData(form).get("passcode");
+    const data = Object.fromEntries(new FormData(form));
+    const passcode = String(data.passcode || "");
+    const profile = employeeProfileFromLogin(data.username);
     if (passcode === PASSCODE) {
       sessionStorage.setItem(EMPLOYEE_SESSION_KEY, "yes");
+      sessionStorage.setItem(EMPLOYEE_PROFILE_KEY, JSON.stringify(profile));
+      sessionStorage.setItem(MANAGER_SESSION_KEY, profile.manager ? "yes" : "no");
+      localStorage.setItem(STAFF_NAME_KEY, profile.name);
       form.reset();
       closeLogin();
-      openEmployeePanel();
+      openEmployeePanel({ tab: "dashboard" });
     } else {
-      $("[data-login-message]").textContent = "Wrong passcode.";
+      $("[data-login-message]").textContent = "Wrong username or passcode.";
     }
   });
 
   $("[data-logout]")?.addEventListener("click", () => {
     sessionStorage.removeItem(EMPLOYEE_SESSION_KEY);
+    sessionStorage.removeItem(EMPLOYEE_PROFILE_KEY);
+    sessionStorage.removeItem(MANAGER_SESSION_KEY);
     closeEmployeePanel();
   });
 
@@ -401,13 +421,13 @@ function bindEmployeeAccess() {
 
 function openLogin() {
   if (sessionStorage.getItem(EMPLOYEE_SESSION_KEY) === "yes") {
-    openEmployeePanel();
+    openEmployeePanel({ tab: "dashboard" });
     return;
   }
   const modal = $("[data-login-modal]");
   modal.hidden = false;
   document.body.classList.add("modal-open");
-  setTimeout(() => $("#employee-passcode")?.focus(), 0);
+  setTimeout(() => $("#employee-username")?.focus(), 0);
 }
 
 function closeLogin() {
@@ -417,10 +437,13 @@ function closeLogin() {
   $("[data-login-message]").textContent = "";
 }
 
-function openEmployeePanel() {
+function openEmployeePanel({ tab = "" } = {}) {
   const panel = $("[data-employee-panel]");
   panel.hidden = false;
   document.body.classList.add("employee-open");
+  syncSignedInEmployeeToUi({ force: true });
+  renderAll();
+  if (tab) setEmployeeTab(tab);
   $("[data-tab-panel].is-active")?.scrollTo({ top: 0 });
 }
 
@@ -431,6 +454,98 @@ function closeEmployeePanel() {
   if (location.hash === "#employee") {
     history.replaceState(null, "", location.pathname + location.search);
   }
+}
+
+function employeeProfileFromLogin(username) {
+  const rawName = String(username || "").trim();
+  const key = normalizeEmployeeName(rawName);
+  const manager = MANAGER_USERNAMES.has(key);
+  return {
+    username: key,
+    name: STAFF_ACCOUNT_LABELS[key] || titleCaseName(rawName || "Employee"),
+    manager
+  };
+}
+
+function currentEmployeeProfile() {
+  if (sessionStorage.getItem(EMPLOYEE_SESSION_KEY) !== "yes") return null;
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(EMPLOYEE_PROFILE_KEY) || "null");
+    if (parsed?.name) return {
+      username: parsed.username || normalizeEmployeeName(parsed.name),
+      name: parsed.name,
+      manager: Boolean(parsed.manager)
+    };
+  } catch {
+    return null;
+  }
+  const name = localStorage.getItem(STAFF_NAME_KEY) || "Employee";
+  return {
+    username: normalizeEmployeeName(name),
+    name,
+    manager: sessionStorage.getItem(MANAGER_SESSION_KEY) === "yes"
+  };
+}
+
+function currentEmployeeName() {
+  return currentEmployeeProfile()?.name || "";
+}
+
+function isManagerSignedIn() {
+  return Boolean(currentEmployeeProfile()?.manager) || sessionStorage.getItem(MANAGER_SESSION_KEY) === "yes";
+}
+
+function syncSignedInEmployeeToUi({ force = false } = {}) {
+  const profile = currentEmployeeProfile();
+  const signedIn = $("[data-current-staff]");
+  if (signedIn) {
+    signedIn.hidden = !profile;
+    signedIn.textContent = profile ? `Signed in as ${profile.name}${profile.manager ? " · Manager" : ""}` : "";
+  }
+
+  $$("[data-manager-only]").forEach((item) => {
+    item.hidden = !profile?.manager;
+  });
+
+  if (!profile) return;
+  const name = profile.name;
+  const manager = profile.manager;
+  localStorage.setItem(STAFF_NAME_KEY, name);
+
+  const staffNameInput = $("[data-staff-name]");
+  if (staffNameInput) {
+    if (force || !staffNameInput.value || staffNameInput.value.trim() === staffNameInput.dataset.signedInName) {
+      staffNameInput.value = name;
+    }
+    staffNameInput.dataset.signedInName = name;
+    staffNameInput.dataset.previousName = name;
+    staffNameInput.readOnly = true;
+    staffNameInput.classList.add("is-locked-staff-field");
+  }
+
+  $$("[data-employee-panel] input[name='employee']").forEach((input) => {
+    if (force || !input.value || input.value.trim() === input.dataset.signedInName || !manager) {
+      input.value = name;
+    }
+    input.dataset.signedInName = name;
+    input.readOnly = !manager;
+    input.classList.toggle("is-locked-staff-field", !manager);
+  });
+
+  if (!manager && ($("[data-tab].is-active")?.dataset.tab === "settings" || $("[data-tab].is-active")?.dataset.tab === "content")) {
+    setEmployeeTab("dashboard");
+  }
+  if (!manager && $("[data-staff-panel].is-active")?.dataset.staffPanel === "manager") {
+    setStaffDashboardView("mine");
+  }
+}
+
+function titleCaseName(value) {
+  return String(value || "")
+    .trim()
+    .split(/\s+/)
+    .map((part) => part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : "")
+    .join(" ");
 }
 
 function settleHashScroll() {
@@ -524,14 +639,19 @@ function scrollClearanceShelfIntoView(section) {
 
 function bindEmployeeTabs() {
   $$("[data-tab]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const tab = button.dataset.tab;
-      $$("[data-tab]").forEach((item) => item.classList.toggle("is-active", item === button));
-      $$("[data-tab-panel]").forEach((panel) => {
-        panel.classList.toggle("is-active", panel.dataset.tabPanel === tab);
-        if (panel.dataset.tabPanel === tab) panel.scrollTop = 0;
-      });
-    });
+    button.addEventListener("click", () => setEmployeeTab(button.dataset.tab));
+  });
+}
+
+function setEmployeeTab(tab) {
+  if (!tab) return;
+  if (!isManagerSignedIn() && ["settings", "content"].includes(tab)) tab = "dashboard";
+  $$("[data-tab]").forEach((item) => {
+    item.classList.toggle("is-active", item.dataset.tab === tab);
+  });
+  $$("[data-tab-panel]").forEach((panel) => {
+    panel.classList.toggle("is-active", panel.dataset.tabPanel === tab);
+    if (panel.dataset.tabPanel === tab) panel.scrollTop = 0;
   });
 }
 
@@ -672,9 +792,18 @@ function getEstateCompanyUrl(value) {
 
 function getLiveEstateSaleUrl(value) {
   if (!isEstateSalesUrl(value)) return "";
+  if (isEndedPopUpSaleUrl(value)) return "";
   const url = new URL(value);
   const path = url.pathname.replace(/\/+$/, "");
   return path && !path.startsWith("/companies") ? value : "";
+}
+
+function isEndedPopUpSaleUrl(value) {
+  return normalizeUrlForCompare(value) === normalizeUrlForCompare(ENDED_POPUP_SALE_URL);
+}
+
+function normalizeUrlForCompare(value) {
+  return String(value || "").trim().replace(/\/+$/, "").toLowerCase();
 }
 
 function displayUrl(value) {
@@ -702,7 +831,7 @@ function renderEstateSales() {
   const cards = sales.map(renderEstateSaleCard);
   if (sales.length < 3) cards.push(renderComingSoonSaleCard());
   grid.replaceChildren(...cards);
-  if (note) note.textContent = "Times can move. Open the yellow buttons for the live EstateSales.NET listings.";
+  if (note) note.textContent = "Times can move. Open the yellow buttons for official EstateSales.NET listings and final terms.";
 }
 
 function renderComingSoonSaleCard() {
@@ -766,7 +895,7 @@ function getVisibleEstateSales() {
 }
 
 function getPrimaryEstateSaleUrl() {
-  return getVisibleEstateSales()[0]?.url || "";
+  return getVisibleEstateSales().find((sale) => ["upcoming", "live"].includes(sale.status))?.url || "";
 }
 
 function saleSortValue(sale) {
@@ -792,6 +921,7 @@ function saleStatusLabel(status) {
   return {
     upcoming: "Upcoming",
     live: "Live now",
+    ended: "Sale ended",
     past: "Past",
     canceled: "Canceled"
   }[status] || "Upcoming";
@@ -996,7 +1126,7 @@ function bindPricingTool() {
       clearancePrice: data.clearancePrice.trim(),
       notes: data.notes.trim(),
       status: data.status,
-      employee: data.employee.trim(),
+      employee: employeeNameForSave(data.employee),
       destination: data.destination,
       image: uploaded,
       ai: pricingAiSuggestion,
@@ -1537,6 +1667,7 @@ function publishPricedItem(item, destination) {
     price: destination === "clearance" ? item.clearancePrice || item.storePrice : item.storePrice,
     tag: destination === "clearance" ? "Last chance" : destination === "featured" ? "Fresh find" : destination === "special" ? "Warehouse special" : "Floor photo",
     note: item.notes || "Fresh from Vern's Estate Sale Warehouse.",
+    employee: item.employee,
     image,
     createdAt: new Date().toISOString()
   });
@@ -1578,8 +1709,9 @@ function priceRange(range, multiplier) {
 function renderPricingTable() {
   const body = $("[data-pricing-table]");
   if (!body) return;
+  const items = itemsVisibleToCurrentEmployee(state.pricedItems);
   body.replaceChildren(
-    ...state.pricedItems.slice(0, 20).map((item) => {
+    ...items.slice(0, 20).map((item) => {
       const row = document.createElement("tr");
       row.append(
         cell(`${item.name}\n${categoryLabel(item.category)} / ${conditionLabel(item.condition)}`),
@@ -1615,7 +1747,7 @@ function bindMarketplaceTool() {
       price: data.price.trim(),
       title: data.title.trim(),
       description: data.description.trim(),
-      employee: data.employee.trim(),
+      employee: employeeNameForSave(data.employee),
       status: data.status,
       postedDate: data.postedDate,
       soldPrice: data.soldPrice.trim(),
@@ -1718,7 +1850,7 @@ function renderPricedItemSelect() {
   const select = $("[data-priced-item-select]");
   if (!select) return;
   select.replaceChildren(optionEl("", "Choose saved item or type below"));
-  state.pricedItems.slice(0, 80).forEach((item) => {
+  itemsVisibleToCurrentEmployee(state.pricedItems).slice(0, 80).forEach((item) => {
     select.append(optionEl(item.id, `${item.name} - ${item.marketPrice}`));
   });
 }
@@ -1726,7 +1858,8 @@ function renderPricedItemSelect() {
 function renderMarketplaceList() {
   const list = $("[data-marketplace-list]");
   if (!list) return;
-  const items = marketplaceFilter === "all" ? state.marketplace : state.marketplace.filter((item) => item.status === marketplaceFilter);
+  const scopedItems = itemsVisibleToCurrentEmployee(state.marketplace);
+  const items = marketplaceFilter === "all" ? scopedItems : scopedItems.filter((item) => item.status === marketplaceFilter);
   if (!items.length) {
     list.replaceChildren(pEl("", "No Marketplace items in this view yet."));
     return;
@@ -1752,7 +1885,7 @@ function bindDashboardTool() {
   const staffNameInput = $("[data-staff-name]");
 
   if (staffNameInput) {
-    const savedName = localStorage.getItem(STAFF_NAME_KEY) || "";
+    const savedName = currentEmployeeName() || localStorage.getItem(STAFF_NAME_KEY) || "";
     staffNameInput.value = savedName;
     staffNameInput.dataset.previousName = savedName;
     syncTimeoffEmployeeFromStaffName(form, savedName);
@@ -1772,17 +1905,17 @@ function bindDashboardTool() {
 
   $("[data-manager-unlock]")?.addEventListener("click", () => {
     const code = $("[data-manager-code]")?.value || "";
-    if (code === MANAGER_PASSCODE) {
+    if (code === MANAGER_PASSCODE && isManagerSignedIn()) {
       sessionStorage.setItem(MANAGER_SESSION_KEY, "yes");
       unlockManagerDashboard();
       renderDashboard();
     } else {
       const message = $("[data-manager-message]");
-      if (message) message.textContent = "Wrong manager code.";
+      if (message) message.textContent = "Manager view is for Mike or Vern logins.";
     }
   });
 
-  if (sessionStorage.getItem(MANAGER_SESSION_KEY) === "yes") unlockManagerDashboard();
+  if (isManagerSignedIn()) unlockManagerDashboard();
 
   if (!form) {
     renderDashboard();
@@ -1837,13 +1970,15 @@ function syncTimeoffEmployeeFromStaffName(form, name, previousName = "") {
 }
 
 function setStaffDashboardView(view) {
+  if (view === "manager" && !isManagerSignedIn()) view = "mine";
   $$("[data-staff-view]").forEach((button) => {
     button.classList.toggle("is-active", button.dataset.staffView === view);
   });
   $$("[data-staff-panel]").forEach((panel) => {
     panel.classList.toggle("is-active", panel.dataset.staffPanel === view);
   });
-  if (view === "manager" && sessionStorage.getItem(MANAGER_SESSION_KEY) === "yes") unlockManagerDashboard();
+  if (view === "manager" && isManagerSignedIn()) unlockManagerDashboard();
+  renderDashboard();
 }
 
 function unlockManagerDashboard() {
@@ -1859,7 +1994,7 @@ function saveTimeoffRequest(form) {
   const data = Object.fromEntries(new FormData(form));
   state.timeoff.unshift({
     id: createId("time"),
-    employee: data.employee.trim(),
+    employee: employeeNameForSave(data.employee),
     start: data.start,
     end: data.end,
     notes: data.notes.trim(),
@@ -1875,7 +2010,7 @@ function saveTimeoffRequest(form) {
 }
 
 function dashboardStaffName() {
-  return ($("[data-staff-name]")?.value || localStorage.getItem(STAFF_NAME_KEY) || "").trim();
+  return (currentEmployeeName() || $("[data-staff-name]")?.value || localStorage.getItem(STAFF_NAME_KEY) || "").trim();
 }
 
 function updateTimeoffSendLinks(form) {
@@ -1953,7 +2088,7 @@ function bindCalendarTool() {
       type: data.type,
       status: data.status,
       location: data.location.trim(),
-      employee: data.employee.trim(),
+      employee: employeeNameForSave(data.employee),
       notes: data.notes.trim(),
       createdAt: new Date().toISOString()
     });
@@ -2055,6 +2190,7 @@ function renderStaffOwnDashboard() {
   summary.replaceChildren(
     miniStat("Priced", counts.priced),
     miniStat("Marketplace", counts.marketplace),
+    miniStat("Photos", counts.photos),
     miniStat("Time off", counts.timeoff),
     miniStat("Calendar", counts.calendar)
   );
@@ -2070,12 +2206,19 @@ function renderManagerDashboard() {
   const roster = $("[data-employee-activity]");
   const detail = $("[data-manager-employee-detail]");
   if (!stats || !roster || !detail) return;
+  if (!isManagerSignedIn()) {
+    stats.replaceChildren();
+    roster.replaceChildren(staffEmptyNote("Manager view is available to Mike or Vern logins."));
+    detail.replaceChildren(headingEl("h3", "Manager only"), pEl("", "Log in as Mike or Vern to see employee production."));
+    return;
+  }
 
   const names = employeeNames();
   const counts = {
     Staff: names.length,
     Priced: state.pricedItems.length,
     Marketplace: state.marketplace.length,
+    Photos: state.photoItems.filter((item) => item.employee).length,
     "Time off": state.timeoff.length,
     Calendar: state.calendarEvents.length
   };
@@ -2112,7 +2255,7 @@ function renderTimeoffList() {
 
 function employeeNames() {
   const names = new Set();
-  [...state.pricedItems, ...state.marketplace, ...state.calendarEvents, ...state.timeoff].forEach((item) => {
+  [...state.pricedItems, ...state.marketplace, ...state.photoItems, ...state.calendarEvents, ...state.timeoff].forEach((item) => {
     const name = String(item.employee || "").trim();
     if (name) names.add(name);
   });
@@ -2141,7 +2284,7 @@ function renderManagerEmployeeDetail(detail, employee) {
   const counts = employeeProductionCounts(employee);
   const header = divEl("manager-detail-head", [
     headingEl("h3", employee),
-    pEl("", `${counts.priced} priced · ${counts.marketplace} Marketplace · ${counts.timeoff} time off · ${counts.calendar} calendar`)
+    pEl("", `${counts.priced} priced · ${counts.marketplace} Marketplace · ${counts.photos} photos · ${counts.timeoff} time off · ${counts.calendar} calendar`)
   ]);
   detail.replaceChildren(
     header,
@@ -2171,6 +2314,16 @@ function employeeProductionRows(employee) {
       date: item.createdAt
     });
   });
+  state.photoItems.forEach((item) => {
+    if (!employeeMatches(item.employee, employee)) return;
+    rows.push({
+      kind: "Photo",
+      title: item.title || "Published photo",
+      meta: `${labelForPhotoCategory(item.category)} · ${photoItemTypeLabel(item)}`,
+      note: item.price || item.tag || item.note || "Public site photo",
+      date: item.createdAt
+    });
+  });
   state.calendarEvents.forEach((item) => {
     if (!employeeMatches(item.employee, employee)) return;
     rows.push({
@@ -2197,9 +2350,20 @@ function employeeProductionRows(employee) {
 function employeeProductionCounts(employee) {
   const priced = state.pricedItems.filter((item) => employeeMatches(item.employee, employee)).length;
   const marketplace = state.marketplace.filter((item) => employeeMatches(item.employee, employee)).length;
+  const photos = state.photoItems.filter((item) => employeeMatches(item.employee, employee)).length;
   const timeoff = state.timeoff.filter((item) => employeeMatches(item.employee, employee)).length;
   const calendar = state.calendarEvents.filter((item) => employeeMatches(item.employee, employee)).length;
-  return { priced, marketplace, timeoff, calendar, total: priced + marketplace + timeoff + calendar };
+  return { priced, marketplace, photos, timeoff, calendar, total: priced + marketplace + photos + timeoff + calendar };
+}
+
+function employeeNameForSave(value) {
+  return (String(value || "").trim() || currentEmployeeName() || dashboardStaffName() || "Employee").trim();
+}
+
+function itemsVisibleToCurrentEmployee(items) {
+  if (isManagerSignedIn()) return items;
+  const employee = currentEmployeeName();
+  return employee ? items.filter((item) => employeeMatches(item.employee, employee)) : items;
 }
 
 function employeeMatches(value, employee) {
@@ -2307,7 +2471,7 @@ function bindContentTool() {
     } else {
       state.estateSales.unshift(sale);
     }
-    state.settings.saleUrl = sale.status === "past" || sale.status === "canceled" ? state.settings.saleUrl : sale.url;
+    if (["upcoming", "live"].includes(sale.status)) state.settings.saleUrl = sale.url;
     saveState();
     form.reset();
     renderAll();
@@ -2334,6 +2498,7 @@ function bindContentTool() {
       price: data.price.trim(),
       tag: data.tag.trim(),
       note: data.note.trim(),
+      employee: employeeNameForSave(data.employee),
       image,
       createdAt: new Date().toISOString()
     });
@@ -2625,7 +2790,7 @@ function normalizeSaleFeed(payload) {
       city: String(sale.city || sale.location || "").slice(0, 80),
       dateSummary: String(sale.dateSummary || sale.dates || "").slice(0, 80),
       hours: String(sale.hours || "").slice(0, 100),
-      status: ["upcoming", "live", "past", "canceled"].includes(sale.status) ? sale.status : "upcoming",
+      status: ["upcoming", "live", "ended", "past", "canceled"].includes(sale.status) ? sale.status : "upcoming",
       note: String(sale.note || sale.description || "Full details and photos open on EstateSales.NET.").slice(0, 180),
       image: String(sale.image || sale.mainImage || "").slice(0, 400000),
       lastReviewed: String(sale.lastReviewed || todayIsoDate()).slice(0, 10),

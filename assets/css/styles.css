@@ -2419,6 +2419,18 @@ textarea {
   font-size: clamp(1.9rem, 5vw, 3.4rem);
 }
 
+.employee-signed-in {
+  margin: 0.25rem 0 0;
+  color: #fff8dc;
+  font-weight: 900;
+}
+
+.employee-panel input.is-locked-staff-field {
+  background: #fff8dc;
+  border-color: rgba(24, 25, 24, 0.36);
+  color: var(--ink);
+}
+
 .employee-actions {
   display: flex;
   gap: 0.6rem;

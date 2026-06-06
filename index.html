@@ -16,10 +16,10 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="assets/img/app/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="assets/img/app/apple-touch-icon.png" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=20260606-upcoming-sale" />
-    <script src="assets/js/today-photo-items.js?v=20260606-upcoming-sale" defer></script>
-    <script src="assets/js/site-data.js?v=20260606-upcoming-sale" defer></script>
-    <script src="assets/js/app.js?v=20260606-upcoming-sale" defer></script>
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260606-sale-ended-staff-login" />
+    <script src="assets/js/today-photo-items.js?v=20260606-sale-ended-staff-login" defer></script>
+    <script src="assets/js/site-data.js?v=20260606-sale-ended-staff-login" defer></script>
+    <script src="assets/js/app.js?v=20260606-sale-ended-staff-login" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -55,10 +55,10 @@
             <a
               class="btn hero-action-button hero-estatesales-button"
               data-estate-company-link
-              href="https://www.estatesales.net/MI/Muskegon/49442/4940091"
+              href="https://www.estatesales.net/companies/MI/Muskegon/49441/16076"
               target="_blank"
               rel="noopener"
-              aria-label="Open upcoming EstateSales.NET sale"
+              aria-label="Open Vern's EstateSales.NET page"
             >
               <img class="hero-estatesales-logo" src="assets/img/estatesales-net-logo.svg" alt="EstateSales.NET" />
             </a>
@@ -134,20 +134,20 @@
             </a>
             <div class="estate-banner-copy">
               <span class="tag">Official page</span>
-              <h3>Photos, dates, and sale terms stay live on EstateSales.NET</h3>
+              <h3>Photos, dates, and sale terms stay on EstateSales.NET</h3>
             </div>
             <div class="estate-banner-actions">
-              <a class="btn btn-gold" data-estate-link href="https://www.estatesales.net/MI/Muskegon/49442/4940091" target="_blank" rel="noopener">
-                View Current Sale Photos
+              <a class="btn btn-gold" data-estate-link href="https://www.estatesales.net/companies/MI/Muskegon/49441/16076" target="_blank" rel="noopener">
+                Open EstateSales.NET Page
               </a>
-              <a class="btn btn-quiet" data-estate-company-link href="https://www.estatesales.net/MI/Muskegon/49442/4940091" target="_blank" rel="noopener">
-                Upcoming Sales on EstateSales.NET
+              <a class="btn btn-quiet" data-estate-company-link href="https://www.estatesales.net/companies/MI/Muskegon/49441/16076" target="_blank" rel="noopener">
+                Vern's EstateSales.NET Page
               </a>
             </div>
           </aside>
           <div class="estate-sale-grid" data-estate-sales-grid></div>
           <p class="sale-board-note" data-sale-board-note>
-            Times can move. The yellow buttons open the live EstateSales.NET listings.
+            Times can move. The yellow buttons open official EstateSales.NET listings and final terms.
           </p>
         </div>
       </section>
@@ -292,10 +292,12 @@
       <section class="login-modal" role="dialog" aria-modal="true" aria-labelledby="employee-login-title">
         <button class="icon-btn modal-close" type="button" data-close-login aria-label="Close login">×</button>
         <h2 id="employee-login-title">Employee Login</h2>
-        <p>Enter the staff passcode.</p>
+        <p>Enter your staff username and passcode.</p>
         <form data-login-form>
+          <label for="employee-username">Username</label>
+          <input id="employee-username" name="username" autocomplete="username" autocapitalize="words" required />
           <label for="employee-passcode">Passcode</label>
-          <input id="employee-passcode" name="passcode" type="password" inputmode="numeric" autocomplete="off" />
+          <input id="employee-passcode" name="passcode" type="password" inputmode="numeric" autocomplete="current-password" required />
           <button class="btn btn-gold" type="submit">Open employee tools</button>
           <button class="btn btn-quiet" type="button" data-back-to-site>Back to Website</button>
           <p class="form-message" data-login-message role="status"></p>
@@ -308,6 +310,7 @@
         <div>
           <p class="eyebrow">Employee area</p>
           <h2>Vern's Staff Tools</h2>
+          <p class="employee-signed-in" data-current-staff hidden></p>
         </div>
         <div class="employee-actions">
           <button class="btn btn-gold" type="button" data-back-to-site>Back to Website</button>
@@ -321,8 +324,8 @@
         <button class="tab-button" type="button" role="tab" data-tab="marketplace">Marketplace</button>
         <button class="tab-button" type="button" role="tab" data-tab="dashboard">Dashboard</button>
         <button class="tab-button" type="button" role="tab" data-tab="calendar">Calendar</button>
-        <button class="tab-button" type="button" role="tab" data-tab="settings">Settings</button>
-        <button class="tab-button" type="button" role="tab" data-tab="content">Public Content</button>
+        <button class="tab-button" type="button" role="tab" data-tab="settings" data-manager-only>Settings</button>
+        <button class="tab-button" type="button" role="tab" data-tab="content" data-manager-only>Public Content</button>
       </div>
 
       <div class="employee-tab-panel is-active" data-tab-panel="pricing">
@@ -565,7 +568,7 @@
             <div class="staff-view-links" role="tablist" aria-label="Staff dashboard views">
               <button class="staff-view-link is-active" type="button" data-staff-view="mine">My work</button>
               <button class="staff-view-link" type="button" data-staff-view="timeoff">Request time off</button>
-              <button class="staff-view-link" type="button" data-staff-view="manager">Manager view</button>
+              <button class="staff-view-link" type="button" data-staff-view="manager" data-manager-only>Manager view</button>
             </div>
           </section>
 
@@ -812,6 +815,7 @@
               <select name="status">
                 <option value="upcoming" selected>Upcoming</option>
                 <option value="live">Live now</option>
+                <option value="ended">Sale ended</option>
                 <option value="past">Past</option>
                 <option value="canceled">Canceled / removed</option>
               </select>
@@ -828,6 +832,7 @@
           <section class="tool-card">
             <h3>AI photo publish station</h3>
             <form class="mini-form" data-photo-item-form>
+              <input name="employee" type="hidden" />
               <label class="file-drop">
                 Take or add picture
                 <input name="photo" type="file" accept="image/*" capture="environment" data-ai-photo-input />
