@@ -2748,6 +2748,7 @@ th {
 
 .staff-send-row .is-disabled {
   opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .manager-gate {

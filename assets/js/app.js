@@ -549,11 +549,16 @@ function populateCategorySelects() {
 
 function renderSettings() {
   const settings = state.settings;
-  $("[data-current-year]").textContent = new Date().getFullYear();
-  $("[data-business-hours]").textContent = settings.shortHours || settings.hours;
+  const currentYear = $("[data-current-year]");
+  if (currentYear) currentYear.textContent = new Date().getFullYear();
+  const businessHours = $("[data-business-hours]");
+  if (businessHours) businessHours.textContent = settings.shortHours || settings.hours;
   const locationLabel = $("[data-business-location-label]");
   if (locationLabel) locationLabel.textContent = settings.location || "Norton Shores, MI";
-  else $("[data-business-location]").textContent = settings.location || "Norton Shores, MI";
+  else {
+    const businessLocation = $("[data-business-location]");
+    if (businessLocation) businessLocation.textContent = settings.location || "Norton Shores, MI";
+  }
   $$("[data-business-address]").forEach((item) => {
     item.textContent = settings.address;
   });
@@ -1782,31 +1787,33 @@ function bindDashboardTool() {
   });
 
   $("[data-timeoff-email]")?.addEventListener("click", (event) => {
+    event.preventDefault();
     if (!form.reportValidity()) {
-      event.preventDefault();
       return;
     }
-    if (!managerEmailAddress()) {
-      event.preventDefault();
+    const href = timeoffEmailHref(form);
+    if (!href) {
       setTimeoffSendStatus("Add Vern's email in Settings first.");
+      updateTimeoffSendLinks(form);
       return;
     }
-    updateTimeoffSendLinks(form);
     setTimeoffSendStatus("Opening email...");
+    window.location.href = href;
   });
 
   $("[data-timeoff-sms]")?.addEventListener("click", (event) => {
+    event.preventDefault();
     if (!form.reportValidity()) {
-      event.preventDefault();
       return;
     }
-    if (!managerPhoneDigits()) {
-      event.preventDefault();
+    const href = timeoffSmsHref(form);
+    if (!href) {
       setTimeoffSendStatus("Add Vern's phone in Settings first.");
+      updateTimeoffSendLinks(form);
       return;
     }
-    updateTimeoffSendLinks(form);
     setTimeoffSendStatus("Opening text message...");
+    window.location.href = href;
   });
 
   form.addEventListener("submit", (event) => {
@@ -1865,21 +1872,37 @@ function dashboardStaffName() {
 
 function updateTimeoffSendLinks(form) {
   if (!form) return;
+  const email = managerEmailAddress();
+  const phone = managerPhoneDigits();
+  const emailButton = $("[data-timeoff-email]");
+  const smsButton = $("[data-timeoff-sms]");
+  if (emailButton) {
+    emailButton.dataset.sendHref = timeoffEmailHref(form);
+    emailButton.classList.toggle("is-disabled", !email);
+    emailButton.setAttribute("aria-disabled", email ? "false" : "true");
+  }
+  if (smsButton) {
+    smsButton.dataset.sendHref = timeoffSmsHref(form);
+    smsButton.classList.toggle("is-disabled", !phone);
+    smsButton.setAttribute("aria-disabled", phone ? "false" : "true");
+  }
+}
+
+function timeoffEmailHref(form) {
+  const email = managerEmailAddress();
+  if (!email || !form) return "";
   const data = Object.fromEntries(new FormData(form));
   const subject = encodeURIComponent(`Time off request - ${data.employee || "Employee"}`);
   const body = encodeURIComponent(timeoffRequestMessage(data));
-  const email = managerEmailAddress();
+  return `mailto:${email}?subject=${subject}&body=${body}`;
+}
+
+function timeoffSmsHref(form) {
   const phone = managerPhoneDigits();
-  const emailLink = $("[data-timeoff-email]");
-  const smsLink = $("[data-timeoff-sms]");
-  if (emailLink) {
-    emailLink.href = email ? `mailto:${email}?subject=${subject}&body=${body}` : "#";
-    emailLink.classList.toggle("is-disabled", !email);
-  }
-  if (smsLink) {
-    smsLink.href = phone ? `sms:${phone}?&body=${body}` : "#";
-    smsLink.classList.toggle("is-disabled", !phone);
-  }
+  if (!phone || !form) return "";
+  const data = Object.fromEntries(new FormData(form));
+  const body = encodeURIComponent(timeoffRequestMessage(data));
+  return `sms:${phone}?&body=${body}`;
 }
 
 function timeoffRequestMessage(data) {

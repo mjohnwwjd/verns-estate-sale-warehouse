@@ -1,97 +1,68 @@
 # Deep Smoke Test Report
 
-Date: 2026-06-02
+Date: 2026-06-06
 
 ## Commands
 
 - `npm run check` passed.
+- `node --check scripts/smoke-check.mjs` passed.
 - `npm run smoke` passed.
-- Local server restarted cleanly at `http://127.0.0.1:8080/`.
+- Local rendered browser smoke used `http://127.0.0.1:18097/?v=20260606-deep-smoke`.
 
-## Public Website Checks
+## Static Smoke Coverage
 
-- Rendered anchor crawl found 28 anchors, 26 visible.
-- No empty `#` links.
-- No missing internal section targets.
-- External new-tab links include `rel="noopener"`.
-- No broken images in the rendered public page.
-- No horizontal page overflow.
-- Removed/redundant copy stayed removed:
-  - `Fresh finds`
-  - `Upcoming EstateSales.NET Sales`
-  - `Official sale links`
-- Public sections present:
-  - `#home`
-  - `#photos`
-  - `#sales`
-  - `#last-chance`
-  - `#visit`
-  - `#donate`
-- Sales board shows 3 cards, including the `More Sales Coming Soon` card.
-- Quick Peeks shows 3 cards and no search field.
-- Category controls passed:
-  - `More categories` expands the full category list.
-  - `Tools` filter shows 1 result.
-  - Result note updates to `Showing 1 floor peek in Tools.`
-- Yellow-band variant switch works:
-  - Active balanced link: `?v=thin-yellow-bands#last-chance`
-  - Tighter fallback link: `?v=yellow-band-variants&band=tight#last-chance`
+- `index.html` and `meet-vern.html` both return successfully.
+- No empty links or placeholder `href="#"` links remain in either HTML page.
+- Same-page hash links point to existing section IDs.
+- Static dropdowns have options.
+- Required employee dynamic dropdown hooks are present:
+  - `data-category-select`
+  - `data-pricing-destination`
+  - `data-priced-item-select`
+  - `data-market-category-select`
+  - `data-photo-item-type-select`
 
-## Link Checks
+## Rendered Link Checks
 
-Automated probes:
+- Homepage rendered 20 anchors, 18 visible.
+- Meet Vern rendered 5 anchors, 5 visible.
+- No rendered placeholder links.
+- No missing rendered hash targets.
+- New-tab links include `rel="noopener"`.
+- Fresh browser console error checks passed on the homepage, employee area, and Meet Vern page.
+- Asset cache tag verified: `20260606-deep-smoke`.
 
-- Google Maps address link: `200`
-- EstateSales.NET company page: `200`
-- Spring Lake EstateSales.NET listing: `200`
-- Muskegon EstateSales.NET listing: `200`
-- 1M Project home: `200`
-- 1M Project support page: `200`
-- Stripe donation link: `200`
-- Facebook profile ID: `301` redirect to `https://www.facebook.com/people/Quick-Flip/61590076124139/`
+## Employee Area Dropdown Checks
 
-Facebook note: the current Facebook ID is reachable, but the redirected slug says `Quick-Flip` while the site label says `Verns Estate Sales on Facebook`. Confirm whether that is the desired page/renamed page.
-
-## Browser Click Smoke
-
-- Top nav links passed:
-  - Home
-  - Photos
-  - EstateSales
-  - Clearance
-  - Visit
-- Hero action links passed after the page settles:
-  - View Floor Photos
-  - Upcoming Sales
-  - Last Chance Clearance
-- Clearance tag directions link passed.
-- Added explicit same-page hash-link handling so anchor buttons navigate consistently.
-
-## Employee Area Smoke
-
-- `#employee` opens hidden employee login modal.
-- Wrong passcode shows `Wrong passcode.`
-- Passcode `3939` opens employee panel.
-- Pricing camera input exists.
-- Employee tabs switch correctly:
-  - Pricing
-  - Marketplace
-  - Dashboard
-  - Settings
-  - Public Content
-- `Back to Website` closes employee panel and clears `#employee` from the URL.
-
-## Backend/API Smoke
-
-- `/api/status` returned `ok: true`.
-- `/api/estate-sales/sync` returned the seed sale list and correctly reports sync is permission-gated/off.
-- `/api/price-photo` accepts the employee camera field name `photo`.
-- OpenAI is not configured locally, so pricing currently returns the local fallback with the note `OPENAI_API_KEY is not configured for this server.`
+- Employee passcode `3939` opens Vern's Staff Tools.
+- Pricing tab dropdowns work:
+  - Category: 22 options
+  - Condition: 5 options
+  - Status: 2 options
+  - Destination: 6 options
+- Marketplace tab dropdowns work:
+  - Priced item: 1 option
+  - Category: 22 options
+  - Status: 4 options
+- Dashboard works:
+  - Request time off opens.
+  - `Email Vern` is a button, not a fake link.
+  - `Text Vern` is a button, not a fake link.
+  - Manager view unlocks and shows the manager dashboard.
+- Calendar tab dropdowns work:
+  - Type: 5 options
+  - Status: 4 options
+- Settings tab dropdown works:
+  - Default pricing basis: 2 options
+- Public Content tab dropdowns work:
+  - Sale status: 4 options
+  - Photo category: 4 options
+  - Item type: 19 options
 
 ## Fixes Made During Test
 
-- Added repeatable `npm run smoke`.
-- Added `scripts/smoke-check.mjs`.
-- Fixed same-page CTA/hash links with explicit hash navigation handling.
-- Fixed backend photo upload parser to accept `images`, `photo`, or `image`.
-- Documented smoke commands in `README.md`.
+- Replaced staff time-off placeholder send links with action buttons that build email/text handoffs only when needed.
+- Added real fallback URLs for EstateSales.NET, Google Maps, and Facebook links before JavaScript finishes loading.
+- Fixed shared settings rendering so `meet-vern.html` no longer throws when homepage-only elements are absent.
+- Bumped homepage, Meet Vern, and service worker cache tags to `20260606-deep-smoke`.
+- Expanded `npm run smoke` to check both HTML pages, placeholder links, hash targets, static dropdown options, and required employee dropdown hooks.

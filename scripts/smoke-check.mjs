@@ -21,6 +21,7 @@ server.stderr.on("data", (chunk) => warnings.push(`server stderr: ${String(chunk
 try {
   await waitForServer();
   await checkCorePages();
+  await checkStaticLinksAndDropdowns();
   await checkLocalAssets();
   await checkPwaAssets();
   await checkApi();
@@ -68,11 +69,55 @@ async function checkCorePages() {
   expect(html.includes("data-estate-sales-grid"), "home page missing estate sales grid");
   expect(!html.includes("Upcoming EstateSales.NET Sales"), "removed sale-board header is back");
   expect(!html.includes("Official sale links"), "removed official-sale intro is back");
+
+  const meetResponse = await fetch(`${origin}/meet-vern.html?smoke=1`);
+  const meetHtml = await meetResponse.text();
+  expect(meetResponse.ok, `meet-vern.html returned ${meetResponse.status}`);
+  expect(meetHtml.includes("Meet Vern | Vern's Estate Sale Warehouse"), "meet-vern page missing title");
+  expect(meetHtml.includes("Back to Vern's Warehouse"), "meet-vern page missing back link");
+}
+
+async function checkStaticLinksAndDropdowns() {
+  for (const file of ["index.html", "meet-vern.html"]) {
+    const html = await readFile(path.join(root, file), "utf8");
+    const ids = new Set(Array.from(html.matchAll(/\sid=["']([^"']+)["']/g), (match) => match[1]));
+    const anchors = Array.from(html.matchAll(/<a\b[^>]*\bhref=["']([^"']*)["'][^>]*>/g), (match) => match[1]);
+
+    for (const href of anchors) {
+      expect(href.trim() !== "", `${file} anchor has an empty href`);
+      expect(href !== "#", `${file} anchor still uses placeholder href="#"`);
+      if (href.startsWith("#")) expect(ids.has(href.slice(1)), `${file} anchor target ${href} is missing`);
+    }
+
+    const staticSelects = Array.from(html.matchAll(/<select\b([^>]*)>([\s\S]*?)<\/select>/g));
+    for (const [, attrs, optionsHtml] of staticSelects) {
+      if (/data-category-select|data-market-category-select|data-photo-item-type-select/.test(attrs)) continue;
+      const optionCount = Array.from(optionsHtml.matchAll(/<option\b/g)).length;
+      expect(optionCount > 0, `${file} select ${selectName(attrs)} has no options`);
+    }
+  }
+
+  const html = await readFile(path.join(root, "index.html"), "utf8");
+  expect(!/<a\b[^>]*data-timeoff-email/i.test(html), "Email Vern should be a button, not a placeholder link");
+  expect(!/<a\b[^>]*data-timeoff-sms/i.test(html), "Text Vern should be a button, not a placeholder link");
+
+  const requiredSelects = [
+    "data-category-select",
+    "data-pricing-destination",
+    "data-priced-item-select",
+    "data-market-category-select",
+    "data-photo-item-type-select"
+  ];
+
+  for (const attribute of requiredSelects) {
+    expect(new RegExp(`<select[^>]*${attribute}`, "i").test(html), `missing select ${attribute}`);
+  }
+
 }
 
 async function checkLocalAssets() {
   const refs = new Set();
-  for (const file of ["index.html", "assets/css/styles.css", "assets/js/site-data.js", "assets/js/app.js"]) {
+  for (const file of ["index.html", "meet-vern.html", "assets/css/styles.css", "assets/js/site-data.js", "assets/js/app.js"]) {
     const text = await readFile(path.join(root, file), "utf8");
     for (const match of text.matchAll(/assets\/[^"'`)>\s]+/g)) {
       const ref = match[0].replace(/^url\(/, "").split("?")[0];
@@ -186,6 +231,12 @@ function isPlaceholderReference(value) {
   return value.includes("assets/img/file.svg")
     || value.includes("/MI/City/Zip/SaleId")
     || value.endsWith("/companies/...");
+}
+
+function selectName(attrs) {
+  const name = attrs.match(/\bname=["']([^"']+)["']/)?.[1];
+  const dataAttribute = attrs.match(/\b(data-[\w-]+)/)?.[1];
+  return name || dataAttribute || attrs.trim() || "unknown";
 }
 
 function delay(ms) {
