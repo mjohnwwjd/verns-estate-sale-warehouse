@@ -2693,6 +2693,11 @@ th {
   font-size: 1.85rem;
 }
 
+.stat-card.mini-stat-card p {
+  color: var(--paper);
+  font-weight: 900;
+}
+
 .staff-compact-list {
   display: grid;
   gap: 0.55rem;
