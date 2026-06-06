@@ -3,7 +3,7 @@ const todayPhotoItems = Array.isArray(window.VERNS_TODAY_PHOTO_ITEMS) ? window.V
 window.VERNS_STARTER_DATA = {
   settings: {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
-    saleUrl: "",
+    saleUrl: "https://www.estatesales.net/MI/Muskegon/49442/4940091",
     embedUrl: "",
     address: "1663 West Sherman Boulevard, Norton Shores, MI 49441",
     phone: "(616) 638-3873",
@@ -32,7 +32,7 @@ window.VERNS_STARTER_DATA = {
       city: "Spring Lake, MI",
       dateSummary: "Jun 1-3, 2026",
       hours: "Mon-Tue 8:30 AM-5 PM; Wed 8:30 AM-3 PM",
-      status: "upcoming",
+      status: "past",
       note: "Full details and photos open on the official EstateSales.NET listing.",
       image: "assets/img/sale-spring-lake-horse.jpeg",
       lastReviewed: "2026-05-31"
@@ -44,7 +44,7 @@ window.VERNS_STARTER_DATA = {
       city: "Norton Shores, MI",
       dateSummary: "Jun 5-6, 2026",
       hours: "8:30 AM-5 PM",
-      status: "upcoming",
+      status: "live",
       note: "Warehouse pop-up listing. Open EstateSales.NET for current photos and final times.",
       image: "assets/img/sale-muskegon-pop-up-tent.jpeg",
       lastReviewed: "2026-05-31"

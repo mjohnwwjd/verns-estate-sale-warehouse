@@ -5,8 +5,9 @@ const MANAGER_SESSION_KEY = "vernsManagerUnlocked";
 const PASSCODE = "3939";
 const MANAGER_PASSCODE = PASSCODE;
 const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Muskegon/49441/16076";
+const DEFAULT_ESTATE_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-06-05-clearance-gate";
+const DEMO_CONTENT_VERSION = "2026-06-06-upcoming-sale-link";
 const CONTACT_INFO_VERSION = "2026-06-05-hero-facts";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -152,8 +153,10 @@ function normalizeState(nextState) {
   if (rawSettings.demoContentVersion !== DEMO_CONTENT_VERSION) {
     featured = mergeSeedById(featured, starter.featured);
     specials = mergeSeedById(specials, starter.specials);
+    estateSales = mergeSeedById(estateSales, starter.estateSales);
     photoItems = mergeSeedById(photoItems, starter.photoItems);
     photoItems = removeDeprecatedPhotoItems(photoItems);
+    if (!getLiveEstateSaleUrl(rawSettings.saleUrl)) settings.saleUrl = starter.settings.saleUrl || DEFAULT_ESTATE_SALE_URL;
     settings.demoContentVersion = DEMO_CONTENT_VERSION;
   }
 
@@ -596,9 +599,14 @@ function renderSettings() {
   const companyUrl = getEstateCompanyUrl(settings.companyUrl);
   const liveSaleUrl = getLiveEstateSaleUrl(settings.saleUrl);
   const activeSaleUrl = liveSaleUrl || getPrimaryEstateSaleUrl();
+  const publicEstateUrl = activeSaleUrl || companyUrl;
 
   $$("[data-estate-company-link]").forEach((link) => {
-    link.href = companyUrl;
+    link.href = publicEstateUrl;
+    if (activeSaleUrl && link.textContent.trim() && !link.querySelector("img")) {
+      link.textContent = "Upcoming Sales on EstateSales.NET";
+      link.setAttribute("aria-label", "Open upcoming EstateSales.NET sale");
+    }
   });
   if (activeSaleUrl) {
     if (estateLink) {
