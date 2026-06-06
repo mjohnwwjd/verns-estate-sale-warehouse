@@ -16,10 +16,10 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="assets/img/app/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="assets/img/app/apple-touch-icon.png" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=20260605-clearance-gate" />
-    <script src="assets/js/today-photo-items.js?v=20260605-clearance-gate" defer></script>
-    <script src="assets/js/site-data.js?v=20260605-clearance-gate" defer></script>
-    <script src="assets/js/app.js?v=20260605-clearance-gate" defer></script>
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260605-hero-facts" />
+    <script src="assets/js/today-photo-items.js?v=20260605-hero-facts" defer></script>
+    <script src="assets/js/site-data.js?v=20260605-hero-facts" defer></script>
+    <script src="assets/js/app.js?v=20260605-hero-facts" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -28,7 +28,7 @@
       <section class="hero section-band" id="home">
         <div class="hero-copy">
           <div class="hero-title-lockup">
-            <p class="eyebrow hero-kicker">Official Vern Estate Sales</p>
+            <p class="eyebrow hero-kicker">Official Vern&apos;s Estate Sale Warehouse</p>
             <button
               class="hero-logo-button"
               type="button"
@@ -70,7 +70,10 @@
           <dl class="quick-facts" aria-label="Warehouse quick facts">
             <div>
               <dt>Hours</dt>
-              <dd data-business-hours>Daily 9-5</dd>
+              <dd>
+                <span class="quick-fact-main" data-business-hours>Every day 9 AM-5 PM</span>
+                <span class="quick-fact-note">Warehouse shopping</span>
+              </dd>
             </div>
             <div>
               <dt>Location</dt>
@@ -84,7 +87,10 @@
                   rel="noopener"
                   aria-label="Open Vern's Estate Sale Warehouse location in Google Maps"
                 >
-                  <span data-business-location-label>Norton Shores, MI</span>
+                  <span class="quick-fact-location-copy">
+                    <span class="quick-fact-main" data-business-location-label>Norton Shores, MI</span>
+                    <span class="quick-fact-note">1663 W. Sherman Blvd</span>
+                  </span>
                   <span class="hero-map-icon map-mark" aria-hidden="true">
                     <img src="assets/img/maps-app-style-icon.svg" alt="" />
                   </span>
@@ -295,6 +301,7 @@
         <button class="tab-button is-active" type="button" role="tab" data-tab="pricing">Pricing</button>
         <button class="tab-button" type="button" role="tab" data-tab="marketplace">Marketplace</button>
         <button class="tab-button" type="button" role="tab" data-tab="dashboard">Dashboard</button>
+        <button class="tab-button" type="button" role="tab" data-tab="calendar">Calendar</button>
         <button class="tab-button" type="button" role="tab" data-tab="settings">Settings</button>
         <button class="tab-button" type="button" role="tab" data-tab="content">Public Content</button>
       </div>
@@ -306,7 +313,9 @@
             <label class="file-drop pricing-camera-drop">
               <span class="pricing-camera-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" focusable="false">
-                  <path d="M8.6 5 10.2 3h3.6l1.6 2H19a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h3.6Zm3.4 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0-2a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" />
+                  <path d="M4.5 8.5a3 3 0 0 1 3-3h1.7l1.35-1.65h2.9L14.8 5.5h1.7a3 3 0 0 1 3 3v7.7a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3V8.5Z" />
+                  <path d="M12 16.1a3.7 3.7 0 1 0 0-7.4 3.7 3.7 0 0 0 0 7.4Z" />
+                  <path d="M17.05 8.55h.02" />
                 </svg>
               </span>
               <span class="pricing-camera-copy">
@@ -315,20 +324,23 @@
               </span>
               <input name="photo" type="file" accept="image/*" capture="environment" data-pricing-photo-input />
             </label>
-            <div class="ai-photo-preview pricing-photo-preview">
-              <img src="assets/img/placeholder-furniture.svg" alt="Selected pricing item preview" data-pricing-preview-image />
+            <div class="ai-photo-preview pricing-photo-preview is-empty" aria-label="Pricing photo preview">
+              <img alt="Selected pricing item preview" data-pricing-preview-image hidden />
+              <div class="pricing-scan-overlay" data-pricing-scan-overlay hidden aria-live="polite">
+                <span class="pricing-scan-kicker">Scanning photo</span>
+                <strong data-pricing-scan-countdown>10</strong>
+                <small data-pricing-scan-copy>AI is checking the item and shelf price.</small>
+              </div>
               <div class="price-overlay" data-pricing-clearance-overlay hidden>
                 <strong data-pricing-overlay-price>$</strong>
                 <span>Clearance</span>
               </div>
-            </div>
-            <div class="pricing-ai-action-stack">
-              <button class="btn btn-dark pricing-ai-primary-button" type="button" data-price-photo-ai>
+              <button class="btn btn-dark pricing-ai-primary-button pricing-preview-action" type="button" data-price-photo-ai hidden>
                 <span class="pricing-ai-badge" aria-hidden="true">AI</span>
                 <span>Price from photo</span>
               </button>
-              <div class="ai-status pricing-ai-status" data-pricing-ai-status>Take a picture, then let AI fill the form.</div>
             </div>
+            <div class="ai-status pricing-ai-status" data-pricing-ai-status>Take a picture, then let AI fill the form.</div>
             <label>
               Item hint
               <input name="hint" placeholder="Optional: lamp, dresser, tools, brand, model..." />
@@ -521,35 +533,151 @@
       </div>
 
       <div class="employee-tab-panel" data-tab-panel="dashboard">
-        <section class="dashboard-grid" data-dashboard-stats></section>
-        <div class="tool-grid">
-          <section class="tool-card">
-            <h3>Employee activity</h3>
-            <div class="activity-list" data-employee-activity></div>
+        <div class="staff-dashboard" data-staff-dashboard>
+          <section class="staff-hub-card">
+            <div class="staff-hub-copy">
+              <p class="eyebrow">Staff hub</p>
+              <h3>Quick staff dashboard</h3>
+            </div>
+            <label class="staff-name-field">
+              You are
+              <input name="staffName" data-staff-name placeholder="Employee name" autocomplete="name" />
+            </label>
+            <div class="staff-view-links" role="tablist" aria-label="Staff dashboard views">
+              <button class="staff-view-link is-active" type="button" data-staff-view="mine">My work</button>
+              <button class="staff-view-link" type="button" data-staff-view="timeoff">Request time off</button>
+              <button class="staff-view-link" type="button" data-staff-view="manager">Manager view</button>
+            </div>
           </section>
-          <form class="tool-card" data-timeoff-form>
-            <h3>Vacation / closed-out tracking</h3>
+
+          <section class="staff-panel is-active" data-staff-panel="mine">
+            <div class="staff-mini-stats" data-staff-my-summary></div>
+            <div class="staff-compact-list" data-staff-my-activity></div>
+          </section>
+
+          <section class="staff-panel" data-staff-panel="timeoff">
+            <form class="staff-timeoff-card" data-timeoff-form>
+              <div class="staff-section-head">
+                <h3>Time off request</h3>
+                <span data-timeoff-send-status></span>
+              </div>
+              <label>
+                Employee
+                <input name="employee" required placeholder="Name" />
+              </label>
+              <div class="two-col">
+                <label>
+                  Start
+                  <input name="start" type="date" required />
+                </label>
+                <label>
+                  End
+                  <input name="end" type="date" required />
+                </label>
+              </div>
+              <label>
+                Notes
+                <textarea name="notes" rows="3" placeholder="Reason, coverage notes, or preferred callback"></textarea>
+              </label>
+              <div class="button-row staff-send-row">
+                <button class="btn btn-gold" type="submit">Save request</button>
+                <a class="btn btn-dark" href="#" data-timeoff-email>Email Vern</a>
+                <a class="btn btn-quiet" href="#" data-timeoff-sms>Text Vern</a>
+              </div>
+            </form>
+            <div class="staff-compact-list" data-timeoff-list></div>
+          </section>
+
+          <section class="staff-panel" data-staff-panel="manager">
+            <div class="manager-gate" data-manager-gate>
+              <label>
+                Manager code
+                <input name="managerCode" type="password" inputmode="numeric" autocomplete="off" data-manager-code />
+              </label>
+              <button class="btn btn-gold" type="button" data-manager-unlock>Open manager view</button>
+              <p class="form-message" data-manager-message role="status"></p>
+            </div>
+            <div class="manager-dashboard" data-manager-dashboard hidden>
+              <section class="dashboard-grid staff-dashboard-grid" data-dashboard-stats></section>
+              <div class="manager-layout">
+                <section class="staff-compact-list employee-roster" data-employee-activity></section>
+                <section class="manager-detail" data-manager-employee-detail>
+                  <h3>Pick an employee</h3>
+                  <p>Click a name to see pricing, Marketplace, and photo activity.</p>
+                </section>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="employee-tab-panel" data-tab-panel="calendar">
+        <div class="tool-grid calendar-tool-grid">
+          <form class="tool-card" data-calendar-form>
+            <h3>Sale calendar</h3>
+            <p class="compliance-note">
+              Add sale days, setup windows, pickup times, staff notes, or closed dates. These entries stay in the employee tools on this device.
+            </p>
             <label>
-              Employee
-              <input name="employee" required placeholder="Name" />
+              Calendar title
+              <input name="title" required placeholder="Norton Shores pop-up sale" />
             </label>
             <div class="two-col">
               <label>
-                Start
-                <input name="start" type="date" required />
+                Date
+                <input name="date" type="date" required />
               </label>
               <label>
-                End
-                <input name="end" type="date" required />
+                Type
+                <select name="type">
+                  <option value="sale" selected>Sale day</option>
+                  <option value="setup">Setup / staging</option>
+                  <option value="pickup">Pickup window</option>
+                  <option value="staff">Staff note</option>
+                  <option value="closed">Closed date</option>
+                </select>
+              </label>
+            </div>
+            <div class="two-col">
+              <label>
+                Start time
+                <input name="startTime" type="time" />
+              </label>
+              <label>
+                End time
+                <input name="endTime" type="time" />
               </label>
             </div>
             <label>
-              Notes
-              <textarea name="notes" rows="3" placeholder="Vacation, closed-out duties, warehouse notes"></textarea>
+              Location
+              <input name="location" placeholder="Warehouse, city, or sale address" />
             </label>
-            <button class="btn btn-gold" type="submit">Save tracking note</button>
-            <div class="activity-list" data-timeoff-list></div>
+            <label>
+              Notes
+              <textarea name="notes" rows="3" placeholder="Door time, discount schedule, staff reminder, or sale link note"></textarea>
+            </label>
+            <div class="two-col">
+              <label>
+                Employee
+                <input name="employee" placeholder="Name" />
+              </label>
+              <label>
+                Status
+                <select name="status">
+                  <option value="upcoming" selected>Upcoming</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="completed">Completed</option>
+                  <option value="canceled">Canceled</option>
+                </select>
+              </label>
+            </div>
+            <button class="btn btn-gold" type="submit">Add calendar item</button>
           </form>
+
+          <section class="tool-card">
+            <h3>Upcoming calendar</h3>
+            <div class="calendar-list" data-calendar-list></div>
+          </section>
         </div>
       </div>
 
@@ -685,8 +813,8 @@
                 Take or add picture
                 <input name="photo" type="file" accept="image/*" capture="environment" data-ai-photo-input />
               </label>
-              <div class="ai-photo-preview" data-ai-photo-preview>
-                <img src="assets/img/placeholder-clearance.svg" alt="Selected item preview" data-ai-preview-image />
+              <div class="ai-photo-preview is-empty" data-ai-photo-preview aria-label="Selected item photo preview">
+                <img alt="Selected item preview" data-ai-preview-image hidden />
                 <div class="price-overlay" data-ai-preview-overlay hidden>
                   <strong data-ai-preview-price>$</strong>
                   <span data-ai-preview-label>Last Chance</span>

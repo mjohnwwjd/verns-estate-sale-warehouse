@@ -229,6 +229,8 @@ async function pricePhoto(images, fields) {
         "Identify the photographed item and estimate practical resale value for a discount estate-sale warehouse. " +
         "Use general resale knowledge only; do not claim live access to EstateSales.NET, eBay, Facebook Marketplace, or retail databases. " +
         `Employee hint: ${fields.hint || "none"}. Category selected by employee: ${fields.category || "none"}. Condition selected by employee: ${fields.condition || "good"}. ` +
+        "If the exact maker or model is unclear, still give the best plain item name from the visible object type, use Low confidence, and say what tag, brand, or angle would improve the scan. Do not say you cannot identify the item unless no object is visible. " +
+        "For CDs, DVDs, Blu-ray, VHS tapes, video games, books, and records, if a title is visible or inferable, itemName must include the title and format, such as \"Hush DVD\" or \"The Beatles CD\", not a generic name like \"DVD disc\" or \"CD\". " +
         "Return ONLY valid JSON with these keys: itemName, category, condition, marketValue, retailValue, estimatedLow, estimatedHigh, confidence, priceBasis, notes, marketplaceTitle, marketplaceDescription. " +
         `category must be one of ${PRICING_CATEGORIES.join(", ")}. ` +
         "condition must be one of new, excellent, good, fair, repair. " +
@@ -238,7 +240,7 @@ async function pricePhoto(images, fields) {
     {
       type: "input_image",
       image_url: `data:${image.mimeType};base64,${image.base64}`,
-      detail: "auto"
+      detail: "high"
     }
   ];
 
@@ -267,6 +269,10 @@ async function pricePhoto(images, fields) {
 
     const payload = JSON.parse(rawText);
     const parsed = parseJsonText(extractTextFromResponse(payload));
+    if (isGenericItemName(parsed.itemName) && fields.hint) parsed.itemName = fields.hint;
+    if (isGenericItemName(parsed.itemName)) {
+      parsed.notes = parsed.notes || "Best visual estimate. Add brand, model, tag, or detail photos for better confidence.";
+    }
     return normalizePricingResult(parsed, settings, {
       modelUsed: OPENAI_MODEL,
       elapsedMs: Date.now() - startedAt,
@@ -288,7 +294,8 @@ async function pricePhoto(images, fields) {
 }
 
 function normalizePricingResult(result, settings, meta = {}) {
-  const category = allowedCategory(result.category, result.itemName, result.marketplaceTitle, result.notes);
+  const itemName = clarifyPricingItemName(result);
+  const category = allowedCategory(result.category, itemName, result.itemName, result.marketplaceTitle, result.notes);
   const condition = allowedCondition(result.condition);
   const fallbackRange = fallbackRangeFor(category, condition);
   const marketValue = positiveNumber(result.marketValue) || positiveNumber(result.likelySellingPrice) || average(fallbackRange);
@@ -297,7 +304,6 @@ function normalizePricingResult(result, settings, meta = {}) {
   const storePrice = roundPrice(basisValue * (1 - settings.thriftMarkdownPercent / 100));
   const marketplacePrice = roundPrice(marketValue * (settings.marketplacePercent / 100));
   const clearancePrice = roundPrice(basisValue * (1 - settings.clearanceMarkdownPercent / 100));
-  const itemName = String(result.itemName || "Estate sale warehouse item").slice(0, 90);
 
   return {
     itemName,
@@ -532,7 +538,141 @@ function extractTextFromResponse(data) {
 function parseJsonText(text) {
   const trimmed = String(text || "").trim();
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  return JSON.parse(fenced ? fenced[1].trim() : trimmed);
+  const candidate = fenced ? fenced[1].trim() : trimmed;
+  try {
+    return JSON.parse(candidate);
+  } catch (error) {
+    const start = candidate.indexOf("{");
+    const end = candidate.lastIndexOf("}");
+    if (start !== -1 && end > start) return JSON.parse(candidate.slice(start, end + 1));
+    throw error;
+  }
+}
+
+function isGenericItemName(value) {
+  return /^(unknown|unidentified|cannot identify|estate sale warehouse item|item|object)$/i.test(String(value || "").trim());
+}
+
+function clarifyPricingItemName(result = {}) {
+  const fields = [
+    result.itemName,
+    result.title,
+    result.marketplaceTitle,
+    result.marketplaceDescription,
+    result.notes,
+    result.priceBasis
+  ];
+  const joined = fields.filter(Boolean).join(" ");
+  const mediaFormat = mediaFormatFromText(joined);
+  const current = String(result.itemName || result.title || "Estate sale warehouse item").trim();
+  if (!mediaFormat) return current.slice(0, 90);
+
+  const candidate = [
+    result.itemName,
+    result.title,
+    result.marketplaceTitle
+  ].map((value) => cleanMediaCandidateName(value, mediaFormat))
+    .find((value) => value && !isVagueMediaName(value, mediaFormat));
+
+  if (candidate) {
+    return nameIncludesMediaFormat(candidate, mediaFormat)
+      ? candidate.slice(0, 90)
+      : `${candidate} ${mediaFormat}`.slice(0, 90);
+  }
+
+  const extractedTitle = extractMediaTitle(joined);
+  if (extractedTitle) return `${extractedTitle} ${mediaFormat}`.slice(0, 90);
+
+  if (current && !isVagueMediaName(current, mediaFormat)) {
+    return nameIncludesMediaFormat(current, mediaFormat)
+      ? current.slice(0, 90)
+      : `${current} ${mediaFormat}`.slice(0, 90);
+  }
+  return `${mediaFormat} media item`.slice(0, 90);
+}
+
+function cleanMediaCandidateName(value, mediaFormat) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const extractedTitle = extractMediaTitle(raw);
+  if (extractedTitle) return `${extractedTitle} ${mediaFormat}`;
+  return raw
+    .replace(/\s+-\s+Vern'?s Estate Sale Warehouse.*$/i, "")
+    .replace(/\bVern'?s Estate Sale Warehouse\b/gi, "")
+    .replace(/\s+/g, " ")
+    .replace(/^["'\u201c\u201d\s]+|["'\u201c\u201d.\s]+$/g, "")
+    .trim()
+    .slice(0, 90);
+}
+
+function mediaFormatFromText(text) {
+  const value = String(text || "").toLowerCase();
+  if (/\bblu[-\s]?ray\b/.test(value)) return "Blu-ray";
+  if (/\bdvd\b/.test(value)) return "DVD";
+  if (/\b(cd|compact disc)\b/.test(value)) return "CD";
+  if (/\bvhs\b/.test(value)) return "VHS";
+  if (/\b(vinyl|record|lp)\b/.test(value)) return "Vinyl record";
+  if (/\b(xbox|playstation|ps[1-5]?|nintendo|wii|switch|gamecube|video game)\b/.test(value)) return "Video game";
+  if (/\b(book|novel|hardcover|paperback)\b/.test(value)) return "Book";
+  return "";
+}
+
+function extractMediaTitle(text) {
+  const source = String(text || "");
+  const patterns = [
+    /\b(?:dvd|cd|blu[-\s]?ray|vhs|record|vinyl|book|game|video game)\s+(?:titled|title|called|named)\s+["'\u201c\u201d]?([^"'\u201c\u201d.,;\n]{2,80})/i,
+    /\b(?:titled|title|called|named)\s+["'\u201c\u201d]?([^"'\u201c\u201d.,;\n]{2,80})["'\u201c\u201d]?\s+(?:dvd|cd|blu[-\s]?ray|vhs|record|vinyl|book|game|video game)\b/i,
+    /\b["\u201c]([^"\u201d]{2,80})["\u201d]\s+(?:dvd|cd|blu[-\s]?ray|vhs|record|vinyl|book|game|video game)\b/i,
+    /\b(?:dvd|cd|blu[-\s]?ray|vhs|record|vinyl|book|game|video game)\s+["\u201c]([^"\u201d]{2,80})["\u201d]/i
+  ];
+  for (const pattern of patterns) {
+    const match = source.match(pattern);
+    if (match?.[1]) return displayTitleCase(cleanExtractedMediaTitle(match[1]));
+  }
+  return "";
+}
+
+function cleanExtractedMediaTitle(value) {
+  const cleaned = String(value || "")
+    .replace(/\b(condition|basis|confidence|category|market|retail|price|value|notes?)\b.*$/i, "")
+    .replace(/\b(dvd|cd|blu[-\s]?ray|vhs|record|vinyl|book|game|video game)\b.*$/i, "")
+    .replace(/^[:\-\u2013\u2014\s]+|[:\-\u2013\u2014."'\u201c\u201d\s]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned.split(/\s+/).slice(0, 10).join(" ");
+}
+
+function displayTitleCase(value) {
+  return String(value || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => (/^[A-Z0-9&'-]{2,}$/.test(word) ? word : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
+    .join(" ");
+}
+
+function isVagueMediaName(name, mediaFormat) {
+  const lower = String(name || "").toLowerCase().replace(/[^a-z0-9\s-]/g, " ").replace(/\s+/g, " ").trim();
+  if (!lower) return true;
+  if (/^(dvd|dvd disc|disc|cd|cd disc|compact disc|movie|film|blu ray|blu-ray|vhs|vhs tape|record|vinyl|vinyl record|book|media|video game|game|case)$/i.test(lower)) {
+    return true;
+  }
+  const stripped = lower
+    .replace(/\b(dvd|cd|compact|disc|movie|film|blu|ray|blu-ray|vhs|tape|record|vinyl|book|media|video|game|case|used|estate|sale|warehouse|item)\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return stripped.length < 3 && nameIncludesMediaFormat(lower, mediaFormat);
+}
+
+function nameIncludesMediaFormat(name, mediaFormat) {
+  const lower = String(name || "").toLowerCase();
+  if (mediaFormat === "Blu-ray") return /\bblu[-\s]?ray\b/.test(lower);
+  if (mediaFormat === "DVD") return /\bdvd\b/.test(lower);
+  if (mediaFormat === "CD") return /\b(cd|compact disc)\b/.test(lower);
+  if (mediaFormat === "VHS") return /\bvhs\b/.test(lower);
+  if (mediaFormat === "Vinyl record") return /\b(vinyl|record|lp)\b/.test(lower);
+  if (mediaFormat === "Video game") return /\b(xbox|playstation|ps[1-5]?|nintendo|wii|switch|gamecube|video game|game)\b/.test(lower);
+  if (mediaFormat === "Book") return /\b(book|novel|hardcover|paperback)\b/.test(lower);
+  return false;
 }
 
 function normalizeProviderErrorMessage(raw, fallback) {

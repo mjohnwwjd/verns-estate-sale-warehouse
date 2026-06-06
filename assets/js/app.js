@@ -1,10 +1,13 @@
 const STORAGE_KEY = "vernsWebsiteStateV1";
 const EMPLOYEE_SESSION_KEY = "vernsEmployeeUnlocked";
+const STAFF_NAME_KEY = "vernsStaffName";
+const MANAGER_SESSION_KEY = "vernsManagerUnlocked";
 const PASSCODE = "3939";
+const MANAGER_PASSCODE = PASSCODE;
 const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Muskegon/49441/16076";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
 const DEMO_CONTENT_VERSION = "2026-06-05-clearance-gate";
-const CONTACT_INFO_VERSION = "2026-06-04-norton-shores-daily-hours";
+const CONTACT_INFO_VERSION = "2026-06-05-hero-facts";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
   "estate-sale-muskegon-popup-4940091": "assets/img/sale-muskegon-pop-up-tent.jpeg"
@@ -31,7 +34,7 @@ const PHOTO_CATEGORY_FILTERS = [
   { value: "collectibles", label: "Collectibles", icon: "*", keywords: ["collectible", "collectibles", "vintage", "brass", "figurine", "antique", "estate"] },
   { value: "scratch-dent", label: "Clearance", icon: "TAG", keywords: ["clearance", "yellow", "markdown", "scratch", "dent", "as-is", "repair", "project", "needs work"] }
 ];
-const POPULAR_PHOTO_FILTERS = ["all", "furniture", "glassware", "tools", "clocks", "sporting"];
+const POPULAR_PHOTO_FILTERS = ["furniture", "glassware", "tools", "clocks", "sporting"];
 const PUBLIC_GALLERY_ALL_LIMIT = 3;
 const DEPRECATED_PHOTO_ITEM_IDS = new Set([
   "starter-photo-clearance-1",
@@ -51,6 +54,8 @@ let photoCategoriesExpanded = false;
 let clearanceShelfOpen = false;
 let pricingPhotoDataUrl = "";
 let pricingAiSuggestion = null;
+let pricingScanTimer = null;
+let selectedManagerEmployee = "";
 let lastSalesSyncStatus = "";
 let deferredInstallPrompt = null;
 
@@ -70,6 +75,7 @@ function init() {
   bindPricingTool();
   bindMarketplaceTool();
   bindDashboardTool();
+  bindCalendarTool();
   bindContentTool();
   bindImportExport();
   renderAll();
@@ -159,7 +165,8 @@ function normalizeState(nextState) {
     photoItems,
     pricedItems: Array.isArray(nextState.pricedItems) ? nextState.pricedItems : [],
     marketplace: Array.isArray(nextState.marketplace) ? nextState.marketplace : [],
-    timeoff: Array.isArray(nextState.timeoff) ? nextState.timeoff : []
+    timeoff: Array.isArray(nextState.timeoff) ? nextState.timeoff : [],
+    calendarEvents: Array.isArray(nextState.calendarEvents) ? nextState.calendarEvents : starter.calendarEvents
   };
 }
 
@@ -186,6 +193,7 @@ function isOldHours(value) {
 
 function isOldShortHours(value) {
   return !value
+    || value === "Daily 9-5"
     || value === "Thu-Sat 10-5"
     || value === "Tue-Fri 10-4; Sat 9-4"
     || value === "Tue-Fri 10 AM-4 PM; Sat 9 AM-4 PM; Sun-Mon Closed"
@@ -231,6 +239,7 @@ function renderAll() {
   renderPricedItemSelect();
   renderMarketplaceList();
   renderDashboard();
+  renderCalendarEvents();
   renderContentLists();
   renderPricingSettings();
 }
@@ -297,6 +306,7 @@ function isStandaloneApp() {
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
   if (!/^https?:$/i.test(location.protocol)) return;
+  if (location.hostname.endsWith(".trycloudflare.com")) return;
   navigator.serviceWorker.register("./service-worker.js").catch(() => {
     // The site still works normally if install/offline support is unavailable.
   });
@@ -869,7 +879,7 @@ function renderPhotoCategoryControls() {
   const buttonWrap = $("[data-photo-category-buttons]");
   if (!buttonWrap) return;
   const visibleCategoryValues = photoCategoriesExpanded
-    ? PHOTO_CATEGORY_FILTERS.map((category) => category.value)
+    ? PHOTO_CATEGORY_FILTERS.filter((category) => category.value !== "all").map((category) => category.value)
     : collapsedPhotoCategoryValues();
   const buttons = visibleCategoryValues.map((value) => {
     const category = getPhotoCategory(value);
@@ -899,7 +909,7 @@ function renderPhotoCategoryControls() {
 
 function collapsedPhotoCategoryValues() {
   const values = [...POPULAR_PHOTO_FILTERS];
-  if (!values.includes(publicGalleryFilter)) {
+  if (publicGalleryFilter !== "all" && !values.includes(publicGalleryFilter)) {
     values.splice(values.length - 1, 0, publicGalleryFilter);
   }
   return values;
@@ -1031,17 +1041,29 @@ async function updatePricingPhotoPreview(form) {
   }
   pricingPhotoDataUrl = await fileToDataUrl(file);
   const preview = $("[data-pricing-preview-image]");
-  preview.src = pricingPhotoDataUrl;
-  preview.alt = file.name || "Selected pricing item preview";
+  const wrap = preview?.closest(".pricing-photo-preview");
+  if (wrap) wrap.classList.remove("is-empty");
+  if (preview) {
+    preview.hidden = false;
+    preview.src = pricingPhotoDataUrl;
+    preview.alt = file.name || "Selected pricing item preview";
+  }
+  setPricingPhotoActionVisible(true);
   updatePricingOverlayPreview(form);
+  window.setTimeout(scrollPricingPreviewIntoView, 120);
 }
 
 function resetPricingPhotoPreview() {
   const preview = $("[data-pricing-preview-image]");
   if (preview) {
-    preview.src = "assets/img/placeholder-furniture.svg";
+    preview.removeAttribute("src");
     preview.alt = "Selected pricing item preview";
+    preview.hidden = true;
+    const wrap = preview.closest(".pricing-photo-preview");
+    if (wrap) wrap.classList.add("is-empty");
   }
+  stopPricingScanCountdown();
+  setPricingPhotoActionVisible(false);
   const status = $("[data-pricing-ai-status]");
   if (status) status.textContent = "Take a picture, then let AI fill the form.";
   const overlay = $("[data-pricing-clearance-overlay]");
@@ -1056,16 +1078,43 @@ function updatePricingOverlayPreview(form) {
   $("[data-pricing-overlay-price]").textContent = form.clearancePrice.value.trim() || "Sale";
 }
 
+function pricingPreviewHasPhoto() {
+  const preview = $("[data-pricing-preview-image]");
+  return Boolean(preview && !preview.hidden && preview.getAttribute("src"));
+}
+
+function setPricingPhotoActionVisible(visible) {
+  const button = $("[data-price-photo-ai]");
+  if (!button) return;
+  button.hidden = !visible;
+  button.disabled = !visible || Boolean(pricingScanTimer);
+}
+
+function setPricingPhotoScanning(isScanning) {
+  const wrap = $(".pricing-photo-preview");
+  const overlay = $("[data-pricing-scan-overlay]");
+  if (wrap) wrap.classList.toggle("is-scanning", isScanning);
+  if (overlay) overlay.hidden = !isScanning;
+  setPricingPhotoActionVisible(!isScanning && pricingPreviewHasPhoto());
+}
+
+function scrollPricingPreviewIntoView() {
+  const preview = $(".pricing-photo-preview");
+  if (!preview || typeof preview.scrollIntoView !== "function") return;
+  preview.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+}
+
 async function pricePhotoWithAi(form) {
   const status = $("[data-pricing-ai-status]");
   const [file] = Array.from(form.photo?.files || []);
+  if (pricingScanTimer) return;
   if (!file) {
-    status.textContent = "Take or choose a photo first.";
+    if (status) status.textContent = "Take or choose a photo first.";
     form.photo?.focus();
     return;
   }
 
-  status.textContent = "Reading the photo and building thrift prices...";
+  startPricingScanCountdown(status);
   const endpoint = state.settings.aiEndpoint || "/api/price-photo";
   const endpointWarning = aiEndpointWarning(endpoint);
   if (endpointWarning) {
@@ -1081,6 +1130,7 @@ async function pricePhotoWithAi(form) {
       priceBasis: "Local fallback because the AI endpoint is not reachable from this page."
     };
     applyPricingSuggestion(form, pricingAiSuggestion);
+    stopPricingScanCountdown();
     status.textContent = endpointWarning;
     return;
   }
@@ -1093,9 +1143,10 @@ async function pricePhotoWithAi(form) {
   payload.append("marketplacePercent", String(state.settings.marketplacePercent ?? 90));
   payload.append("clearanceMarkdownPercent", String(state.settings.clearanceMarkdownPercent ?? 75));
   payload.append("defaultPricingBasis", state.settings.defaultPricingBasis || "market");
-  payload.append("images", file);
 
   try {
+    const uploadImage = await fileToUploadImage(file);
+    payload.append("images", uploadImage.blob, uploadImage.filename);
     const response = await fetch(endpoint, { method: "POST", body: payload });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -1121,7 +1172,39 @@ async function pricePhotoWithAi(form) {
     };
     applyPricingSuggestion(form, pricingAiSuggestion);
     status.textContent = message;
+  } finally {
+    stopPricingScanCountdown();
   }
+}
+
+function startPricingScanCountdown(status) {
+  stopPricingScanCountdown();
+  setPricingPhotoScanning(true);
+  const countdown = $("[data-pricing-scan-countdown]");
+  const copy = $("[data-pricing-scan-copy]");
+  let remaining = 10;
+  const render = () => {
+    if (countdown) countdown.textContent = String(remaining);
+    if (copy) {
+      copy.textContent = remaining >= 0
+        ? "AI is checking the item and shelf price."
+        : "Still working. Keep this open.";
+    }
+    if (status) {
+      status.textContent = remaining >= 0
+        ? `Scanning photo... ${remaining}`
+        : `Still scanning... ${remaining}`;
+    }
+    remaining -= 1;
+  };
+  render();
+  pricingScanTimer = window.setInterval(render, 1000);
+}
+
+function stopPricingScanCountdown() {
+  if (pricingScanTimer) window.clearInterval(pricingScanTimer);
+  pricingScanTimer = null;
+  setPricingPhotoScanning(false);
 }
 
 function aiEndpointWarning(endpoint) {
@@ -1152,15 +1235,20 @@ function backendFallbackMessage(suggestion) {
   if (/OPENAI_API_KEY/i.test(suggestion.notes || "")) {
     return "The Vern server is running, but the AI key is not configured there. Local fallback filled the form.";
   }
-  if (/unreadable|Retake|No readable image/i.test(`${suggestion.notes || ""} ${suggestion.priceBasis || ""}`)) {
-    return "The photo was not readable enough, so local fallback filled the form. Try one clearer picture.";
+  if (/unreadable|Retake|No readable image|unsupported|format/i.test(`${suggestion.notes || ""} ${suggestion.priceBasis || ""}`)) {
+    return "The photo format was not readable. A safe starting price filled in; try a camera photo or JPG if it looks off.";
   }
-  return "Backend fallback price added. Staff should verify before tagging.";
+  if (/timed out|failed|rejected|Unexpected|JSON|parse/i.test(`${suggestion.notes || ""} ${suggestion.priceBasis || ""}`)) {
+    return "AI could not finish that scan. A safe starting price filled in; add a brand, tag, or model hint and try again when needed.";
+  }
+  return "AI filled a safe starting estimate. Staff should verify before tagging.";
 }
 
 function applyPricingSuggestion(form, suggestion) {
+  const itemName = clarifyPricingItemName(suggestion, form.name?.value);
   const normalizedCategory = normalizePricingCategory(
     suggestion.category,
+    itemName,
     suggestion.itemName,
     suggestion.title,
     suggestion.marketplaceTitle,
@@ -1168,7 +1256,7 @@ function applyPricingSuggestion(form, suggestion) {
     form.hint?.value
   );
   if (normalizedCategory) suggestion.category = normalizedCategory;
-  form.name.value = suggestion.itemName || suggestion.title || form.name.value || "Estate sale warehouse item";
+  form.name.value = itemName || "Estate sale warehouse item";
   if (normalizedCategory && window.VERNS_PRICE_GUIDE[normalizedCategory]) form.category.value = normalizedCategory;
   if (suggestion.condition) form.condition.value = normalizedConditionValue(suggestion.condition);
   form.marketValue.value = moneyValue(suggestion.marketValue || suggestion.likelySellingPrice || suggestion.estimatedHigh);
@@ -1182,6 +1270,130 @@ function applyPricingSuggestion(form, suggestion) {
     suggestion.confidence ? `Confidence: ${suggestion.confidence}` : ""
   ].filter(Boolean).join("\n");
   updatePricingOverlayPreview(form);
+}
+
+function clarifyPricingItemName(suggestion = {}, fallbackName = "") {
+  const fields = [
+    suggestion.itemName,
+    suggestion.title,
+    suggestion.marketplaceTitle,
+    suggestion.marketplaceDescription,
+    suggestion.notes,
+    suggestion.priceBasis,
+    fallbackName
+  ];
+  const joined = fields.filter(Boolean).join(" ");
+  const mediaFormat = mediaFormatFromText(joined);
+  const current = String(suggestion.itemName || suggestion.title || fallbackName || "").trim();
+  if (!mediaFormat) return current.slice(0, 90);
+
+  const candidate = [
+    suggestion.itemName,
+    suggestion.title,
+    suggestion.marketplaceTitle,
+    fallbackName
+  ].map((value) => cleanMediaCandidateName(value, mediaFormat))
+    .find((value) => value && !isVagueMediaName(value, mediaFormat));
+
+  if (candidate) {
+    return nameIncludesMediaFormat(candidate, mediaFormat)
+      ? candidate.slice(0, 90)
+      : `${candidate} ${mediaFormat}`.slice(0, 90);
+  }
+
+  const extractedTitle = extractMediaTitle(joined);
+  if (extractedTitle) return `${extractedTitle} ${mediaFormat}`.slice(0, 90);
+
+  if (current && !isVagueMediaName(current, mediaFormat)) {
+    return nameIncludesMediaFormat(current, mediaFormat)
+      ? current.slice(0, 90)
+      : `${current} ${mediaFormat}`.slice(0, 90);
+  }
+  return `${mediaFormat} media item`.slice(0, 90);
+}
+
+function cleanMediaCandidateName(value, mediaFormat) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const extractedTitle = extractMediaTitle(raw);
+  if (extractedTitle) return `${extractedTitle} ${mediaFormat}`;
+  return raw
+    .replace(/\s+-\s+Vern'?s Estate Sale Warehouse.*$/i, "")
+    .replace(/\bVern'?s Estate Sale Warehouse\b/gi, "")
+    .replace(/\s+/g, " ")
+    .replace(/^["'\u201c\u201d\s]+|["'\u201c\u201d.\s]+$/g, "")
+    .trim()
+    .slice(0, 90);
+}
+
+function mediaFormatFromText(text) {
+  const value = String(text || "").toLowerCase();
+  if (/\bblu[-\s]?ray\b/.test(value)) return "Blu-ray";
+  if (/\bdvd\b/.test(value)) return "DVD";
+  if (/\b(cd|compact disc)\b/.test(value)) return "CD";
+  if (/\bvhs\b/.test(value)) return "VHS";
+  if (/\b(vinyl|record|lp)\b/.test(value)) return "Vinyl record";
+  if (/\b(xbox|playstation|ps[1-5]?|nintendo|wii|switch|gamecube|video game)\b/.test(value)) return "Video game";
+  if (/\b(book|novel|hardcover|paperback)\b/.test(value)) return "Book";
+  return "";
+}
+
+function extractMediaTitle(text) {
+  const source = String(text || "");
+  const patterns = [
+    /\b(?:dvd|cd|blu[-\s]?ray|vhs|record|vinyl|book|game|video game)\s+(?:titled|title|called|named)\s+["'\u201c\u201d]?([^"'\u201c\u201d.,;\n]{2,80})/i,
+    /\b(?:titled|title|called|named)\s+["'\u201c\u201d]?([^"'\u201c\u201d.,;\n]{2,80})["'\u201c\u201d]?\s+(?:dvd|cd|blu[-\s]?ray|vhs|record|vinyl|book|game|video game)\b/i,
+    /\b["\u201c]([^"\u201d]{2,80})["\u201d]\s+(?:dvd|cd|blu[-\s]?ray|vhs|record|vinyl|book|game|video game)\b/i,
+    /\b(?:dvd|cd|blu[-\s]?ray|vhs|record|vinyl|book|game|video game)\s+["\u201c]([^"\u201d]{2,80})["\u201d]/i
+  ];
+  for (const pattern of patterns) {
+    const match = source.match(pattern);
+    if (match?.[1]) return displayTitleCase(cleanExtractedMediaTitle(match[1]));
+  }
+  return "";
+}
+
+function cleanExtractedMediaTitle(value) {
+  const cleaned = String(value || "")
+    .replace(/\b(condition|basis|confidence|category|market|retail|price|value|notes?)\b.*$/i, "")
+    .replace(/\b(dvd|cd|blu[-\s]?ray|vhs|record|vinyl|book|game|video game)\b.*$/i, "")
+    .replace(/^[:\-\u2013\u2014\s]+|[:\-\u2013\u2014."'\u201c\u201d\s]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned.split(/\s+/).slice(0, 10).join(" ");
+}
+
+function displayTitleCase(value) {
+  return String(value || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => (/^[A-Z0-9&'-]{2,}$/.test(word) ? word : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
+    .join(" ");
+}
+
+function isVagueMediaName(name, mediaFormat) {
+  const lower = String(name || "").toLowerCase().replace(/[^a-z0-9\s-]/g, " ").replace(/\s+/g, " ").trim();
+  if (!lower) return true;
+  if (/^(dvd|dvd disc|disc|cd|cd disc|compact disc|movie|film|blu ray|blu-ray|vhs|vhs tape|record|vinyl|vinyl record|book|media|video game|game|case)$/i.test(lower)) {
+    return true;
+  }
+  const stripped = lower
+    .replace(/\b(dvd|cd|compact|disc|movie|film|blu|ray|blu-ray|vhs|tape|record|vinyl|book|media|video|game|case|used|estate|sale|warehouse|item)\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return stripped.length < 3 && nameIncludesMediaFormat(lower, mediaFormat);
+}
+
+function nameIncludesMediaFormat(name, mediaFormat) {
+  const lower = String(name || "").toLowerCase();
+  if (mediaFormat === "Blu-ray") return /\bblu[-\s]?ray\b/.test(lower);
+  if (mediaFormat === "DVD") return /\bdvd\b/.test(lower);
+  if (mediaFormat === "CD") return /\b(cd|compact disc)\b/.test(lower);
+  if (mediaFormat === "VHS") return /\bvhs\b/.test(lower);
+  if (mediaFormat === "Vinyl record") return /\b(vinyl|record|lp)\b/.test(lower);
+  if (mediaFormat === "Video game") return /\b(xbox|playstation|ps[1-5]?|nintendo|wii|switch|gamecube|video game|game)\b/.test(lower);
+  if (mediaFormat === "Book") return /\b(book|novel|hardcover|paperback)\b/.test(lower);
+  return false;
 }
 
 function normalizePricingCategory(...values) {
@@ -1290,7 +1502,7 @@ function publishPricedItem(item, destination) {
       itemName: item.name,
       category: item.category,
       price: item.marketPrice || item.storePrice,
-      title: `${guide.titlePrefix} ${item.name} - Vern's Estate Sale Warehouse`,
+      title: marketplaceListingTitle(guide.titlePrefix, item.name),
       description: marketplaceDescriptionForPricedItem(item),
       employee: item.employee,
       status: "pending",
@@ -1370,18 +1582,19 @@ function renderPricingTable() {
 function bindMarketplaceTool() {
   const form = $("[data-marketplace-form]");
   if (!form) return;
+  const fields = marketplaceFields(form);
 
-  form.pricedItem.addEventListener("change", () => hydrateMarketplaceFromPricedItem(form));
-  form.photos.addEventListener("change", () => previewMarketplacePhotos(form));
+  fields.pricedItem.addEventListener("change", () => hydrateMarketplaceFromPricedItem(form));
+  fields.photos.addEventListener("change", () => previewMarketplacePhotos(form));
   $("[data-generate-marketplace]")?.addEventListener("click", () => generateMarketplaceCopy(form));
-  $("[data-copy-title]")?.addEventListener("click", () => copyField(form.title));
-  $("[data-copy-description]")?.addEventListener("click", () => copyField(form.description));
-  $("[data-copy-price]")?.addEventListener("click", () => copyField(form.price));
+  $("[data-copy-title]")?.addEventListener("click", (event) => copyField(fields.title, event.currentTarget));
+  $("[data-copy-description]")?.addEventListener("click", (event) => copyField(fields.description, event.currentTarget));
+  $("[data-copy-price]")?.addEventListener("click", (event) => copyField(fields.price, event.currentTarget));
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(form));
-    const photos = await filesToDataUrls(form.photos.files, 4);
+    const photos = await filesToDataUrls(fields.photos.files, 4);
     const listing = {
       id: createId("market"),
       itemName: data.itemName.trim(),
@@ -1413,33 +1626,57 @@ function bindMarketplaceTool() {
   });
 }
 
+function marketplaceFields(form) {
+  const field = (name) => form.elements.namedItem(name);
+  return {
+    pricedItem: field("pricedItem"),
+    itemName: field("itemName"),
+    category: field("category"),
+    price: field("price"),
+    title: field("title"),
+    description: field("description"),
+    photos: field("photos"),
+    employee: field("employee")
+  };
+}
+
 function hydrateMarketplaceFromPricedItem(form) {
-  const item = state.pricedItems.find((entry) => entry.id === form.pricedItem.value);
+  const fields = marketplaceFields(form);
+  const item = state.pricedItems.find((entry) => entry.id === fields.pricedItem.value);
   if (!item) return;
-  form.itemName.value = item.name;
-  form.category.value = item.category;
-  form.price.value = midpointPrice(item.marketPrice) || item.marketPrice;
-  form.employee.value = item.employee || "";
+  fields.itemName.value = item.name;
+  fields.category.value = item.category;
+  fields.price.value = midpointPrice(item.marketPrice) || item.marketPrice;
+  fields.employee.value = item.employee || "";
   generateMarketplaceCopy(form);
 }
 
 function generateMarketplaceCopy(form) {
-  const name = form.itemName.value.trim();
-  const category = form.category.value;
+  const fields = marketplaceFields(form);
+  const name = fields.itemName.value.trim();
+  const category = fields.category.value;
   const guide = window.VERNS_PRICE_GUIDE[category] || window.VERNS_PRICE_GUIDE.furniture;
   const cleanName = name || "Estate sale item";
-  form.title.value = `${guide.titlePrefix} ${cleanName} - Vern's Estate Sale Warehouse`;
-  form.description.value = [
+  fields.title.value = marketplaceListingTitle(guide.titlePrefix, cleanName);
+  fields.description.value = [
     `${cleanName} available at Vern's Estate Sale Warehouse.`,
     "",
     "Condition: see photos and inspect in person before buying.",
     "Pickup: local warehouse pickup. First come, first served unless staff marks it sold.",
     "Notes: message or stop in for current availability."
   ].join("\n");
-  if (!form.price.value) {
+  if (!fields.price.value) {
     const range = priceRange(guide.market, 1);
-    form.price.value = midpointPrice(range) || range;
+    fields.price.value = midpointPrice(range) || range;
   }
+}
+
+function marketplaceListingTitle(prefix, itemName) {
+  const cleanPrefix = String(prefix || "").trim();
+  const cleanName = String(itemName || "Estate sale item").trim();
+  const hasPrefix = cleanPrefix && cleanName.toLowerCase().startsWith(`${cleanPrefix.toLowerCase()} `);
+  const title = hasPrefix ? cleanName : `${cleanPrefix} ${cleanName}`.trim();
+  return `${title} - Vern's Estate Sale Warehouse`;
 }
 
 function midpointPrice(value) {
@@ -1451,9 +1688,10 @@ function midpointPrice(value) {
 }
 
 function previewMarketplacePhotos(form) {
+  const fields = marketplaceFields(form);
   const wrap = $("[data-photo-preview]");
   wrap.replaceChildren();
-  Array.from(form.photos.files || [])
+  Array.from(fields.photos.files || [])
     .slice(0, 4)
     .forEach((file) => {
       const img = document.createElement("img");
@@ -1498,69 +1736,471 @@ function renderMarketplaceList() {
 
 function bindDashboardTool() {
   const form = $("[data-timeoff-form]");
+  const staffNameInput = $("[data-staff-name]");
+
+  if (staffNameInput) {
+    const savedName = localStorage.getItem(STAFF_NAME_KEY) || "";
+    staffNameInput.value = savedName;
+    staffNameInput.dataset.previousName = savedName;
+    syncTimeoffEmployeeFromStaffName(form, savedName);
+    staffNameInput.addEventListener("input", () => {
+      const previousName = staffNameInput.dataset.previousName || "";
+      const name = staffNameInput.value.trim();
+      localStorage.setItem(STAFF_NAME_KEY, name);
+      syncTimeoffEmployeeFromStaffName(form, name, previousName);
+      staffNameInput.dataset.previousName = name;
+      renderDashboard();
+    });
+  }
+
+  $$("[data-staff-view]").forEach((button) => {
+    button.addEventListener("click", () => setStaffDashboardView(button.dataset.staffView));
+  });
+
+  $("[data-manager-unlock]")?.addEventListener("click", () => {
+    const code = $("[data-manager-code]")?.value || "";
+    if (code === MANAGER_PASSCODE) {
+      sessionStorage.setItem(MANAGER_SESSION_KEY, "yes");
+      unlockManagerDashboard();
+      renderDashboard();
+    } else {
+      const message = $("[data-manager-message]");
+      if (message) message.textContent = "Wrong manager code.";
+    }
+  });
+
+  if (sessionStorage.getItem(MANAGER_SESSION_KEY) === "yes") unlockManagerDashboard();
+
+  if (!form) {
+    renderDashboard();
+    return;
+  }
+
+  updateTimeoffSendLinks(form);
+  ["input", "change"].forEach((eventName) => {
+    form.addEventListener(eventName, () => updateTimeoffSendLinks(form));
+  });
+
+  $("[data-timeoff-email]")?.addEventListener("click", (event) => {
+    if (!form.reportValidity()) {
+      event.preventDefault();
+      return;
+    }
+    if (!managerEmailAddress()) {
+      event.preventDefault();
+      setTimeoffSendStatus("Add Vern's email in Settings first.");
+      return;
+    }
+    updateTimeoffSendLinks(form);
+    setTimeoffSendStatus("Opening email...");
+  });
+
+  $("[data-timeoff-sms]")?.addEventListener("click", (event) => {
+    if (!form.reportValidity()) {
+      event.preventDefault();
+      return;
+    }
+    if (!managerPhoneDigits()) {
+      event.preventDefault();
+      setTimeoffSendStatus("Add Vern's phone in Settings first.");
+      return;
+    }
+    updateTimeoffSendLinks(form);
+    setTimeoffSendStatus("Opening text message...");
+  });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveTimeoffRequest(form);
+  });
+}
+
+function syncTimeoffEmployeeFromStaffName(form, name, previousName = "") {
+  const employee = form?.elements?.namedItem("employee");
+  if (!employee) return;
+  if (!employee.value || employee.value.trim() === previousName) employee.value = name;
+}
+
+function setStaffDashboardView(view) {
+  $$("[data-staff-view]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.staffView === view);
+  });
+  $$("[data-staff-panel]").forEach((panel) => {
+    panel.classList.toggle("is-active", panel.dataset.staffPanel === view);
+  });
+  if (view === "manager" && sessionStorage.getItem(MANAGER_SESSION_KEY) === "yes") unlockManagerDashboard();
+}
+
+function unlockManagerDashboard() {
+  const gate = $("[data-manager-gate]");
+  const dashboard = $("[data-manager-dashboard]");
+  const message = $("[data-manager-message]");
+  if (gate) gate.hidden = true;
+  if (dashboard) dashboard.hidden = false;
+  if (message) message.textContent = "";
+}
+
+function saveTimeoffRequest(form) {
+  const data = Object.fromEntries(new FormData(form));
+  state.timeoff.unshift({
+    id: createId("time"),
+    employee: data.employee.trim(),
+    start: data.start,
+    end: data.end,
+    notes: data.notes.trim(),
+    status: "requested",
+    createdAt: new Date().toISOString()
+  });
+  saveState();
+  form.reset();
+  syncTimeoffEmployeeFromStaffName(form, dashboardStaffName());
+  updateTimeoffSendLinks(form);
+  setTimeoffSendStatus("Saved locally. Use Email or Text to send it to Vern.");
+  renderDashboard();
+}
+
+function dashboardStaffName() {
+  return ($("[data-staff-name]")?.value || localStorage.getItem(STAFF_NAME_KEY) || "").trim();
+}
+
+function updateTimeoffSendLinks(form) {
   if (!form) return;
+  const data = Object.fromEntries(new FormData(form));
+  const subject = encodeURIComponent(`Time off request - ${data.employee || "Employee"}`);
+  const body = encodeURIComponent(timeoffRequestMessage(data));
+  const email = managerEmailAddress();
+  const phone = managerPhoneDigits();
+  const emailLink = $("[data-timeoff-email]");
+  const smsLink = $("[data-timeoff-sms]");
+  if (emailLink) {
+    emailLink.href = email ? `mailto:${email}?subject=${subject}&body=${body}` : "#";
+    emailLink.classList.toggle("is-disabled", !email);
+  }
+  if (smsLink) {
+    smsLink.href = phone ? `sms:${phone}?&body=${body}` : "#";
+    smsLink.classList.toggle("is-disabled", !phone);
+  }
+}
+
+function timeoffRequestMessage(data) {
+  return [
+    "Time off request",
+    `Employee: ${data.employee || ""}`,
+    `Dates: ${data.start || ""} to ${data.end || ""}`,
+    `Notes: ${data.notes || ""}`,
+    "",
+    "Sent from Vern's staff tools."
+  ].join("\n");
+}
+
+function managerPhoneDigits() {
+  return String(state.settings.phone || "").replace(/\D/g, "");
+}
+
+function managerEmailAddress() {
+  return String(state.settings.email || "").trim();
+}
+
+function setTimeoffSendStatus(message) {
+  const status = $("[data-timeoff-send-status]");
+  if (status) status.textContent = message;
+}
+
+function bindCalendarTool() {
+  const form = $("[data-calendar-form]");
+  if (!form) return;
+  form.date.value = form.date.value || todayIsoDate();
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(form));
-    state.timeoff.unshift({
-      id: createId("time"),
+    state.calendarEvents.unshift({
+      id: createId("calendar"),
+      title: data.title.trim(),
+      date: data.date,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      type: data.type,
+      status: data.status,
+      location: data.location.trim(),
       employee: data.employee.trim(),
-      start: data.start,
-      end: data.end,
       notes: data.notes.trim(),
       createdAt: new Date().toISOString()
     });
     saveState();
     form.reset();
-    renderDashboard();
+    form.date.value = todayIsoDate();
+    renderAll();
   });
 }
 
+function renderCalendarEvents() {
+  const list = $("[data-calendar-list]");
+  if (!list) return;
+  const events = [...(state.calendarEvents || [])].sort((a, b) => calendarSortValue(a) - calendarSortValue(b));
+  if (!events.length) {
+    list.replaceChildren(pEl("", "No calendar items yet."));
+    return;
+  }
+  list.replaceChildren(
+    ...events.map((item) => {
+      const activity = activityItem(item.title || "Calendar item", [
+        `${formatCalendarDate(item.date)} · ${formatTimeRange(item)}`,
+        `${calendarTypeLabel(item.type)} · ${calendarStatusLabel(item.status)} · ${item.location || "Location not set"}`,
+        [item.notes, item.employee ? `Added by ${item.employee}` : ""].filter(Boolean).join(" · ") || "No notes"
+      ]);
+      activity.classList.add("calendar-event");
+      activity.dataset.calendarStatus = item.status || "upcoming";
+      activity.append(miniActions(item.id, "calendarEvents"));
+      return activity;
+    })
+  );
+}
+
+function calendarSortValue(item) {
+  return Date.parse(`${item.date || "9999-12-31"}T${item.startTime || "23:59"}`) || Number.MAX_SAFE_INTEGER;
+}
+
+function formatCalendarDate(value) {
+  const parsed = Date.parse(`${value}T00:00:00`);
+  if (Number.isNaN(parsed)) return value || "Date not set";
+  return new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" }).format(new Date(parsed));
+}
+
+function formatTimeRange(item) {
+  const start = formatTimeValue(item.startTime);
+  const end = formatTimeValue(item.endTime);
+  if (start && end) return `${start}-${end}`;
+  return start || end || "Time not set";
+}
+
+function formatTimeValue(value) {
+  const match = String(value || "").match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return "";
+  const date = new Date();
+  date.setHours(Number(match[1]), Number(match[2]), 0, 0);
+  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(date);
+}
+
+function calendarTypeLabel(type) {
+  return {
+    sale: "Sale day",
+    setup: "Setup / staging",
+    pickup: "Pickup window",
+    staff: "Staff note",
+    closed: "Closed date"
+  }[type] || "Calendar";
+}
+
+function calendarStatusLabel(status) {
+  return {
+    upcoming: "Upcoming",
+    confirmed: "Confirmed",
+    completed: "Completed",
+    canceled: "Canceled"
+  }[status] || "Upcoming";
+}
+
 function renderDashboard() {
+  renderStaffOwnDashboard();
+  renderManagerDashboard();
+  renderTimeoffList();
+  updateTimeoffSendLinks($("[data-timeoff-form]"));
+}
+
+function renderStaffOwnDashboard() {
+  const summary = $("[data-staff-my-summary]");
+  const activity = $("[data-staff-my-activity]");
+  if (!summary || !activity) return;
+
+  const employee = dashboardStaffName();
+  if (!employee) {
+    summary.replaceChildren(staffEmptyNote("Enter your name above to see your own work."));
+    activity.replaceChildren();
+    return;
+  }
+
+  const rows = employeeProductionRows(employee);
+  const counts = employeeProductionCounts(employee);
+  summary.replaceChildren(
+    miniStat("Priced", counts.priced),
+    miniStat("Marketplace", counts.marketplace),
+    miniStat("Time off", counts.timeoff),
+    miniStat("Calendar", counts.calendar)
+  );
+  activity.replaceChildren(
+    ...(rows.length
+      ? rows.slice(0, 8).map(staffActivityRow)
+      : [staffEmptyNote("No saved work for this name yet.")])
+  );
+}
+
+function renderManagerDashboard() {
   const stats = $("[data-dashboard-stats]");
-  if (stats) {
-    const counts = {
-      Pending: state.marketplace.filter((item) => item.status === "pending").length,
-      Posted: state.marketplace.filter((item) => item.status === "posted").length,
-      Sold: state.marketplace.filter((item) => item.status === "sold").length,
-      Closed: state.marketplace.filter((item) => item.status === "closed").length,
-      Priced: state.pricedItems.length,
-      Photos: state.photoItems.length,
-      Sales: state.estateSales.length,
-      "Review due": state.estateSales.filter((sale) => isSaleReviewDue(sale) && sale.status !== "past").length
-    };
-    stats.replaceChildren(
-      ...Object.entries(counts).map(([label, count]) => {
-        const card = articleEl("stat-card");
-        card.append(strongEl(String(count)), pEl("", label));
-        return card;
-      })
-    );
-  }
+  const roster = $("[data-employee-activity]");
+  const detail = $("[data-manager-employee-detail]");
+  if (!stats || !roster || !detail) return;
 
-  const activity = $("[data-employee-activity]");
-  if (activity) {
-    const byEmployee = {};
-    [...state.pricedItems, ...state.marketplace].forEach((item) => {
-      const name = item.employee || "Unassigned";
-      byEmployee[name] = (byEmployee[name] || 0) + 1;
-    });
-    const entries = Object.entries(byEmployee);
-    activity.replaceChildren(
-      ...(entries.length
-        ? entries.map(([employee, count]) => activityItem(employee, [`${count} saved staff action${count === 1 ? "" : "s"}`]))
-        : [pEl("", "No employee activity yet.")])
-    );
-  }
+  const names = employeeNames();
+  const counts = {
+    Staff: names.length,
+    Priced: state.pricedItems.length,
+    Marketplace: state.marketplace.length,
+    "Time off": state.timeoff.length,
+    Calendar: state.calendarEvents.length
+  };
+  stats.replaceChildren(...Object.entries(counts).map(([label, count]) => miniStat(label, count)));
 
+  if (!selectedManagerEmployee && names.length) selectedManagerEmployee = names[0];
+  roster.replaceChildren(
+    ...(names.length
+      ? names.map((name) => employeeRosterButton(name))
+      : [staffEmptyNote("No employee activity yet.")])
+  );
+  renderManagerEmployeeDetail(detail, selectedManagerEmployee);
+}
+
+function renderTimeoffList() {
   const timeoff = $("[data-timeoff-list]");
-  if (timeoff) {
-    timeoff.replaceChildren(
-      ...(state.timeoff.length
-        ? state.timeoff.map((item) => activityItem(item.employee, [`${item.start} to ${item.end}`, item.notes || "No notes"]))
-        : [pEl("", "No vacation or close-out notes yet.")])
-    );
+  if (!timeoff) return;
+  const employee = dashboardStaffName();
+  const visibleItems = employee
+    ? state.timeoff.filter((item) => employeeMatches(item.employee, employee))
+    : state.timeoff;
+  timeoff.replaceChildren(
+    ...(visibleItems.length
+      ? visibleItems.slice(0, 10).map((item) => staffActivityRow({
+          kind: "Time off",
+          title: item.employee || "Employee",
+          meta: `${item.start} to ${item.end}`,
+          note: item.notes || "No notes",
+          date: item.createdAt
+        }))
+      : [staffEmptyNote(employee ? "No time off requests for this name yet." : "No time off requests yet.")])
+  );
+}
+
+function employeeNames() {
+  const names = new Set();
+  [...state.pricedItems, ...state.marketplace, ...state.calendarEvents, ...state.timeoff].forEach((item) => {
+    const name = String(item.employee || "").trim();
+    if (name) names.add(name);
+  });
+  return Array.from(names).sort((a, b) => a.localeCompare(b));
+}
+
+function employeeRosterButton(name) {
+  const counts = employeeProductionCounts(name);
+  const button = document.createElement("button");
+  button.className = `employee-roster-button${employeeMatches(name, selectedManagerEmployee) ? " is-active" : ""}`;
+  button.type = "button";
+  button.append(strongEl(name), spanEl("", `${counts.total} saved action${counts.total === 1 ? "" : "s"}`));
+  button.addEventListener("click", () => {
+    selectedManagerEmployee = name;
+    renderDashboard();
+  });
+  return button;
+}
+
+function renderManagerEmployeeDetail(detail, employee) {
+  if (!employee) {
+    detail.replaceChildren(headingEl("h3", "Pick an employee"), pEl("", "Click a name to see pricing, Marketplace, and calendar activity."));
+    return;
   }
+  const rows = employeeProductionRows(employee);
+  const counts = employeeProductionCounts(employee);
+  const header = divEl("manager-detail-head", [
+    headingEl("h3", employee),
+    pEl("", `${counts.priced} priced · ${counts.marketplace} Marketplace · ${counts.timeoff} time off · ${counts.calendar} calendar`)
+  ]);
+  detail.replaceChildren(
+    header,
+    ...(rows.length ? rows.slice(0, 14).map(staffActivityRow) : [staffEmptyNote("No saved activity for this employee yet.")])
+  );
+}
+
+function employeeProductionRows(employee) {
+  const rows = [];
+  state.pricedItems.forEach((item) => {
+    if (!employeeMatches(item.employee, employee)) return;
+    rows.push({
+      kind: "Priced",
+      title: item.name || "Priced item",
+      meta: `${item.storePrice || "No shelf price"} shelf · ${item.marketPrice || "No Marketplace price"}`,
+      note: item.status || categoryLabel(item.category),
+      date: item.createdAt
+    });
+  });
+  state.marketplace.forEach((item) => {
+    if (!employeeMatches(item.employee, employee)) return;
+    rows.push({
+      kind: "Marketplace",
+      title: item.title || item.itemName || "Marketplace listing",
+      meta: `${item.price || "No price"} · ${statusLabel(item.status)}`,
+      note: item.postedDate ? `Posted ${item.postedDate}` : "Not posted",
+      date: item.createdAt
+    });
+  });
+  state.calendarEvents.forEach((item) => {
+    if (!employeeMatches(item.employee, employee)) return;
+    rows.push({
+      kind: "Calendar",
+      title: item.title || "Calendar item",
+      meta: `${formatCalendarDate(item.date)} · ${formatTimeRange(item)}`,
+      note: calendarStatusLabel(item.status),
+      date: item.date
+    });
+  });
+  state.timeoff.forEach((item) => {
+    if (!employeeMatches(item.employee, employee)) return;
+    rows.push({
+      kind: "Time off",
+      title: `${item.start} to ${item.end}`,
+      meta: item.status || "Requested",
+      note: item.notes || "No notes",
+      date: item.createdAt
+    });
+  });
+  return rows.sort((a, b) => Date.parse(b.date || 0) - Date.parse(a.date || 0));
+}
+
+function employeeProductionCounts(employee) {
+  const priced = state.pricedItems.filter((item) => employeeMatches(item.employee, employee)).length;
+  const marketplace = state.marketplace.filter((item) => employeeMatches(item.employee, employee)).length;
+  const timeoff = state.timeoff.filter((item) => employeeMatches(item.employee, employee)).length;
+  const calendar = state.calendarEvents.filter((item) => employeeMatches(item.employee, employee)).length;
+  return { priced, marketplace, timeoff, calendar, total: priced + marketplace + timeoff + calendar };
+}
+
+function employeeMatches(value, employee) {
+  return normalizeEmployeeName(value) === normalizeEmployeeName(employee);
+}
+
+function normalizeEmployeeName(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function miniStat(label, value) {
+  const card = articleEl("stat-card mini-stat-card");
+  card.append(strongEl(String(value)), pEl("", label));
+  return card;
+}
+
+function staffActivityRow(item) {
+  const row = divEl("staff-activity-row");
+  row.append(
+    spanEl("staff-activity-kind", item.kind),
+    divEl("staff-activity-copy", [
+      headingEl("h4", item.title || "Staff activity"),
+      pEl("", item.meta || ""),
+      item.note ? pEl("", item.note) : ""
+    ].filter(Boolean))
+  );
+  return row;
+}
+
+function staffEmptyNote(message) {
+  const note = pEl("staff-empty-note", message);
+  return note;
 }
 
 function bindContentTool() {
@@ -1803,6 +2443,9 @@ async function updateAiPhotoPreview(form) {
   }
   const image = await fileToDataUrl(file);
   const preview = $("[data-ai-preview-image]");
+  const wrap = preview?.closest("[data-ai-photo-preview]");
+  if (wrap) wrap.classList.remove("is-empty");
+  preview.hidden = false;
   preview.src = image;
   preview.alt = file.name || "Selected item preview";
   updateAiOverlayPreview(form);
@@ -1813,8 +2456,11 @@ function resetAiPhotoPreview() {
   const overlay = $("[data-ai-preview-overlay]");
   const status = $("[data-ai-status]");
   if (preview) {
-    preview.src = "assets/img/placeholder-clearance.svg";
+    preview.removeAttribute("src");
     preview.alt = "Selected item preview";
+    preview.hidden = true;
+    const wrap = preview.closest("[data-ai-photo-preview]");
+    if (wrap) wrap.classList.add("is-empty");
   }
   if (overlay) overlay.hidden = true;
   if (status) status.textContent = "Upload a photo, then ask for a quick suggestion.";
@@ -2044,6 +2690,28 @@ function firstFileToDataUrl(files) {
   return file ? fileToDataUrl(file) : Promise.resolve("");
 }
 
+async function fileToUploadImage(file) {
+  try {
+    const dataUrl = await fileToDataUrl(file);
+    const blob = dataUrlToBlob(dataUrl);
+    if (blob?.size) return { blob, filename: "pricing-photo.jpg" };
+  } catch {
+    // Keep the original file as a last resort if the browser cannot render it.
+  }
+  return { blob: file, filename: file.name || "pricing-photo.jpg" };
+}
+
+function dataUrlToBlob(dataUrl) {
+  const match = String(dataUrl || "").match(/^data:([^;,]+)(?:;[^,]*)?;base64,(.+)$/);
+  if (!match) return null;
+  const binary = atob(match[2]);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return new Blob([bytes], { type: match[1] || "image/jpeg" });
+}
+
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     if (file.type.startsWith("image/")) {
@@ -2075,13 +2743,38 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function copyField(field) {
-  const value = field.value || field.textContent || "";
-  if (!value) return;
-  navigator.clipboard?.writeText(value).catch(() => {
+function copyField(field, button) {
+  const value = field?.value || field?.textContent || "";
+  if (!value) {
+    flashCopyButton(button, "Nothing to copy");
+    return;
+  }
+
+  const fallbackCopy = () => {
+    field.focus?.();
     field.select?.();
-    document.execCommand("copy");
-  });
+    const copied = document.execCommand?.("copy");
+    flashCopyButton(button, copied ? "Copied" : "Select + copy");
+  };
+
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(value).then(
+      () => flashCopyButton(button, "Copied"),
+      fallbackCopy
+    );
+    return;
+  }
+
+  fallbackCopy();
+}
+
+function flashCopyButton(button, label) {
+  if (!button) return;
+  button.dataset.defaultLabel = button.dataset.defaultLabel || button.textContent;
+  button.textContent = label;
+  window.setTimeout(() => {
+    button.textContent = button.dataset.defaultLabel;
+  }, 1300);
 }
 
 function createId(prefix) {

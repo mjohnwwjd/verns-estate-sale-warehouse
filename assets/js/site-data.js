@@ -10,13 +10,13 @@ window.VERNS_STARTER_DATA = {
     email: "",
     facebookUrl: "https://www.facebook.com/profile.php?id=61590219587739",
     hours: "Every day 9 AM-5 PM",
-    shortHours: "Daily 9-5",
+    shortHours: "Every day 9 AM-5 PM",
     location: "Norton Shores, MI",
     aiEndpoint: "/api/price-photo",
     salesSyncUrl: "/api/estate-sales/sync",
     salesAutoSync: true,
     lastSalesSyncAt: "",
-    contactInfoVersion: "2026-06-04-norton-shores-daily-hours",
+    contactInfoVersion: "2026-06-05-hero-facts",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
     demoContentVersion: "2026-06-05-clearance-gate",
     thriftMarkdownPercent: 50,
@@ -48,6 +48,32 @@ window.VERNS_STARTER_DATA = {
       note: "Warehouse pop-up listing. Open EstateSales.NET for current photos and final times.",
       image: "assets/img/sale-muskegon-pop-up-tent.jpeg",
       lastReviewed: "2026-05-31"
+    }
+  ],
+  calendarEvents: [
+    {
+      id: "calendar-norton-shores-popup-2026-06-05",
+      title: "Norton Shores POP UP SURPRISE Vintage & Antiques",
+      date: "2026-06-05",
+      startTime: "08:30",
+      endTime: "17:00",
+      type: "sale",
+      status: "upcoming",
+      location: "Norton Shores, MI",
+      employee: "",
+      notes: "EstateSales.NET listing 4940091. Verify final photos and terms before opening."
+    },
+    {
+      id: "calendar-norton-shores-popup-2026-06-06",
+      title: "Norton Shores POP UP SURPRISE Vintage & Antiques",
+      date: "2026-06-06",
+      startTime: "08:30",
+      endTime: "17:00",
+      type: "sale",
+      status: "upcoming",
+      location: "Norton Shores, MI",
+      employee: "",
+      notes: "Second sale day. Confirm hours and any discount schedule before posting updates."
     }
   ],
   featured: [
