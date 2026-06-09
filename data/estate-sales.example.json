@@ -1,6 +1,19 @@
 {
   "sales": [
     {
+      "id": "estate-sale-grand-haven-current",
+      "title": "Grand Haven Estate Sale",
+      "url": "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
+      "city": "Grand Haven, MI",
+      "dateSummary": "Dates on EstateSales.NET",
+      "hours": "Official times on EstateSales.NET",
+      "status": "upcoming",
+      "note": "New Grand Haven sale. Open Vern's official EstateSales.NET page for current photos, dates, and final terms.",
+      "image": "assets/img/sale-coming-soon-west-mi.png",
+      "buttonLabel": "Open Vern's EstateSales.NET page",
+      "lastReviewed": "2026-06-09"
+    },
+    {
       "id": "estate-sale-spring-lake-4932078",
       "title": "Spring Lake Estate Sale",
       "url": "https://www.estatesales.net/MI/Spring-Lake/49456/4932078",

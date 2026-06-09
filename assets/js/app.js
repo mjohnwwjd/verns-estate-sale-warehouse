@@ -14,7 +14,7 @@ const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Mus
 const DEFAULT_ESTATE_SALE_URL = "";
 const ENDED_POPUP_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-06-06-sale-ended";
+const DEMO_CONTENT_VERSION = "2026-06-09-grand-haven-sale";
 const CONTACT_INFO_VERSION = "2026-06-05-hero-facts";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -840,7 +840,7 @@ function renderComingSoonSaleCard() {
     comingSoonImageEl(),
     spanEl("tag sale-card-badge sale-scheduling-tag", "Next cities scheduling"),
     headingEl("h3", "More Sales Coming Soon"),
-    pEl("sale-location sale-city-line", "Grand Haven · Wyoming · Grand Rapids · Spring Lake"),
+    pEl("sale-location sale-city-line", "Wyoming · Grand Rapids · Spring Lake · Lakeshore"),
     pEl("sale-date", "New dates are being lined up"),
     pEl("", "Vern's sale board changes as dates lock in. Check back for the next round of official listings."),
     linkEl("btn btn-dark", getEstateCompanyUrl(state.settings.companyUrl), "Watch Vern's page")
@@ -870,7 +870,7 @@ function renderEstateSaleCard(sale) {
     pEl("sale-date", sale.dateSummary || "Dates on EstateSales.NET"),
     pEl("", sale.hours || "Check official listing for current hours."),
     pEl("", sale.note || "Full photos and final details are on EstateSales.NET."),
-    linkEl("btn btn-gold", sale.url, "Open official listing")
+    linkEl("btn btn-gold", sale.url, sale.buttonLabel || "Open official listing")
   );
   return card;
 }
@@ -899,9 +899,15 @@ function getPrimaryEstateSaleUrl() {
 }
 
 function saleSortValue(sale) {
+  const statusOrder = {
+    live: 0,
+    upcoming: 1,
+    ended: 8
+  }[sale.status] ?? 5;
   const match = String(sale.dateSummary || "").match(/([A-Z][a-z]{2})\s+(\d{1,2})(?:-\d{1,2})?,?\s+(\d{4})/);
   const parsed = match ? Date.parse(`${match[1]} ${match[2]}, ${match[3]}`) : NaN;
-  return Number.isNaN(parsed) ? Date.now() : parsed;
+  const dateValue = Number.isNaN(parsed) ? Date.now() : parsed;
+  return (statusOrder * 10000000000000) + dateValue;
 }
 
 function isSaleReviewDue(sale) {
