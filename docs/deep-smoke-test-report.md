@@ -1,109 +1,58 @@
 # Deep Smoke Test Report
 
-Date: 2026-06-06
+Date: 2026-06-09
 
 ## Commands
 
 - `npm run check` passed.
-- `node --check scripts/smoke-check.mjs` passed.
 - `npm run smoke` passed.
-- Local rendered browser smoke used `http://127.0.0.1:18097/?v=20260606-deep-smoke`.
-- Follow-up EstateSales.NET button smoke used `http://127.0.0.1:18098/?v=20260606-upcoming-sale`.
-- Staff login/dashboard smoke used `http://127.0.0.1:18100/?v=20260606-sale-ended-staff-login`.
+- `git diff --check` passed.
+- Direct local backend probe passed on `http://127.0.0.1:18123`.
+- Static fallback/link crawl passed on the local homepage.
+- Headless Chrome DOM render loaded the local homepage, current sale copy, real address, and real phone number.
 
-## Static Smoke Coverage
+## Backend/API Coverage
 
-- `index.html` and `meet-vern.html` both return successfully.
-- No empty links or placeholder `href="#"` links remain in either HTML page.
-- Same-page hash links point to existing section IDs.
-- Static dropdowns have options.
-- Required employee dynamic dropdown hooks are present:
-  - `data-category-select`
-  - `data-pricing-destination`
-  - `data-priced-item-select`
-  - `data-market-category-select`
-  - `data-photo-item-type-select`
+- `/api/status` returns `ok: true` and exposes only safe configuration flags.
+- `/api/estate-sales/sync` returns a sales array and `syncAllowed` flag.
+- `/api/price-photo` returns a safe fallback result when no readable image is uploaded.
+- Malformed encoded URLs now return `400 Bad request`.
+- Source/private paths are blocked from the Node static server:
+  - `/server.js`
+  - `/package.json`
+  - `/README.md`
+  - `/docs/deep-smoke-test-report.md`
+  - `/scripts/smoke-check.mjs`
+  - `/data/estate-sales.example.json`
+  - `/.env.local`
+  - `/assets/%2e%2e/server.js`
 
-## Rendered Link Checks
+## Link/Asset Coverage
 
-- Homepage rendered 20 anchors, 18 visible.
-- Meet Vern rendered 5 anchors, 5 visible.
-- No rendered placeholder links.
-- No missing rendered hash targets.
-- New-tab links include `rel="noopener"`.
-- Fresh browser console error checks passed on the homepage, employee area, and Meet Vern page.
-- Asset cache tags verified:
-  - Deep staff/link pass: `20260606-deep-smoke`
-  - EstateSales.NET sale-link follow-up: `20260606-upcoming-sale`
-  - Sale-ended plus staff-login follow-up: `20260606-sale-ended-staff-login`
+- Homepage app scripts, stylesheet, and manifest return `200`.
+- Existing smoke still checks both `index.html` and `meet-vern.html`.
+- No empty or placeholder `href="#"` links were found in static HTML.
+- Same-page hash links point to existing IDs.
+- New-tab links are checked for `rel="noopener"`.
+- PWA assets and service worker return successfully.
+- External references are checked by the smoke script with warnings instead of false failures for sites that block automated HEAD/GET checks.
 
-## Staff Login And Dashboard Follow-up
+## Fixes Saved
 
-- Employee login now requires username and passcode.
-- Any non-manager username with the staff passcode lands on Dashboard and is scoped to that name.
-- `mike` and `vern` are manager usernames with the existing staff passcode.
-- Regular employee test:
-  - Logged in as `sarah`.
-  - Dashboard opened automatically.
-  - Staff name and employee fields auto-filled as `Sarah`.
-  - Employee fields were locked for Sarah.
-  - Manager, Settings, and Public Content controls were hidden.
-  - Saved one priced item and Sarah's dashboard showed `1 Priced`.
-- Manager test:
-  - Logged in as `mike`.
-  - Header showed `Signed in as Mike · Manager`.
-  - Manager, Settings, and Public Content controls were visible.
-  - Manager view showed Sarah in the roster with `1 saved action`.
-  - Sarah detail showed the priced item she saved.
+- Hardened `serveStatic` so the Node server only serves public root files and `assets/`.
+- Added smoke-test coverage for blocked private/source paths.
+- Added a clean `400` response for malformed encoded URLs.
+- Replaced the raw homepage address fallback with `1663 West Sherman Boulevard, Norton Shores, MI 49441`.
+- Replaced the raw homepage phone fallback with `(616) 638-3873`.
 
-## EstateSales.NET Button Follow-up
+## Live Site Check
 
-- Homepage EstateSales.NET logo/button links now open the active sale listing:
-  - `https://www.estatesales.net/MI/Muskegon/49442/4940091`
-- Meet Vern EstateSales.NET button now opens the same active sale listing.
-- Sale board now shows the Norton Shores/Muskegon sale as `Live now`.
-- Spring Lake is marked `past` and no longer appears as an upcoming sale card.
-- The employee settings still retain Vern's company profile URL for staff reference.
+- `http://estatesbyvern.com/` returns `200` and includes the Vern site title.
+- `https://estatesbyvern.com/` did not respond during this audit.
+- GitHub Pages reports `https_enforced: false` for the custom domain.
+- `https://mjohnwwjd.github.io/verns-estate-sale-warehouse/` redirects to `http://estatesbyvern.com/`.
 
-## Employee Area Dropdown Checks
+## Follow-Up
 
-- Employee passcode `3939` opens Vern's Staff Tools.
-- Pricing tab dropdowns work:
-  - Category: 22 options
-  - Condition: 5 options
-  - Status: 2 options
-  - Destination: 6 options
-- Marketplace tab dropdowns work:
-  - Priced item: 1 option
-  - Category: 22 options
-  - Status: 4 options
-- Dashboard works:
-  - Request time off opens.
-  - `Email Vern` is a button, not a fake link.
-  - `Text Vern` is a button, not a fake link.
-  - Manager view unlocks and shows the manager dashboard.
-- Calendar tab dropdowns work:
-  - Type: 5 options
-  - Status: 4 options
-- Settings tab dropdown works:
-  - Default pricing basis: 2 options
-- Public Content tab dropdowns work:
-  - Sale status: 4 options
-  - Photo category: 4 options
-  - Item type: 19 options
-
-## Fixes Made During Test
-
-- Replaced staff time-off placeholder send links with action buttons that build email/text handoffs only when needed.
-- Added real fallback URLs for EstateSales.NET, Google Maps, and Facebook links before JavaScript finishes loading.
-- Fixed shared settings rendering so `meet-vern.html` no longer throws when homepage-only elements are absent.
-- Bumped homepage, Meet Vern, and service worker cache tags to `20260606-deep-smoke`.
-- Expanded `npm run smoke` to check both HTML pages, placeholder links, hash targets, static dropdown options, and required employee dropdown hooks.
-- Updated public EstateSales.NET buttons to prefer the active sale listing over the company profile.
-- Set the active sale URL to the Norton Shores/Muskegon listing.
-- Bumped homepage, Meet Vern, and service worker cache tags to `20260606-upcoming-sale`.
-- Added username + passcode staff login with session identity.
-- Auto-filled staff/employee fields from the signed-in profile.
-- Scoped regular employee activity lists to their own name.
-- Added manager-only roster access for `mike` and `vern`.
-- Added photo publishing to employee production counts.
+- Turn on/fix HTTPS for `estatesbyvern.com` in GitHub Pages or DNS once the certificate/domain setup is ready.
+- The employee passcode gate is still a convenience screen in a static app, not true protected authentication. Use real server-side auth before storing private employee data online.

@@ -24,6 +24,7 @@ try {
   await checkStaticLinksAndDropdowns();
   await checkLocalAssets();
   await checkPwaAssets();
+  await checkPrivateStaticFiles();
   await checkApi();
   await checkExternalReferences();
 } finally {
@@ -159,6 +160,29 @@ async function checkPwaAssets() {
   const serviceWorker = await fetch(`${origin}/service-worker.js`);
   expect(serviceWorker.ok, `service-worker.js returned ${serviceWorker.status}`);
   expect((await serviceWorker.text()).includes("CACHE_NAME"), "service-worker.js missing cache setup");
+}
+
+async function checkPrivateStaticFiles() {
+  const blockedPaths = [
+    "/server.js",
+    "/package.json",
+    "/README.md",
+    "/docs/deep-smoke-test-report.md",
+    "/scripts/smoke-check.mjs",
+    "/data/estate-sales.example.json",
+    "/.env.local",
+    "/assets/%2e%2e/server.js"
+  ];
+
+  for (const pathname of blockedPaths) {
+    const response = await fetch(`${origin}${pathname}`);
+    const text = await response.text();
+    expect([403, 404].includes(response.status), `${pathname} should be blocked but returned ${response.status}`);
+    expect(!/OPENAI_API_KEY|const http = require|passcode|sk-[A-Za-z0-9]/.test(text), `${pathname} exposed private/source content`);
+  }
+
+  const malformed = await fetch(`${origin}/%E0%A4%A`);
+  expect(malformed.status === 400, `malformed encoded URL should return 400 but returned ${malformed.status}`);
 }
 
 async function checkApi() {

@@ -55,6 +55,13 @@ const mimeTypes = {
   ".webp": "image/webp"
 };
 
+const publicRootFiles = new Set([
+  "/index.html",
+  "/meet-vern.html",
+  "/manifest.webmanifest",
+  "/service-worker.js"
+]);
+
 const securityHeaders = {
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
@@ -405,12 +412,25 @@ async function writeSalesCache(payload) {
 }
 
 async function serveStatic(req, res, url) {
-  let filePath = decodeURIComponent(url.pathname);
+  let filePath;
+  try {
+    filePath = decodeURIComponent(url.pathname);
+  } catch {
+    sendText(res, 400, "text/plain; charset=utf-8", "Bad request");
+    return;
+  }
   if (filePath === "/") filePath = "/index.html";
-  const resolved = path.normalize(path.join(ROOT, filePath));
+  const resolved = path.resolve(ROOT, `.${filePath}`);
+  const relativePath = path.relative(ROOT, resolved);
 
-  if (!resolved.startsWith(ROOT)) {
+  if (!relativePath || relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
     sendText(res, 403, "text/plain; charset=utf-8", "Forbidden");
+    return;
+  }
+
+  const publicPath = `/${relativePath.split(path.sep).join("/")}`;
+  if (!isPublicStaticPath(publicPath)) {
+    sendText(res, 404, "text/plain; charset=utf-8", "Not found");
     return;
   }
 
@@ -422,9 +442,18 @@ async function serveStatic(req, res, url) {
     return;
   }
 
-  const finalPath = stat.isDirectory() ? path.join(resolved, "index.html") : resolved;
+  if (stat.isDirectory()) {
+    sendText(res, 404, "text/plain; charset=utf-8", "Not found");
+    return;
+  }
+
+  const finalPath = resolved;
   const content = await fsp.readFile(finalPath);
   sendText(res, 200, mimeTypes[path.extname(finalPath).toLowerCase()] || "application/octet-stream", req.method === "HEAD" ? "" : content);
+}
+
+function isPublicStaticPath(publicPath) {
+  return publicRootFiles.has(publicPath) || publicPath.startsWith("/assets/");
 }
 
 function getRequestBody(req) {
