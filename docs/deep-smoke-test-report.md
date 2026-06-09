@@ -47,12 +47,13 @@ Date: 2026-06-09
 
 ## Live Site Check
 
-- `http://estatesbyvern.com/` returns `200` and includes the Vern site title.
-- `https://estatesbyvern.com/` did not respond during this audit.
-- GitHub Pages reports `https_enforced: false` for the custom domain.
-- `https://mjohnwwjd.github.io/verns-estate-sale-warehouse/` redirects to `http://estatesbyvern.com/`.
+- `http://estatesbyvern.com/` redirects to `https://estatesbyvern.com/`.
+- `https://estatesbyvern.com/` returns `200` and includes the Vern site title.
+- `http://www.estatesbyvern.com/` and `https://www.estatesbyvern.com/` redirect to `https://estatesbyvern.com/`.
+- GitHub Pages reports `https_enforced: true`.
+- GitHub Pages reports the HTTPS certificate as `approved` for `estatesbyvern.com` and `www.estatesbyvern.com`.
+- GitHub Pages certificate expires on `2026-09-07`.
 
 ## Follow-Up
 
-- Turn on/fix HTTPS for `estatesbyvern.com` in GitHub Pages or DNS once the certificate/domain setup is ready.
 - The employee passcode gate is still a convenience screen in a static app, not true protected authentication. Use real server-side auth before storing private employee data online.
