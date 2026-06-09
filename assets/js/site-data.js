@@ -18,7 +18,7 @@ window.VERNS_STARTER_DATA = {
     lastSalesSyncAt: "",
     contactInfoVersion: "2026-06-05-hero-facts",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
-    demoContentVersion: "2026-06-09-grand-haven-sale",
+    demoContentVersion: "2026-06-09-grand-haven-details",
     thriftMarkdownPercent: 50,
     marketplacePercent: 90,
     clearanceMarkdownPercent: 75,
@@ -27,15 +27,15 @@ window.VERNS_STARTER_DATA = {
   estateSales: [
     {
       id: "estate-sale-grand-haven-current",
-      title: "Grand Haven Estate Sale",
-      url: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
+      title: "GRAND HAVEN Lakeshore Ave. Estate Sale",
+      url: "https://www.estatesales.net/MI/Grand-Haven/49417/4951521",
       city: "Grand Haven, MI",
-      dateSummary: "Dates on EstateSales.NET",
-      hours: "Official times on EstateSales.NET",
+      dateSummary: "Jun 11-13, 2026",
+      hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
       status: "upcoming",
-      note: "New Grand Haven sale. Open Vern's official EstateSales.NET page for current photos, dates, and final terms.",
+      note: "Address releases on EstateSales.NET after 9 AM Wednesday, June 10. Open the official listing for photos, terms, and final details.",
       image: "assets/img/sale-coming-soon-west-mi.png",
-      buttonLabel: "Open Vern's EstateSales.NET page",
+      buttonLabel: "Open official listing",
       lastReviewed: "2026-06-09"
     },
     {
