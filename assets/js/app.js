@@ -14,7 +14,7 @@ const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Mus
 const DEFAULT_ESTATE_SALE_URL = "";
 const ENDED_POPUP_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-06-10-grand-haven-dates";
+const DEMO_CONTENT_VERSION = "2026-06-11-grand-haven-address-links";
 const CONTACT_INFO_VERSION = "2026-06-05-hero-facts";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -163,10 +163,13 @@ function normalizeState(nextState) {
     estateSales = mergeSeedById(estateSales, starter.estateSales);
     photoItems = mergeSeedById(photoItems, starter.photoItems);
     photoItems = removeDeprecatedPhotoItems(photoItems);
-    if (!getLiveEstateSaleUrl(rawSettings.saleUrl) || isEndedPopUpSaleUrl(rawSettings.saleUrl)) {
+    if (!getLiveEstateSaleUrl(rawSettings.saleUrl) || isEndedPopUpSaleUrl(rawSettings.saleUrl) || isInactiveStarterSaleUrl(rawSettings.saleUrl, starter.estateSales)) {
       settings.saleUrl = starter.settings.saleUrl || DEFAULT_ESTATE_SALE_URL;
     }
     settings.demoContentVersion = DEMO_CONTENT_VERSION;
+  }
+  if (isInactiveStarterSaleUrl(settings.saleUrl, starter.estateSales)) {
+    settings.saleUrl = starter.settings.saleUrl || DEFAULT_ESTATE_SALE_URL;
   }
   estateSales = mergeSeedById(estateSales, starter.estateSales);
 
@@ -719,7 +722,7 @@ function renderSettings() {
   const estateLink = $("[data-estate-link]");
   const companyUrl = getEstateCompanyUrl(settings.companyUrl);
   const liveSaleUrl = getLiveEstateSaleUrl(settings.saleUrl);
-  const activeSaleUrl = liveSaleUrl || getPrimaryEstateSaleUrl();
+  const activeSaleUrl = getPrimaryEstateSaleUrl() || liveSaleUrl;
   const publicEstateUrl = activeSaleUrl || companyUrl;
 
   $$("[data-estate-company-link]").forEach((link) => {
@@ -803,6 +806,11 @@ function isEndedPopUpSaleUrl(value) {
   return normalizeUrlForCompare(value) === normalizeUrlForCompare(ENDED_POPUP_SALE_URL);
 }
 
+function isInactiveStarterSaleUrl(value, starterSales = []) {
+  const matchedSale = starterSales.find((sale) => normalizeUrlForCompare(sale.url) === normalizeUrlForCompare(value));
+  return Boolean(matchedSale && ["past", "ended", "canceled"].includes(matchedSale.status));
+}
+
 function normalizeUrlForCompare(value) {
   return String(value || "").trim().replace(/\/+$/, "").toLowerCase();
 }
@@ -868,6 +876,7 @@ function renderEstateSaleCard(sale) {
     spanEl("tag sale-card-badge", saleStatusLabel(sale.status)),
     headingEl("h3", sale.title),
     pEl("sale-location", sale.city || "Estate sale"),
+    sale.address ? pEl("sale-address", sale.address) : "",
     pEl("sale-date", sale.dateSummary || "Dates on EstateSales.NET"),
     pEl("", sale.hours || "Check official listing for current hours."),
     pEl("", sale.note || "Full photos and final details are on EstateSales.NET."),
@@ -896,6 +905,11 @@ function getVisibleEstateSales() {
 }
 
 function getPrimaryEstateSaleUrl() {
+  const starterSaleUrl = window.VERNS_STARTER_DATA?.settings?.saleUrl || "";
+  const starterSale = (state.estateSales || []).find((sale) => normalizeUrlForCompare(sale.url) === normalizeUrlForCompare(starterSaleUrl));
+  if (getLiveEstateSaleUrl(starterSaleUrl) && starterSale && ["upcoming", "live"].includes(starterSale.status)) {
+    return starterSaleUrl;
+  }
   return getVisibleEstateSales().find((sale) => ["upcoming", "live"].includes(sale.status))?.url || "";
 }
 
@@ -2464,6 +2478,7 @@ function bindContentTool() {
       title: data.title.trim(),
       url: data.url.trim(),
       city: data.city.trim(),
+      address: data.address?.trim() || "",
       dateSummary: data.dateSummary.trim(),
       hours: data.hours.trim(),
       status: data.status,
@@ -2795,6 +2810,7 @@ function normalizeSaleFeed(payload) {
       title: String(sale.title || "Estate sale").slice(0, 90),
       url: String(sale.url || ""),
       city: String(sale.city || sale.location || "").slice(0, 80),
+      address: String(sale.address || "").slice(0, 120),
       dateSummary: String(sale.dateSummary || sale.dates || "").slice(0, 80),
       hours: String(sale.hours || "").slice(0, 100),
       status: ["upcoming", "live", "ended", "past", "canceled"].includes(sale.status) ? sale.status : "upcoming",

@@ -3,7 +3,7 @@ const todayPhotoItems = Array.isArray(window.VERNS_TODAY_PHOTO_ITEMS) ? window.V
 window.VERNS_STARTER_DATA = {
   settings: {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
-    saleUrl: "",
+    saleUrl: "https://www.estatesales.net/MI/Grand-Haven/49417/4951521",
     embedUrl: "",
     address: "1663 West Sherman Boulevard, Norton Shores, MI 49441",
     phone: "(616) 638-3873",
@@ -18,7 +18,7 @@ window.VERNS_STARTER_DATA = {
     lastSalesSyncAt: "",
     contactInfoVersion: "2026-06-05-hero-facts",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
-    demoContentVersion: "2026-06-10-grand-haven-dates",
+    demoContentVersion: "2026-06-11-grand-haven-address-links",
     thriftMarkdownPercent: 50,
     marketplacePercent: 90,
     clearanceMarkdownPercent: 75,
@@ -30,10 +30,11 @@ window.VERNS_STARTER_DATA = {
       title: "GRAND HAVEN Lakeshore Ave. Estate Sale",
       url: "https://www.estatesales.net/MI/Grand-Haven/49417/4951521",
       city: "Grand Haven, MI",
+      address: "13462 Lakeshore Ave., Grand Haven, MI 49417",
       dateSummary: "Jun 11-13, 2026",
       hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
-      status: "upcoming",
-      note: "Address releases on EstateSales.NET after 9 AM Wednesday, June 10. Open the official listing for photos, terms, and final details.",
+      status: "live",
+      note: "Sale address is 13462 Lakeshore Ave., Grand Haven, MI 49417. Open the official listing for photos, terms, and final details.",
       image: "assets/img/sale-coming-soon-west-mi.png",
       buttonLabel: "Open official listing",
       lastReviewed: "2026-06-09"
