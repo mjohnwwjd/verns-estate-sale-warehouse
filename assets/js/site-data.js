@@ -18,7 +18,7 @@ window.VERNS_STARTER_DATA = {
     lastSalesSyncAt: "",
     contactInfoVersion: "2026-06-05-hero-facts",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
-    demoContentVersion: "2026-06-11-grand-haven-address-links",
+    demoContentVersion: "2026-06-11-grand-haven-live-address",
     thriftMarkdownPercent: 50,
     marketplacePercent: 90,
     clearanceMarkdownPercent: 75,
@@ -34,10 +34,10 @@ window.VERNS_STARTER_DATA = {
       dateSummary: "Jun 11-13, 2026",
       hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
       status: "live",
-      note: "Sale address is 13462 Lakeshore Ave., Grand Haven, MI 49417. Open the official listing for photos, terms, and final details.",
+      note: "Sale is open now. Open the official listing for photos, terms, and final details.",
       image: "assets/img/sale-coming-soon-west-mi.png",
       buttonLabel: "Open official listing",
-      lastReviewed: "2026-06-09"
+      lastReviewed: "2026-06-11"
     },
     {
       id: "estate-sale-spring-lake-4932078",
