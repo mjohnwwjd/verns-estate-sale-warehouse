@@ -14,7 +14,7 @@ const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Mus
 const DEFAULT_ESTATE_SALE_URL = "";
 const ENDED_POPUP_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-06-16-mona-lake-tools-sale";
+const DEMO_CONTENT_VERSION = "2026-06-16-mona-lake-tools-sale-2";
 const CONTACT_INFO_VERSION = "2026-06-05-hero-facts";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -2747,6 +2747,7 @@ async function maybeRefreshAuthorizedSales(force = false) {
   const endpoint = String(state.settings.salesSyncUrl || "").trim();
   if (!endpoint || !isAllowedSalesSyncUrl(endpoint)) return;
   if (!force && state.settings.salesAutoSync === false) return;
+  if (!force && isMissingStaticSalesSyncEndpoint(endpoint)) return;
 
   const lastSync = Date.parse(state.settings.lastSalesSyncAt || "");
   const recentlySynced = !Number.isNaN(lastSync) && Date.now() - lastSync < 24 * 60 * 60 * 1000;
@@ -2788,6 +2789,12 @@ async function maybeRefreshAuthorizedSales(force = false) {
     renderSettings();
     // Keep the last good employee-managed sale board if the authorized feed is down.
   }
+}
+
+function isMissingStaticSalesSyncEndpoint(endpoint) {
+  const host = window.location.hostname.toLowerCase();
+  const staticHost = host === "estatesbyvern.com" || host === "www.estatesbyvern.com" || host.endsWith(".github.io");
+  return staticHost && String(endpoint).startsWith("/api/");
 }
 
 function isAllowedSalesSyncUrl(value) {

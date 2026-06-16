@@ -1,4 +1,4 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260616-mona-lake-tools-sale";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260616-mona-lake-tools-sale-2";
 const APP_SHELL = [
   "./",
   "./index.html",
