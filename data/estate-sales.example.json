@@ -1,6 +1,19 @@
 {
   "sales": [
     {
+      "id": "estate-sale-mona-lake-tools-4958901",
+      "title": "Mona Lake Frontage Estate Sale - TOOLS GALORE",
+      "url": "https://www.estatesales.net/MI/Norton-Shores/49441/4958901",
+      "city": "Norton Shores, MI",
+      "dateSummary": "Jun 18-21, 2026",
+      "hours": "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM; Sun 8:30 AM-2 PM",
+      "status": "upcoming",
+      "note": "Address releases on EstateSales.NET after 9 AM Wednesday, June 17. Tools, household items, and tent overflow are listed on the official sale page.",
+      "image": "assets/img/sale-mona-lake-tools-thumb.jpg",
+      "buttonLabel": "Open official listing",
+      "lastReviewed": "2026-06-16"
+    },
+    {
       "id": "estate-sale-grand-haven-current",
       "title": "GRAND HAVEN Lakeshore Ave. Estate Sale",
       "url": "https://www.estatesales.net/MI/Grand-Haven/49417/4951521",
@@ -8,8 +21,8 @@
       "address": "13462 Lakeshore Ave., Grand Haven, MI 49417",
       "dateSummary": "Jun 11-13, 2026",
       "hours": "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
-      "status": "live",
-      "note": "Sale is open now. Open the official listing for photos, terms, and final details.",
+      "status": "past",
+      "note": "This sale has ended. Open the official listing for archived photos and details.",
       "image": "assets/img/sale-coming-soon-west-mi.png",
       "buttonLabel": "Open official listing",
       "lastReviewed": "2026-06-11"
@@ -21,7 +34,7 @@
       "city": "Spring Lake, MI",
       "dateSummary": "Jun 1-3, 2026",
       "hours": "Mon-Tue 8:30 AM-5 PM; Wed 8:30 AM-3 PM",
-      "status": "upcoming",
+      "status": "past",
       "note": "Full details and photos open on the official EstateSales.NET listing.",
       "image": "assets/img/sale-spring-lake-horse.jpeg",
       "lastReviewed": "2026-05-31"
@@ -33,8 +46,8 @@
       "city": "Norton Shores, MI",
       "dateSummary": "Jun 5-6, 2026",
       "hours": "8:30 AM-5 PM",
-      "status": "upcoming",
-      "note": "Warehouse pop-up listing. Open EstateSales.NET for current photos and final times.",
+      "status": "ended",
+      "note": "This pop-up sale has ended. Leftover merchandise moves to Vern's Estate Sale Warehouse, so stop by the store for fresh finds.",
       "image": "assets/img/sale-muskegon-pop-up-tent.jpeg",
       "lastReviewed": "2026-05-31"
     }

@@ -3,7 +3,7 @@ const todayPhotoItems = Array.isArray(window.VERNS_TODAY_PHOTO_ITEMS) ? window.V
 window.VERNS_STARTER_DATA = {
   settings: {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
-    saleUrl: "https://www.estatesales.net/MI/Grand-Haven/49417/4951521",
+    saleUrl: "https://www.estatesales.net/MI/Norton-Shores/49441/4958901",
     embedUrl: "",
     address: "1663 West Sherman Boulevard, Norton Shores, MI 49441",
     phone: "(616) 638-3873",
@@ -18,13 +18,26 @@ window.VERNS_STARTER_DATA = {
     lastSalesSyncAt: "",
     contactInfoVersion: "2026-06-05-hero-facts",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
-    demoContentVersion: "2026-06-11-grand-haven-live-address",
+    demoContentVersion: "2026-06-16-mona-lake-tools-sale",
     thriftMarkdownPercent: 50,
     marketplacePercent: 90,
     clearanceMarkdownPercent: 75,
     defaultPricingBasis: "market"
   },
   estateSales: [
+    {
+      id: "estate-sale-mona-lake-tools-4958901",
+      title: "Mona Lake Frontage Estate Sale - TOOLS GALORE",
+      url: "https://www.estatesales.net/MI/Norton-Shores/49441/4958901",
+      city: "Norton Shores, MI",
+      dateSummary: "Jun 18-21, 2026",
+      hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM; Sun 8:30 AM-2 PM",
+      status: "upcoming",
+      note: "Address releases on EstateSales.NET after 9 AM Wednesday, June 17. Tools, household items, and tent overflow are listed on the official sale page.",
+      image: "assets/img/sale-mona-lake-tools-thumb.jpg",
+      buttonLabel: "Open official listing",
+      lastReviewed: "2026-06-16"
+    },
     {
       id: "estate-sale-grand-haven-current",
       title: "GRAND HAVEN Lakeshore Ave. Estate Sale",
@@ -33,8 +46,8 @@ window.VERNS_STARTER_DATA = {
       address: "13462 Lakeshore Ave., Grand Haven, MI 49417",
       dateSummary: "Jun 11-13, 2026",
       hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
-      status: "live",
-      note: "Sale is open now. Open the official listing for photos, terms, and final details.",
+      status: "past",
+      note: "This sale has ended. Open the official listing for archived photos and details.",
       image: "assets/img/sale-coming-soon-west-mi.png",
       buttonLabel: "Open official listing",
       lastReviewed: "2026-06-11"
