@@ -1,4 +1,4 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260616-mona-lake-tools-sale-2";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260623-wyoming-extraordinary-sale";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -14,6 +14,7 @@ const APP_SHELL = [
   "./assets/img/app/verns-app-icon-512.png",
   "./assets/img/app/apple-touch-icon.png",
   "./assets/img/estatesales-net-logo.svg",
+  "./assets/img/sale-wyoming-extraordinary-main.jpg",
   "./assets/img/sale-mona-lake-tools-thumb.jpg",
   "./assets/img/sale-coming-soon-west-mi.png",
   "./assets/img/sale-spring-lake-horse.jpeg",

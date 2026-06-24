@@ -14,7 +14,7 @@ const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Mus
 const DEFAULT_ESTATE_SALE_URL = "";
 const ENDED_POPUP_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-06-16-mona-lake-tools-sale-2";
+const DEMO_CONTENT_VERSION = "2026-06-23-wyoming-extraordinary-sale";
 const CONTACT_INFO_VERSION = "2026-06-05-hero-facts";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -849,7 +849,7 @@ function renderComingSoonSaleCard() {
     comingSoonImageEl(),
     spanEl("tag sale-card-badge sale-scheduling-tag", "Next cities scheduling"),
     headingEl("h3", "More Sales Coming Soon"),
-    pEl("sale-location sale-city-line", "Wyoming · Grand Rapids · Spring Lake · Lakeshore"),
+    pEl("sale-location sale-city-line", "Grand Rapids · Spring Lake · Lakeshore · Holland"),
     pEl("sale-date", "New dates are being lined up"),
     pEl("", "Vern's sale board changes as dates lock in. Check back for the next round of official listings."),
     linkEl("btn btn-dark", getEstateCompanyUrl(state.settings.companyUrl), "Watch Vern's page")

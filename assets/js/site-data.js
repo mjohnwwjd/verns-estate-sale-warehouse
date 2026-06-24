@@ -3,7 +3,7 @@ const todayPhotoItems = Array.isArray(window.VERNS_TODAY_PHOTO_ITEMS) ? window.V
 window.VERNS_STARTER_DATA = {
   settings: {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
-    saleUrl: "https://www.estatesales.net/MI/Norton-Shores/49441/4958901",
+    saleUrl: "https://www.estatesales.net/MI/Wyoming/49519/4971918",
     embedUrl: "",
     address: "1663 West Sherman Boulevard, Norton Shores, MI 49441",
     phone: "(616) 638-3873",
@@ -18,7 +18,7 @@ window.VERNS_STARTER_DATA = {
     lastSalesSyncAt: "",
     contactInfoVersion: "2026-06-05-hero-facts",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
-    demoContentVersion: "2026-06-16-mona-lake-tools-sale-2",
+    demoContentVersion: "2026-06-23-wyoming-extraordinary-sale",
     thriftMarkdownPercent: 50,
     marketplacePercent: 90,
     clearanceMarkdownPercent: 75,
@@ -26,17 +26,30 @@ window.VERNS_STARTER_DATA = {
   },
   estateSales: [
     {
+      id: "estate-sale-wyoming-extraordinary-4971918",
+      title: "Wyoming Extraordinary Estate Sale - Rare & Unusual Antiques",
+      url: "https://www.estatesales.net/MI/Wyoming/49519/4971918",
+      city: "Wyoming, MI",
+      dateSummary: "Jul 9-12, 2026",
+      hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM; Sun 8:30 AM-2 PM",
+      status: "upcoming",
+      note: "Rare and unusual antiques, Art Deco lighting, pottery, glass, sculpture, furniture, tools, garden pieces, and reseller-friendly estate-sale pricing. Address releases on EstateSales.NET before the sale.",
+      image: "assets/img/sale-wyoming-extraordinary-main.jpg",
+      buttonLabel: "Open official listing",
+      lastReviewed: "2026-06-23"
+    },
+    {
       id: "estate-sale-mona-lake-tools-4958901",
       title: "Mona Lake Frontage Estate Sale - TOOLS GALORE",
       url: "https://www.estatesales.net/MI/Norton-Shores/49441/4958901",
       city: "Norton Shores, MI",
       dateSummary: "Jun 18-21, 2026",
       hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM; Sun 8:30 AM-2 PM",
-      status: "upcoming",
-      note: "Address releases on EstateSales.NET after 9 AM Wednesday, June 17. Tools, household items, and tent overflow are listed on the official sale page.",
+      status: "past",
+      note: "This sale has ended. Open the official EstateSales.NET listing for archived photos and details.",
       image: "assets/img/sale-mona-lake-tools-thumb.jpg",
       buttonLabel: "Open official listing",
-      lastReviewed: "2026-06-16"
+      lastReviewed: "2026-06-23"
     },
     {
       id: "estate-sale-grand-haven-current",
@@ -71,7 +84,7 @@ window.VERNS_STARTER_DATA = {
       city: "Norton Shores, MI",
       dateSummary: "Jun 5-6, 2026",
       hours: "8:30 AM-5 PM",
-      status: "ended",
+      status: "past",
       note: "This pop-up sale has ended. Leftover merchandise moves to Vern's Estate Sale Warehouse, so stop by the store for fresh finds.",
       image: "assets/img/sale-muskegon-pop-up-tent.jpeg",
       lastReviewed: "2026-05-31"
