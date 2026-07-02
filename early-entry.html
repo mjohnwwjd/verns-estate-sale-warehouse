@@ -48,7 +48,7 @@
             <span class="early-entry-spots-label" data-early-entry-remaining-label>spots remain</span>
           </div>
           <p data-early-entry-counter-note>
-            Preview count only. Live Stripe countdown will be connected before this goes public.
+            5 spots are already held. Stripe checkout is limited to the remaining public early-entry spots.
           </p>
         </div>
       </section>
@@ -92,14 +92,14 @@
               <span data-early-entry-meter></span>
             </div>
           </div>
-          <a class="btn btn-gold early-entry-pay-button" href="https://venmo.com/ebuyingstore" data-early-entry-pay-button>
-            Pay $25 with Venmo
+          <a class="btn btn-gold early-entry-pay-button" href="https://buy.stripe.com/eVqfZj5MVdy1diF5LsaR200" data-early-entry-pay-button>
+            Pay $25 &amp; Sign Up Early
           </a>
           <p class="early-entry-payment-note" data-early-entry-payment-note>
-            Venmo sign-ups are manually confirmed and limited to available early-entry spots.
+            Limited to the remaining public early-entry spots.
             Free in-person sign-up begins at 7:30 AM at the sale location.
           </p>
-          <div class="venmo-box" data-venmo-box>
+          <div class="venmo-box" data-venmo-box hidden>
             <p class="eyebrow">Venmo fallback</p>
             <p>
               Send payment to <strong data-venmo-username>@ebuyingstore</strong> and include
@@ -107,11 +107,7 @@
             </p>
             <img data-venmo-qr hidden alt="Venmo QR code for Vern's early entry payment" />
           </div>
-          <p class="stripe-setup-note" data-stripe-setup-note>
-            Staff note: paste the Stripe Payment Link into
-            <code>early-entry-config.js</code> when the $25 link is ready and capped
-            at 25 completed payments.
-          </p>
+          <p class="stripe-setup-note" data-stripe-setup-note hidden></p>
         </aside>
       </section>
 

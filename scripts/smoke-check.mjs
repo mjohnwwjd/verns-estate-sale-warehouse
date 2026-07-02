@@ -86,7 +86,7 @@ async function checkCorePages() {
   const earlyEntryHtml = await earlyEntryResponse.text();
   expect(earlyEntryResponse.ok, `early-entry.html returned ${earlyEntryResponse.status}`);
   expect(earlyEntryHtml.includes("Early Entry Sign-Up | Vern's Estate Sale Warehouse"), "early-entry page missing title");
-  expect(earlyEntryHtml.includes("Pay $25 with Venmo"), "early-entry page missing no-JS fallback payment button");
+  expect(earlyEntryHtml.includes("Pay $25 &amp; Sign Up Early"), "early-entry page missing live Stripe payment button");
   expect(earlyEntryHtml.includes("data-early-entry-meter"), "early-entry page missing spots meter");
   expect(earlyEntryHtml.includes("packed front to back"), "early-entry page missing approved sale description");
 
