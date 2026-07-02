@@ -58,6 +58,8 @@ const mimeTypes = {
 const publicRootFiles = new Set([
   "/index.html",
   "/meet-vern.html",
+  "/early-entry.html",
+  "/payment-preview.html",
   "/manifest.webmanifest",
   "/service-worker.js"
 ]);

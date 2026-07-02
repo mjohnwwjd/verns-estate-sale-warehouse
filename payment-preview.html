@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Preview-only checkout for Vern's Estate Sale Warehouse early entry sign-up."
+    />
+    <title>Checkout Preview | Vern's Estate Sale Warehouse</title>
+    <meta name="theme-color" content="#171512" />
+    <link rel="icon" href="assets/img/app/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="assets/img/app/apple-touch-icon.png" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260702-payment-preview" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <main id="main" class="checkout-preview-page">
+      <section class="checkout-preview-shell" aria-labelledby="checkout-preview-title">
+        <div class="checkout-preview-info">
+          <a class="btn btn-dark meet-back-link" href="early-entry.html">Back to Early Entry</a>
+          <p class="eyebrow">Draft payment preview</p>
+          <h1 id="checkout-preview-title">Early Entry Checkout</h1>
+          <p class="checkout-preview-warning">
+            Preview only. This is not live, no card is charged, and no early-entry spot is reserved from this page.
+          </p>
+          <div class="checkout-preview-rules">
+            <p><strong>$25 per person</strong> for one early-entry spot.</p>
+            <p><strong>First 25 paid customers</strong> get early-entry spots when the real Stripe link is active.</p>
+            <p>Free in-person sign-up starts at the sale location at <strong>7:30 AM</strong>.</p>
+          </div>
+        </div>
+
+        <form class="checkout-preview-card" aria-label="Preview checkout form">
+          <div class="checkout-preview-summary">
+            <span class="checkout-preview-price">$25</span>
+            <div>
+              <h2>Vern's Early Entry Spot</h2>
+              <p>Quantity: 1 shopper</p>
+            </div>
+          </div>
+
+          <label>
+            Customer name
+            <input type="text" placeholder="Name used for payment and sign-up" disabled />
+          </label>
+          <label>
+            Email
+            <input type="email" placeholder="Customer receipt email" disabled />
+          </label>
+          <label>
+            Phone
+            <input type="tel" placeholder="Optional confirmation phone" disabled />
+          </label>
+
+          <div class="checkout-preview-total">
+            <span>Total due</span>
+            <strong>$25.00</strong>
+          </div>
+
+          <button class="btn btn-gold" type="button" disabled>
+            Preview only - payment not active
+          </button>
+          <p class="checkout-preview-note">
+            The real Stripe Payment Link will replace this page after it is approved and capped at 25 completed payments.
+          </p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; 2026 Vern's Estate Sale Warehouse.</p>
+      <p>Website built and maintained by Ebuyingstore.</p>
+    </footer>
+  </body>
+</html>

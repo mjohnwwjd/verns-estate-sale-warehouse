@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Vern Estate Sale Early Sign-Up Back Card</title>
+    <style>
+      :root {
+        --ink: #11100e;
+        --black: #070706;
+        --gold: #f4c641;
+        --cream: #fff7dc;
+        --red: #cf1f32;
+        --shadow: rgba(0, 0, 0, 0.5);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1200px;
+        height: 900px;
+        margin: 0;
+        overflow: hidden;
+        background: var(--black);
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+        font-family: Impact, "Arial Black", Arial, sans-serif;
+        color: var(--cream);
+      }
+
+      .card {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        justify-items: center;
+        width: 1200px;
+        height: 900px;
+        overflow: hidden;
+        border: 14px solid var(--gold);
+        border-radius: 18px;
+        background:
+          radial-gradient(circle at 50% 20%, rgba(244, 198, 65, 0.2), transparent 20%),
+          repeating-linear-gradient(0deg, rgba(244, 198, 65, 0.08) 0 2px, transparent 2px 9px),
+          linear-gradient(145deg, #15140f 0%, #070706 58%, #1b150b 100%);
+        box-shadow: inset 0 0 0 5px rgba(244, 198, 65, 0.5), inset 0 0 0 20px rgba(0, 0, 0, 0.35);
+      }
+
+      .inner-line {
+        position: absolute;
+        inset: 28px;
+        border: 2px solid rgba(244, 198, 65, 0.42);
+        border-radius: 14px;
+        pointer-events: none;
+      }
+
+      .top-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        width: 100%;
+        padding-top: 28px;
+      }
+
+      .brand-logo {
+        width: 148px;
+        height: 148px;
+        border: 6px solid var(--gold);
+        border-radius: 12px;
+        background: var(--ink);
+        box-shadow: 9px 9px 0 var(--shadow);
+        object-fit: cover;
+      }
+
+      .brand-title {
+        color: var(--gold);
+        font-size: 56px;
+        line-height: 0.9;
+        text-shadow: 0 5px 0 #000;
+      }
+
+      h1 {
+        margin: 20px 0 0;
+        color: var(--cream);
+        font-size: 92px;
+        line-height: 0.88;
+        text-align: center;
+        text-transform: uppercase;
+        -webkit-text-stroke: 3px #000;
+        text-shadow: 0 7px 0 #000, 0 18px 24px rgba(0, 0, 0, 0.55);
+      }
+
+      .rule-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+        width: 1010px;
+        margin-top: 28px;
+      }
+
+      .rule {
+        position: relative;
+        min-height: 165px;
+        border: 6px solid var(--gold);
+        border-radius: 16px;
+        background: var(--cream);
+        color: var(--ink);
+        padding: 26px 26px 22px 118px;
+        box-shadow: 9px 9px 0 #000;
+      }
+
+      .rule b {
+        position: absolute;
+        left: 24px;
+        top: 28px;
+        display: grid;
+        place-items: center;
+        width: 66px;
+        height: 66px;
+        border-radius: 50%;
+        background: var(--red);
+        color: var(--cream);
+        font-size: 44px;
+        line-height: 1;
+        text-shadow: 0 3px 0 #000;
+      }
+
+      .rule strong {
+        display: block;
+        font-size: 43px;
+        line-height: 0.9;
+      }
+
+      .rule span {
+        display: block;
+        margin-top: 10px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 25px;
+        font-weight: 1000;
+        line-height: 1.1;
+      }
+
+      .footer {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 28px;
+        width: 1010px;
+        margin: 28px 0 46px;
+      }
+
+      .fine-print {
+        border-left: 9px solid var(--gold);
+        padding-left: 18px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 29px;
+        font-weight: 1000;
+        line-height: 1.18;
+        color: var(--cream);
+      }
+
+      .url-box {
+        border: 6px solid var(--gold);
+        border-radius: 15px;
+        background: var(--red);
+        padding: 22px 34px 18px;
+        color: var(--cream);
+        font-size: 44px;
+        line-height: 0.9;
+        text-align: center;
+        text-shadow: 0 4px 0 #000;
+        box-shadow: 8px 8px 0 #000;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card" aria-label="Vern Estate Sale early sign-up rules card">
+      <div class="inner-line"></div>
+      <div class="top-row">
+        <img class="brand-logo" src="../assets/img/logo-vern-option-2.png" alt="Vern Estate Sale logo" />
+        <div class="brand-title">VERN ESTATE SALE</div>
+      </div>
+      <h1>Early Entry Details</h1>
+      <section class="rule-grid" aria-label="Early entry rules">
+        <div class="rule">
+          <b>1</b>
+          <strong>$25 Per Person</strong>
+          <span>Each shopper needs their own paid early-entry spot.</span>
+        </div>
+        <div class="rule">
+          <b>2</b>
+          <strong>First 25 Go First</strong>
+          <span>Paid names are called before the free sign-up list.</span>
+        </div>
+        <div class="rule">
+          <b>3</b>
+          <strong>Free List At 7:30</strong>
+          <span>Free sign-up sheet starts after the paid early-entry list.</span>
+        </div>
+        <div class="rule">
+          <b>4</b>
+          <strong>Be There By 8:30</strong>
+          <span>No refund if your name is called and you are not present.</span>
+        </div>
+      </section>
+      <footer class="footer">
+        <div class="fine-print">
+          Small house. Packed front to back. Built for true collectors,
+          antique buyers, and resellers.
+        </div>
+        <div class="url-box">SIGN UP NOW<br />estatesbyvern.com</div>
+      </footer>
+    </main>
+  </body>
+</html>

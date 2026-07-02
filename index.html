@@ -16,10 +16,12 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="assets/img/app/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="assets/img/app/apple-touch-icon.png" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=20260616-mona-lake-tools-sale-2" />
-    <script src="assets/js/today-photo-items.js?v=20260616-mona-lake-tools-sale-2" defer></script>
-    <script src="assets/js/site-data.js?v=20260616-mona-lake-tools-sale-2" defer></script>
-    <script src="assets/js/app.js?v=20260616-mona-lake-tools-sale-2" defer></script>
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260702-stripe-live" />
+    <script src="assets/js/today-photo-items.js?v=20260702-stripe-live" defer></script>
+    <script src="assets/js/site-data.js?v=20260702-stripe-live" defer></script>
+    <script src="assets/js/early-entry-config.js?v=20260702-stripe-live" defer></script>
+    <script src="assets/js/app.js?v=20260702-stripe-live" defer></script>
+    <script src="assets/js/early-entry.js?v=20260702-stripe-live" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -101,22 +103,23 @@
         </div>
       </section>
 
-      <section class="section-shell photo-section" id="photos">
-        <div class="section-heading">
-          <p class="eyebrow">Warehouse photo board</p>
-          <h2>Quick peeks from the floor</h2>
+      <section class="early-entry-callout" aria-labelledby="early-entry-callout-title">
+        <div class="early-entry-callout-copy">
+          <p class="eyebrow">Early Entry Sign-Up</p>
+          <h2 id="early-entry-callout-title">Wyoming Extraordinary Estate Sale: $25 Early Entry Spots Live Now!</h2>
+          <p>
+            This extraordinary sale is built for true collectors, antique buyers, and
+            resellers. The house is small but packed front to back, so only 25
+            early-entry names go in before the free 7:30 AM list is called.
+          </p>
         </div>
-        <div class="item-grid photo-peek-grid" data-public-gallery></div>
-        <div class="photo-category-panel" aria-label="Floor photo categories">
-          <div class="photo-filter-top">
-            <span class="photo-category-title">Category</span>
-            <p class="photo-filter-note" data-photo-result-note></p>
-          </div>
-          <div class="photo-shortcuts">
-            <span class="photo-filter-subhead" data-photo-chip-heading>Popular categories</span>
-            <div class="photo-category-buttons" data-photo-category-buttons></div>
-          </div>
+        <div class="early-entry-callout-counter" aria-label="Early entry spots remaining">
+          <strong data-early-entry-remaining>20</strong>
+          <span data-early-entry-remaining-label>spots remain</span>
         </div>
+        <a class="btn btn-gold early-entry-callout-button" href="early-entry.html">
+          Pay $25 &amp; Sign Up Early
+        </a>
       </section>
 
       <section class="section-shell" id="sales">
@@ -149,6 +152,24 @@
           <p class="sale-board-note" data-sale-board-note>
             Times can move. The yellow buttons open official EstateSales.NET listings and final terms.
           </p>
+        </div>
+      </section>
+
+      <section class="section-shell photo-section" id="photos">
+        <div class="section-heading">
+          <p class="eyebrow">Warehouse photo board</p>
+          <h2>Quick peeks from the floor</h2>
+        </div>
+        <div class="item-grid photo-peek-grid" data-public-gallery></div>
+        <div class="photo-category-panel" aria-label="Floor photo categories">
+          <div class="photo-filter-top">
+            <span class="photo-category-title">Category</span>
+            <p class="photo-filter-note" data-photo-result-note></p>
+          </div>
+          <div class="photo-shortcuts">
+            <span class="photo-filter-subhead" data-photo-chip-heading>Popular categories</span>
+            <div class="photo-category-buttons" data-photo-category-buttons></div>
+          </div>
         </div>
       </section>
 
@@ -322,6 +343,7 @@
       <div class="employee-tabs" role="tablist" aria-label="Employee tool tabs">
         <button class="tab-button is-active" type="button" role="tab" data-tab="pricing">Pricing</button>
         <button class="tab-button" type="button" role="tab" data-tab="marketplace">Marketplace</button>
+        <button class="tab-button" type="button" role="tab" data-tab="early-entry">Early Entry</button>
         <button class="tab-button" type="button" role="tab" data-tab="dashboard">Dashboard</button>
         <button class="tab-button" type="button" role="tab" data-tab="calendar">Calendar</button>
         <button class="tab-button" type="button" role="tab" data-tab="settings" data-manager-only>Settings</button>
@@ -630,6 +652,84 @@
               </div>
             </div>
           </section>
+        </div>
+      </div>
+
+      <div class="employee-tab-panel" data-tab-panel="early-entry">
+        <div class="early-entry-staff-board">
+          <section class="staff-hub-card early-entry-staff-summary">
+            <div class="staff-hub-copy">
+              <p class="eyebrow">Door list</p>
+              <h3>Early Entry Roster</h3>
+              <p data-early-entry-roster-summary>
+                Reserved spots and paid names will appear here.
+              </p>
+            </div>
+            <button class="btn btn-gold" type="button" data-refresh-early-entry-roster>
+              Refresh Roster
+            </button>
+          </section>
+
+          <div class="early-entry-staff-layout">
+            <section class="staff-panel is-active early-entry-roster-card">
+              <div class="staff-section-head">
+                <h3>Read-off order</h3>
+                <span data-early-entry-roster-status>Preview list</span>
+              </div>
+              <div class="early-entry-roster-list" data-early-entry-roster-list></div>
+            </section>
+
+            <section class="staff-panel is-active early-entry-roster-card">
+              <form class="early-entry-manual-form" data-early-entry-manual-form>
+                <div class="staff-section-head">
+                  <h3>Add name</h3>
+                  <span data-early-entry-manual-status></span>
+                </div>
+                <label>
+                  Shopper name
+                  <input name="name" required placeholder="Name to call at door" />
+                </label>
+                <label>
+                  Phone or email
+                  <input name="contact" placeholder="Optional" />
+                </label>
+                <label>
+                  Source
+                  <select name="source">
+                    <option value="Stripe" selected>Stripe payment</option>
+                    <option value="Venmo">Venmo</option>
+                    <option value="Comp">Comp</option>
+                    <option value="Giveaway">Giveaway</option>
+                  </select>
+                </label>
+                <label>
+                  Notes
+                  <input name="notes" placeholder="Optional note" />
+                </label>
+                <button class="btn btn-gold" type="submit">Add Next Spot</button>
+              </form>
+            </section>
+
+            <section class="staff-panel is-active early-entry-roster-card">
+              <div class="staff-section-head">
+                <h3>How this updates</h3>
+              </div>
+              <div class="early-entry-sync-notes">
+                <p data-early-entry-roster-sync>
+                  Current mode is preview/manual. Once Stripe live sync is connected,
+                  this roster can refresh from the backend about once per minute.
+                </p>
+                <p>
+                  Stripe should collect the shopper name to call at the door. Until the
+                  live roster endpoint is connected, export Stripe payments or check the
+                  Stripe dashboard before the sale and add names to the roster.
+                </p>
+                <p>
+                  Free in-person sign-up starts at 7:30 AM after this early-entry list.
+                </p>
+              </div>
+            </section>
+          </div>
         </div>
       </div>
 

@@ -68,6 +68,11 @@ async function checkCorePages() {
   expect(html.includes('rel="manifest"'), "home page missing web app manifest link");
   expect(html.includes("apple-mobile-web-app-capable"), "home page missing Apple mobile app metadata");
   expect(html.includes("data-estate-sales-grid"), "home page missing estate sales grid");
+  expect(html.includes("data-early-entry-remaining"), "home page missing early-entry spots counter");
+  expect(html.includes("true collectors"), "home page missing approved early-entry collector copy");
+  expect(!html.includes("Want to be one of the first shoppers inside"), "old early-entry lead copy is back");
+  expect(html.indexOf('id="sales"') < html.indexOf('id="photos"'), "sales section should appear before floor photos");
+  expect(!html.includes("Mona Lake Frontage Estate Sale"), "ended Mona Lake sale should not be hardcoded into the public homepage");
   expect(!html.includes("Upcoming EstateSales.NET Sales"), "removed sale-board header is back");
   expect(!html.includes("Official sale links"), "removed official-sale intro is back");
 
@@ -76,10 +81,24 @@ async function checkCorePages() {
   expect(meetResponse.ok, `meet-vern.html returned ${meetResponse.status}`);
   expect(meetHtml.includes("Meet Vern | Vern's Estate Sale Warehouse"), "meet-vern page missing title");
   expect(meetHtml.includes("Back to Vern's Warehouse"), "meet-vern page missing back link");
+
+  const earlyEntryResponse = await fetch(`${origin}/early-entry.html?smoke=1`);
+  const earlyEntryHtml = await earlyEntryResponse.text();
+  expect(earlyEntryResponse.ok, `early-entry.html returned ${earlyEntryResponse.status}`);
+  expect(earlyEntryHtml.includes("Early Entry Sign-Up | Vern's Estate Sale Warehouse"), "early-entry page missing title");
+  expect(earlyEntryHtml.includes("Pay $25 with Venmo"), "early-entry page missing no-JS fallback payment button");
+  expect(earlyEntryHtml.includes("data-early-entry-meter"), "early-entry page missing spots meter");
+  expect(earlyEntryHtml.includes("packed front to back"), "early-entry page missing approved sale description");
+
+  const previewResponse = await fetch(`${origin}/payment-preview.html?smoke=1`);
+  const previewHtml = await previewResponse.text();
+  expect(previewResponse.ok, `payment-preview.html returned ${previewResponse.status}`);
+  expect(previewHtml.includes("Checkout Preview | Vern's Estate Sale Warehouse"), "payment preview page missing title");
+  expect(previewHtml.includes("Preview only"), "payment preview page missing preview-only warning");
 }
 
 async function checkStaticLinksAndDropdowns() {
-  for (const file of ["index.html", "meet-vern.html"]) {
+  for (const file of ["index.html", "meet-vern.html", "early-entry.html", "payment-preview.html"]) {
     const html = await readFile(path.join(root, file), "utf8");
     const ids = new Set(Array.from(html.matchAll(/\sid=["']([^"']+)["']/g), (match) => match[1]));
     const anchors = Array.from(html.matchAll(/<a\b[^>]*\bhref=["']([^"']*)["'][^>]*>/g), (match) => match[1]);
@@ -118,7 +137,17 @@ async function checkStaticLinksAndDropdowns() {
 
 async function checkLocalAssets() {
   const refs = new Set();
-  for (const file of ["index.html", "meet-vern.html", "assets/css/styles.css", "assets/js/site-data.js", "assets/js/app.js"]) {
+  for (const file of [
+    "index.html",
+    "meet-vern.html",
+    "early-entry.html",
+    "payment-preview.html",
+    "assets/css/styles.css",
+    "assets/js/site-data.js",
+    "assets/js/app.js",
+    "assets/js/early-entry-config.js",
+    "assets/js/early-entry.js"
+  ]) {
     const text = await readFile(path.join(root, file), "utf8");
     for (const match of text.matchAll(/assets\/[^"'`)>\s]+/g)) {
       const ref = match[0].replace(/^url\(/, "").split("?")[0];

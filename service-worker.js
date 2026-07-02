@@ -1,13 +1,17 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260623-wyoming-extraordinary-sale";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260702-stripe-live";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./meet-vern.html",
+  "./early-entry.html",
+  "./payment-preview.html",
   "./manifest.webmanifest",
   "./assets/css/styles.css",
   "./assets/js/today-photo-items.js",
   "./assets/js/site-data.js",
   "./assets/js/app.js",
+  "./assets/js/early-entry-config.js",
+  "./assets/js/early-entry.js",
   "./assets/img/logo-vern-option-2.png",
   "./assets/img/maps-app-style-icon.svg",
   "./assets/img/app/verns-app-icon-192.png",
@@ -15,8 +19,6 @@ const APP_SHELL = [
   "./assets/img/app/apple-touch-icon.png",
   "./assets/img/estatesales-net-logo.svg",
   "./assets/img/sale-wyoming-extraordinary-main.jpg",
-  "./assets/img/sale-mona-lake-tools-thumb.jpg",
-  "./assets/img/sale-coming-soon-west-mi.png",
   "./assets/img/sale-spring-lake-horse.jpeg",
   "./assets/img/sale-muskegon-pop-up-tent.jpeg",
   "./assets/img/demo/demo-mid-century-dresser.jpeg",

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Early Entry Sign-Up for Vern's Estate Sale Warehouse estate sales."
+    />
+    <title>Early Entry Sign-Up | Vern's Estate Sale Warehouse</title>
+    <meta name="theme-color" content="#171512" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Vern's" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="assets/img/app/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="assets/img/app/apple-touch-icon.png" />
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260702-stripe-live" />
+    <script src="assets/js/site-data.js?v=20260702-stripe-live" defer></script>
+    <script src="assets/js/app.js?v=20260702-stripe-live" defer></script>
+    <script src="assets/js/early-entry-config.js?v=20260702-stripe-live" defer></script>
+    <script src="assets/js/early-entry.js?v=20260702-stripe-live" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <main id="main">
+      <section class="early-entry-page-hero">
+        <a class="btn btn-dark meet-back-link" href="./">Back to Vern's Warehouse</a>
+        <div class="early-entry-page-lockup">
+          <img src="assets/img/logo-vern-option-2.png" alt="Vern's Estate Sale Warehouse" />
+          <div>
+            <p class="eyebrow">Vern's Estate Sale Warehouse</p>
+            <h1>Early Entry Sign-Up</h1>
+          </div>
+        </div>
+        <p class="early-entry-page-lede">
+          This extraordinary estate sale is for true collectors, antique buyers, and
+          resellers. The house is small but packed front to back with rare, unusual,
+          and hard-to-find pieces, so early entry is limited to the first
+          <strong data-early-entry-max>25</strong> early-entry spots at
+          <strong data-early-entry-price>$25</strong> per person.
+        </p>
+        <div class="early-entry-spots-strip" aria-label="Early entry spots remaining">
+          <div>
+            <span class="early-entry-spots-number" data-early-entry-remaining>20</span>
+            <span class="early-entry-spots-label" data-early-entry-remaining-label>spots remain</span>
+          </div>
+          <p data-early-entry-counter-note>
+            Preview count only. Live Stripe countdown will be connected before this goes public.
+          </p>
+        </div>
+      </section>
+
+      <section class="section-shell early-entry-details" aria-labelledby="early-entry-rules-title">
+        <div class="early-entry-rules-card">
+          <p class="eyebrow">How it works</p>
+          <h2 id="early-entry-rules-title">Early list first, free list after</h2>
+          <p>
+            The first <span data-early-entry-max>25</span> early-entry names
+            will be called before any names from the free sign-up sheet.
+          </p>
+          <p>
+            After the first <span data-early-entry-max>25</span> early sign-up spots,
+            the regular free sign-up sheet will be placed at the sale location at
+            <span data-free-signup-time>7:30 AM</span>.
+          </p>
+          <p>
+            The free sign-up list begins after the first <span data-early-entry-max>25</span>
+            early-entry customers, or after however many early-entry customers signed up.
+          </p>
+          <p>
+            Each person needs their own early-entry spot. Please make sure your payment
+            name matches your sign-up name.
+          </p>
+          <p>
+            Early-entry payments are non-refundable if you are not at the sale at or before
+            8:30 AM on day one when names are read.
+          </p>
+        </div>
+
+        <aside class="early-entry-payment-card" aria-label="Early entry payment">
+          <span class="early-entry-price-badge" data-early-entry-price>$25</span>
+          <h2>Reserve early entry</h2>
+          <div class="early-entry-spots-meter" aria-label="Early entry spot meter">
+            <div class="early-entry-spots-meter-top">
+              <strong><span data-early-entry-remaining>20</span> left</strong>
+              <span><span data-early-entry-paid>5</span> of <span data-early-entry-counter-max>25</span> claimed</span>
+            </div>
+            <div class="early-entry-meter-track" aria-hidden="true">
+              <span data-early-entry-meter></span>
+            </div>
+          </div>
+          <a class="btn btn-gold early-entry-pay-button" href="https://venmo.com/ebuyingstore" data-early-entry-pay-button>
+            Pay $25 with Venmo
+          </a>
+          <p class="early-entry-payment-note" data-early-entry-payment-note>
+            Venmo sign-ups are manually confirmed and limited to available early-entry spots.
+            Free in-person sign-up begins at 7:30 AM at the sale location.
+          </p>
+          <div class="venmo-box" data-venmo-box>
+            <p class="eyebrow">Venmo fallback</p>
+            <p>
+              Send payment to <strong data-venmo-username>@ebuyingstore</strong> and include
+              “Early Entry” plus the shopper name in the note.
+            </p>
+            <img data-venmo-qr hidden alt="Venmo QR code for Vern's early entry payment" />
+          </div>
+          <p class="stripe-setup-note" data-stripe-setup-note>
+            Staff note: paste the Stripe Payment Link into
+            <code>early-entry-config.js</code> when the $25 link is ready and capped
+            at 25 completed payments.
+          </p>
+        </aside>
+      </section>
+
+      <section class="section-shell early-entry-free-note" aria-label="Free in-person sign-up">
+        <p class="eyebrow">No payment required for regular sign-up</p>
+        <h2>Prefer free sign-up?</h2>
+        <p>
+          Come to the sale location on sale day. The free sign-up sheet will be placed out at
+          <span data-free-signup-time>7:30 AM</span> and starts after the early-entry list.
+        </p>
+        <div class="button-row">
+          <a class="btn btn-dark" data-estate-link href="https://www.estatesales.net/MI/Wyoming/49519/4971918" target="_blank" rel="noopener">
+            Open Current Sale Details
+          </a>
+          <a class="btn btn-quiet" href="./">Back to Main Site</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; <span data-current-year></span> Vern's Estate Sale Warehouse.</p>
+      <p>
+        Website built and maintained by Ebuyingstore.
+      </p>
+    </footer>
+    <!-- Cloudflare Web Analytics -->
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"4945c7fc5f3d48e69e4131d7a47bd45b"}'></script>
+    <!-- End Cloudflare Web Analytics -->
+  </body>
+</html>

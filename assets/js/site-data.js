@@ -45,7 +45,7 @@ window.VERNS_STARTER_DATA = {
       city: "Norton Shores, MI",
       dateSummary: "Jun 18-21, 2026",
       hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM; Sun 8:30 AM-2 PM",
-      status: "past",
+      status: "ended",
       note: "This sale has ended. Open the official EstateSales.NET listing for archived photos and details.",
       image: "assets/img/sale-mona-lake-tools-thumb.jpg",
       buttonLabel: "Open official listing",

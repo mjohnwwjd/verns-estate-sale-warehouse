@@ -175,6 +175,48 @@ ESTATESALES_COMPANY_URL=https://www.estatesales.net/companies/MI/Muskegon/49441/
 
 See `data/estate-sales.example.json` for the fallback feed shape.
 
+## Early Entry sign-up
+
+The public Early Entry page is:
+
+```text
+early-entry.html
+```
+
+Payment settings live in:
+
+```text
+assets/js/early-entry-config.js
+```
+
+The current local draft points to the live Stripe Payment Link:
+
+```text
+stripePaymentLink: "https://buy.stripe.com/eVqfZj5MVdy1diF5LsaR200"
+paymentPreviewMode: false
+```
+
+That lets the `Pay $25 & Sign Up Early` button open Stripe checkout for a `$25` Early Entry spot. The Stripe link is capped at `20` completed payments because 5 of the 25 early-entry spots are held before public sales open.
+
+The visible spots-remaining countdown is currently in preview mode:
+
+```text
+spotCounterMode: "preview"
+previewPaidSpots: 5
+spotCounterEndpoint: ""
+```
+
+That displays `20 spots remain` from the local config only. Before going live, set up a secure backend endpoint that reads Stripe and returns the paid/remaining count, then paste that endpoint into `spotCounterEndpoint` and switch `spotCounterMode` to `live`.
+
+To use the local mock checkout instead, clear `stripePaymentLink` and set:
+
+```text
+paymentPreviewMode: true
+paymentPreviewUrl: "payment-preview.html"
+```
+
+If both Stripe and preview mode are off, the page falls back to Venmo at `@ebuyingstore` and clearly says Venmo sign-ups must be manually confirmed.
+
 ## 1M Project donation bar
 
 The bottom donation bar links to:

@@ -3,6 +3,7 @@ const EMPLOYEE_SESSION_KEY = "vernsEmployeeUnlocked";
 const EMPLOYEE_PROFILE_KEY = "vernsEmployeeProfile";
 const STAFF_NAME_KEY = "vernsStaffName";
 const MANAGER_SESSION_KEY = "vernsManagerUnlocked";
+const EARLY_ENTRY_ROSTER_REFRESH_MS = 60 * 1000;
 const PASSCODE = "3939";
 const MANAGER_PASSCODE = PASSCODE;
 const MANAGER_USERNAMES = new Set(["mike", "vern"]);
@@ -13,8 +14,9 @@ const STAFF_ACCOUNT_LABELS = {
 const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Muskegon/49441/16076";
 const DEFAULT_ESTATE_SALE_URL = "";
 const ENDED_POPUP_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
+const ENDED_MONA_LAKE_SALE_URL = "https://www.estatesales.net/MI/Norton-Shores/49441/4958901";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-06-23-wyoming-extraordinary-sale";
+const DEMO_CONTENT_VERSION = "2026-07-02-hide-ended-mona-lake";
 const CONTACT_INFO_VERSION = "2026-06-05-hero-facts";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -65,6 +67,8 @@ let pricingAiSuggestion = null;
 let pricingScanTimer = null;
 let selectedManagerEmployee = "";
 let lastSalesSyncStatus = "";
+let earlyEntryRosterLastSync = "";
+let earlyEntryRosterTimer = null;
 let deferredInstallPrompt = null;
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -82,6 +86,7 @@ function init() {
   bindEmployeeTabs();
   bindPricingTool();
   bindMarketplaceTool();
+  bindEarlyEntryTool();
   bindDashboardTool();
   bindCalendarTool();
   bindContentTool();
@@ -181,6 +186,7 @@ function normalizeState(nextState) {
     photoItems,
     pricedItems: Array.isArray(nextState.pricedItems) ? nextState.pricedItems : [],
     marketplace: Array.isArray(nextState.marketplace) ? nextState.marketplace : [],
+    earlyEntryRoster: Array.isArray(nextState.earlyEntryRoster) ? nextState.earlyEntryRoster : [],
     timeoff: Array.isArray(nextState.timeoff) ? nextState.timeoff : [],
     calendarEvents: Array.isArray(nextState.calendarEvents) ? nextState.calendarEvents : starter.calendarEvents
   };
@@ -255,6 +261,7 @@ function renderAll() {
   renderPricingTable();
   renderPricedItemSelect();
   renderMarketplaceList();
+  renderEarlyEntryRoster();
   renderDashboard();
   renderCalendarEvents();
   renderContentLists();
@@ -657,6 +664,7 @@ function setEmployeeTab(tab) {
     panel.classList.toggle("is-active", panel.dataset.tabPanel === tab);
     if (panel.dataset.tabPanel === tab) panel.scrollTop = 0;
   });
+  if (tab === "early-entry") renderEarlyEntryRoster();
 }
 
 function populateCategorySelects() {
@@ -806,6 +814,10 @@ function isEndedPopUpSaleUrl(value) {
   return normalizeUrlForCompare(value) === normalizeUrlForCompare(ENDED_POPUP_SALE_URL);
 }
 
+function isEndedMonaLakeSaleUrl(value) {
+  return normalizeUrlForCompare(value) === normalizeUrlForCompare(ENDED_MONA_LAKE_SALE_URL);
+}
+
 function isInactiveStarterSaleUrl(value, starterSales = []) {
   const matchedSale = starterSales.find((sale) => normalizeUrlForCompare(sale.url) === normalizeUrlForCompare(value));
   return Boolean(matchedSale && ["past", "ended", "canceled"].includes(matchedSale.status));
@@ -838,35 +850,249 @@ function renderEstateSales() {
   }
 
   const cards = sales.map(renderEstateSaleCard);
-  if (sales.length < 3) cards.push(renderComingSoonSaleCard());
+  cards.splice(Math.min(1, cards.length), 0, renderEarlyEntrySaleCard());
   grid.replaceChildren(...cards);
   if (note) note.textContent = "Times can move. Open the yellow buttons for official EstateSales.NET listings and final terms.";
 }
 
-function renderComingSoonSaleCard() {
-  const card = articleEl("estate-sale-card coming-soon-sale-card");
-  card.append(
-    comingSoonImageEl(),
-    spanEl("tag sale-card-badge sale-scheduling-tag", "Next cities scheduling"),
-    headingEl("h3", "More Sales Coming Soon"),
-    pEl("sale-location sale-city-line", "Grand Rapids · Spring Lake · Lakeshore · Holland"),
-    pEl("sale-date", "New dates are being lined up"),
-    pEl("", "Vern's sale board changes as dates lock in. Check back for the next round of official listings."),
-    linkEl("btn btn-dark", getEstateCompanyUrl(state.settings.companyUrl), "Watch Vern's page")
-  );
-  return card;
+function earlyEntryConfig() {
+  return window.VERNS_EARLY_ENTRY_CONFIG || {};
 }
 
-function comingSoonImageEl() {
-  const wrap = divEl("sale-image-wrap coming-soon-image-wrap");
-  wrap.append(
-    imageEl("assets/img/sale-coming-soon-west-mi.png", "Retro estate sale map and yellow tags for upcoming Vern's sales"),
-    divEl("coming-soon-overlay", [
-      spanEl("coming-soon-kicker", "More sales"),
-      spanEl("coming-soon-title", "Coming soon")
-    ])
+function getEarlyEntryMaxSpots() {
+  const max = Number(earlyEntryConfig().maxPaidSpots);
+  return Number.isFinite(max) ? Math.max(1, Math.round(max)) : 25;
+}
+
+function earlyEntryReservedSpots() {
+  const reserved = earlyEntryConfig().reservedSpots;
+  if (!Array.isArray(reserved)) return [];
+  return reserved.map((item, index) => ({
+    id: `reserved-${index + 1}`,
+    spot: Number.isFinite(Number(item.spot)) ? Math.round(Number(item.spot)) : index + 1,
+    name: item.name || "Reserved",
+    status: item.status || "Held",
+    source: item.source || "Reserved",
+    notes: item.notes || "",
+    locked: true
+  }));
+}
+
+function earlyEntryManualSpots() {
+  return (state.earlyEntryRoster || []).map((item, index) => ({
+    id: item.id || `manual-${index + 1}`,
+    spot: Number.isFinite(Number(item.spot)) ? Math.round(Number(item.spot)) : index + 1,
+    name: item.name || "Unnamed",
+    status: item.status || "Paid",
+    source: item.source || "Manual",
+    contact: item.contact || "",
+    notes: item.notes || "",
+    createdAt: item.createdAt || "",
+    locked: false
+  }));
+}
+
+function earlyEntryRosterRows() {
+  return [...earlyEntryReservedSpots(), ...earlyEntryManualSpots()]
+    .sort((a, b) => a.spot - b.spot || String(a.name).localeCompare(String(b.name)));
+}
+
+function getEarlyEntryClaimedCount() {
+  const max = getEarlyEntryMaxSpots();
+  const previewPaid = Number(earlyEntryConfig().previewPaidSpots);
+  const configuredCount = Number.isFinite(previewPaid) ? Math.max(0, Math.round(previewPaid)) : 0;
+  const rosterCount = earlyEntryRosterRows().length;
+  return Math.min(max, Math.max(configuredCount, rosterCount));
+}
+
+function getEarlyEntryPreviewCounts() {
+  const max = getEarlyEntryMaxSpots();
+  const paid = getEarlyEntryClaimedCount();
+  return {
+    max,
+    paid,
+    remaining: Math.max(0, max - paid)
+  };
+}
+
+function bindEarlyEntryTool() {
+  $("[data-refresh-early-entry-roster]")?.addEventListener("click", () => {
+    refreshEarlyEntryRoster({ silent: false });
+  });
+
+  $("[data-early-entry-manual-form]")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    addManualEarlyEntrySpot(event.currentTarget);
+  });
+
+  startEarlyEntryRosterAutoRefresh();
+}
+
+function startEarlyEntryRosterAutoRefresh() {
+  const endpoint = String(earlyEntryConfig().rosterEndpoint || "").trim();
+  if (!endpoint || earlyEntryRosterTimer) return;
+  earlyEntryRosterTimer = window.setInterval(() => {
+    refreshEarlyEntryRoster({ silent: true });
+  }, EARLY_ENTRY_ROSTER_REFRESH_MS);
+}
+
+function addManualEarlyEntrySpot(form) {
+  const status = $("[data-early-entry-manual-status]");
+  const max = getEarlyEntryMaxSpots();
+  const spot = nextEarlyEntrySpot();
+  if (!spot || spot > max) {
+    if (status) status.textContent = "Early-entry list is full.";
+    return;
+  }
+
+  const data = Object.fromEntries(new FormData(form));
+  const name = String(data.name || "").trim();
+  if (!name) {
+    if (status) status.textContent = "Add a shopper name first.";
+    return;
+  }
+
+  state.earlyEntryRoster = [
+    ...(state.earlyEntryRoster || []),
+    {
+      id: createId("early-entry"),
+      spot,
+      name,
+      contact: String(data.contact || "").trim(),
+      source: String(data.source || "Stripe").trim(),
+      status: String(data.source || "Stripe").toLowerCase() === "stripe" ? "Paid" : String(data.source || "Manual").trim(),
+      notes: String(data.notes || "").trim(),
+      createdAt: new Date().toISOString()
+    }
+  ];
+  saveState();
+  form.reset();
+  if (status) status.textContent = `${name} added as spot ${spot}.`;
+  renderAll();
+}
+
+function nextEarlyEntrySpot() {
+  const occupied = new Set(earlyEntryRosterRows().map((row) => row.spot));
+  const max = getEarlyEntryMaxSpots();
+  for (let spot = 1; spot <= max; spot += 1) {
+    if (!occupied.has(spot)) return spot;
+  }
+  return null;
+}
+
+async function refreshEarlyEntryRoster({ silent = false } = {}) {
+  const endpoint = String(earlyEntryConfig().rosterEndpoint || "").trim();
+  if (!endpoint) {
+    earlyEntryRosterLastSync = "Manual preview mode";
+    renderEarlyEntryRoster();
+    return;
+  }
+
+  const status = $("[data-early-entry-roster-status]");
+  if (status && !silent) status.textContent = "Checking Stripe roster...";
+
+  try {
+    const response = await fetch(endpoint, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Roster returned ${response.status}`);
+    const data = await response.json();
+    const entries = Array.isArray(data.entries) ? data.entries : [];
+    state.earlyEntryRoster = entries.map((item, index) => ({
+      id: item.id || createId("early-entry"),
+      spot: Number.isFinite(Number(item.spot)) ? Math.round(Number(item.spot)) : earlyEntryReservedSpots().length + index + 1,
+      name: item.name || item.customerName || item.email || "Paid customer",
+      contact: item.contact || item.phone || item.email || "",
+      source: item.source || "Stripe",
+      status: item.status || "Paid",
+      notes: item.notes || "",
+      createdAt: item.createdAt || item.created || new Date().toISOString()
+    }));
+    earlyEntryRosterLastSync = `Live check ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+    saveState();
+    renderAll();
+  } catch {
+    earlyEntryRosterLastSync = "Live roster unavailable";
+    renderEarlyEntryRoster();
+  }
+}
+
+function renderEarlyEntryRoster() {
+  const list = $("[data-early-entry-roster-list]");
+  const summary = $("[data-early-entry-roster-summary]");
+  const status = $("[data-early-entry-roster-status]");
+  const sync = $("[data-early-entry-roster-sync]");
+  if (!list && !summary && !status && !sync) return;
+
+  const rows = earlyEntryRosterRows();
+  const counts = getEarlyEntryPreviewCounts();
+  const publicSpots = Math.max(0, counts.max - rows.length);
+  const syncMode = String(earlyEntryConfig().rosterEndpoint || "").trim()
+    ? `Live endpoint checks every ${Math.round(EARLY_ENTRY_ROSTER_REFRESH_MS / 1000)} seconds while this page is open.`
+    : "Manual preview mode. Stripe names must be entered here or imported from a Stripe export until the live roster endpoint is connected.";
+
+  if (summary) {
+    summary.textContent = `${rows.length} early-entry spots held or claimed. ${publicSpots} public spots remain out of ${counts.max}.`;
+  }
+  if (status) {
+    status.textContent = earlyEntryRosterLastSync || "Manual preview mode";
+  }
+  if (sync) {
+    sync.textContent = syncMode;
+  }
+  if (list) {
+    list.replaceChildren(...(rows.length ? rows.map(earlyEntryRosterRow) : [staffEmptyNote("No early-entry names yet.")]));
+  }
+}
+
+function earlyEntryRosterRow(row) {
+  const item = divEl(`early-entry-roster-row${row.locked ? " is-reserved" : ""}`);
+  const copy = divEl("early-entry-roster-copy", [
+    headingEl("h4", row.name),
+    pEl("", [row.status, row.source, row.contact, row.notes].filter(Boolean).join(" · "))
+  ]);
+  item.append(spanEl("early-entry-roster-number", String(row.spot)), copy);
+
+  if (!row.locked) {
+    const remove = document.createElement("button");
+    remove.className = "tiny-btn";
+    remove.type = "button";
+    remove.textContent = "Remove";
+    remove.addEventListener("click", () => {
+      state.earlyEntryRoster = (state.earlyEntryRoster || []).filter((item) => item.id !== row.id);
+      saveState();
+      renderAll();
+    });
+    item.append(remove);
+  }
+  return item;
+}
+
+function renderEarlyEntrySaleCard() {
+  const spots = getEarlyEntryPreviewCounts();
+  const card = articleEl("estate-sale-card early-entry-sale-card");
+  const price = earlyEntryConfig().price || "$25";
+  const max = getEarlyEntryMaxSpots();
+  const button = linkEl("btn btn-gold", "early-entry.html", `Pay ${price} & Sign Up Early`);
+  button.target = "_self";
+  button.removeAttribute("rel");
+
+  card.append(
+    divEl("sale-image-wrap early-entry-card-art", [
+      spanEl("early-entry-card-price", price),
+      spanEl("early-entry-card-title", "Early Entry"),
+      spanEl("early-entry-card-limit", `${spots.remaining} spots remain`)
+    ]),
+    spanEl("tag sale-card-badge early-entry-sale-badge", "Early Sign-Up"),
+    headingEl("h3", "Wyoming Extraordinary Estate Sale"),
+    pEl("sale-location", `${price} early entry spots live now`),
+    pEl("sale-date", `${price} per person`),
+    divEl("early-entry-card-count", [
+      spanEl("early-entry-card-count-number", String(spots.remaining)),
+      spanEl("early-entry-card-count-copy", "spots remain")
+    ]),
+    pEl("", `Extraordinary sale for true collectors and resellers. The first ${max} early-entry names go in before the free 7:30 AM sign-up list is called.`),
+    button
   );
-  return wrap;
+  return card;
 }
 
 function renderEstateSaleCard(sale) {
@@ -900,7 +1126,7 @@ function saleImageEl(sale) {
 
 function getVisibleEstateSales() {
   return (state.estateSales || [])
-    .filter((sale) => isEstateSalesUrl(sale.url) && sale.status !== "past" && sale.status !== "canceled")
+    .filter((sale) => isEstateSalesUrl(sale.url) && !isEndedMonaLakeSaleUrl(sale.url) && !["past", "ended", "canceled"].includes(sale.status))
     .sort((a, b) => saleSortValue(a) - saleSortValue(b));
 }
 
