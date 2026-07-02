@@ -65,7 +65,7 @@
     document.querySelectorAll("[data-early-entry-counter-note]").forEach((el) => {
       el.textContent = counter.mode === "live"
         ? "Live count updates as early-entry payments are completed."
-        : "5 spots are already held. Stripe checkout is limited to the remaining public early-entry spots.";
+        : "Early-entry spots are limited. When they are gone, use the free 7:30 AM sign-up list at the sale.";
     });
   };
 
@@ -116,7 +116,7 @@
       payNote.textContent = stripePaymentLink
         ? `Limited to available early-entry spots. Free in-person sign-up begins at ${freeSignupTime} at the sale location.`
         : paymentPreviewMode
-          ? `Preview mode only: this shows the customer flow, but no payment will be collected. The real Stripe link will be capped to the available public early-entry spots.`
+          ? `Preview mode only: this shows the customer flow, but no payment will be collected. The real Stripe link will be capped to the available early-entry spots.`
         : `Venmo sign-ups are manually confirmed and limited to available early-entry spots. Free in-person sign-up begins at ${freeSignupTime} at the sale location.`;
     }
 

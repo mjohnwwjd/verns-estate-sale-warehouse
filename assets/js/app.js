@@ -871,7 +871,7 @@ function earlyEntryReservedSpots() {
     id: `reserved-${index + 1}`,
     spot: Number.isFinite(Number(item.spot)) ? Math.round(Number(item.spot)) : index + 1,
     name: item.name || "Reserved",
-    status: item.status || "Held",
+    status: item.status || "Claimed",
     source: item.source || "Reserved",
     notes: item.notes || "",
     locked: true
@@ -974,7 +974,9 @@ function addManualEarlyEntrySpot(form) {
 function nextEarlyEntrySpot() {
   const occupied = new Set(earlyEntryRosterRows().map((row) => row.spot));
   const max = getEarlyEntryMaxSpots();
+  const claimed = getEarlyEntryClaimedCount();
   for (let spot = 1; spot <= max; spot += 1) {
+    if (spot <= claimed && !occupied.has(spot)) continue;
     if (!occupied.has(spot)) return spot;
   }
   return null;
@@ -1024,13 +1026,13 @@ function renderEarlyEntryRoster() {
 
   const rows = earlyEntryRosterRows();
   const counts = getEarlyEntryPreviewCounts();
-  const publicSpots = Math.max(0, counts.max - rows.length);
+  const remainingSpots = Math.max(0, counts.remaining);
   const syncMode = String(earlyEntryConfig().rosterEndpoint || "").trim()
     ? `Live endpoint checks every ${Math.round(EARLY_ENTRY_ROSTER_REFRESH_MS / 1000)} seconds while this page is open.`
     : "Manual preview mode. Stripe names must be entered here or imported from a Stripe export until the live roster endpoint is connected.";
 
   if (summary) {
-    summary.textContent = `${rows.length} early-entry spots held or claimed. ${publicSpots} public spots remain out of ${counts.max}.`;
+    summary.textContent = `${counts.paid} early-entry spots claimed. ${remainingSpots} spots remain out of ${counts.max}.`;
   }
   if (status) {
     status.textContent = earlyEntryRosterLastSync || "Manual preview mode";

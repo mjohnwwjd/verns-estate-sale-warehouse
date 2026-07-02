@@ -196,7 +196,7 @@ stripePaymentLink: "https://buy.stripe.com/eVqfZj5MVdy1diF5LsaR200"
 paymentPreviewMode: false
 ```
 
-That lets the `Pay $25 & Sign Up Early` button open Stripe checkout for a `$25` Early Entry spot. The Stripe link is capped at `20` completed payments because 5 of the 25 early-entry spots are held before public sales open.
+That lets the `Pay $25 & Sign Up Early` button open Stripe checkout for a `$25` Early Entry spot. The current page shows `20 spots remain` out of `25` so customers see limited availability.
 
 The visible spots-remaining countdown is currently in preview mode:
 
