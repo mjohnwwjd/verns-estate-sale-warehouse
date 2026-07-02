@@ -54,6 +54,7 @@
     const remainingLabel = remaining === 1 ? "spot remains" : "spots remain";
 
     fillText("[data-early-entry-remaining]", String(remaining));
+    fillText("[data-early-entry-remaining-text]", `${remaining} ${remainingLabel}`);
     fillText("[data-early-entry-paid]", String(paid));
     fillText("[data-early-entry-remaining-label]", remainingLabel);
     fillText("[data-early-entry-counter-max]", String(max));

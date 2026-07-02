@@ -888,7 +888,7 @@ function earlyEntryManualSpots() {
     contact: item.contact || "",
     notes: item.notes || "",
     createdAt: item.createdAt || "",
-    locked: false
+    locked: Boolean(item.locked)
   }));
 }
 
@@ -936,19 +936,51 @@ function startEarlyEntryRosterAutoRefresh() {
   }, EARLY_ENTRY_ROSTER_REFRESH_MS);
 }
 
-function addManualEarlyEntrySpot(form) {
-  const status = $("[data-early-entry-manual-status]");
-  const max = getEarlyEntryMaxSpots();
-  const spot = nextEarlyEntrySpot();
-  if (!spot || spot > max) {
-    if (status) status.textContent = "Early-entry list is full.";
-    return;
-  }
+function staffApiHeaders(extra = {}) {
+  return {
+    "x-verns-staff-code": PASSCODE,
+    ...extra
+  };
+}
 
+async function addManualEarlyEntrySpot(form) {
+  const status = $("[data-early-entry-manual-status]");
+  const endpoint = String(earlyEntryConfig().rosterEndpoint || "").trim();
   const data = Object.fromEntries(new FormData(form));
   const name = String(data.name || "").trim();
   if (!name) {
     if (status) status.textContent = "Add a shopper name first.";
+    return;
+  }
+
+  if (endpoint) {
+    if (status) status.textContent = "Saving to live roster...";
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        cache: "no-store",
+        headers: staffApiHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({
+          name,
+          contact: String(data.contact || "").trim(),
+          source: String(data.source || "Manual").trim(),
+          notes: String(data.notes || "").trim()
+        })
+      });
+      if (!response.ok) throw new Error(`Roster returned ${response.status}`);
+      form.reset();
+      if (status) status.textContent = `${name} added to live roster.`;
+      await refreshEarlyEntryRoster({ silent: true });
+    } catch {
+      if (status) status.textContent = "Live roster save failed. Try Refresh Roster, then add again.";
+    }
+    return;
+  }
+
+  const max = getEarlyEntryMaxSpots();
+  const spot = nextEarlyEntrySpot();
+  if (!spot || spot > max) {
+    if (status) status.textContent = "Early-entry list is full.";
     return;
   }
 
@@ -994,7 +1026,10 @@ async function refreshEarlyEntryRoster({ silent = false } = {}) {
   if (status && !silent) status.textContent = "Checking Stripe roster...";
 
   try {
-    const response = await fetch(endpoint, { cache: "no-store" });
+    const response = await fetch(endpoint, {
+      cache: "no-store",
+      headers: staffApiHeaders()
+    });
     if (!response.ok) throw new Error(`Roster returned ${response.status}`);
     const data = await response.json();
     const entries = Array.isArray(data.entries) ? data.entries : [];
@@ -1006,7 +1041,8 @@ async function refreshEarlyEntryRoster({ silent = false } = {}) {
       source: item.source || "Stripe",
       status: item.status || "Paid",
       notes: item.notes || "",
-      createdAt: item.createdAt || item.created || new Date().toISOString()
+      createdAt: item.createdAt || item.created || new Date().toISOString(),
+      locked: item.locked !== false
     }));
     earlyEntryRosterLastSync = `Live check ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
     saveState();
@@ -1029,13 +1065,13 @@ function renderEarlyEntryRoster() {
   const remainingSpots = Math.max(0, counts.remaining);
   const syncMode = String(earlyEntryConfig().rosterEndpoint || "").trim()
     ? `Live endpoint checks every ${Math.round(EARLY_ENTRY_ROSTER_REFRESH_MS / 1000)} seconds while this page is open.`
-    : "Manual preview mode. Stripe names must be entered here or imported from a Stripe export until the live roster endpoint is connected.";
+    : "Manual backup mode. Add names here only if live roster sync is unavailable.";
 
   if (summary) {
     summary.textContent = `${counts.paid} early-entry spots claimed. ${remainingSpots} spots remain out of ${counts.max}.`;
   }
   if (status) {
-    status.textContent = earlyEntryRosterLastSync || "Manual preview mode";
+    status.textContent = earlyEntryRosterLastSync || (String(earlyEntryConfig().rosterEndpoint || "").trim() ? "Ready for live sync" : "Manual backup mode");
   }
   if (sync) {
     sync.textContent = syncMode;
@@ -1076,19 +1112,23 @@ function renderEarlyEntrySaleCard() {
   const button = linkEl("btn btn-gold", "early-entry.html", `Pay ${price} & Sign Up Early`);
   button.target = "_self";
   button.removeAttribute("rel");
+  const remainingLimit = spanEl("early-entry-card-limit", `${spots.remaining} spots remain`);
+  remainingLimit.dataset.earlyEntryRemainingText = "";
+  const remainingCount = spanEl("early-entry-card-count-number", String(spots.remaining));
+  remainingCount.dataset.earlyEntryRemaining = "";
 
   card.append(
     divEl("sale-image-wrap early-entry-card-art", [
       spanEl("early-entry-card-price", price),
       spanEl("early-entry-card-title", "Early Entry"),
-      spanEl("early-entry-card-limit", `${spots.remaining} spots remain`)
+      remainingLimit
     ]),
     spanEl("tag sale-card-badge early-entry-sale-badge", "Early Sign-Up"),
     headingEl("h3", "Wyoming Extraordinary Estate Sale"),
     pEl("sale-location", `${price} early entry spots live now`),
     pEl("sale-date", `${price} per person`),
     divEl("early-entry-card-count", [
-      spanEl("early-entry-card-count-number", String(spots.remaining)),
+      remainingCount,
       spanEl("early-entry-card-count-copy", "spots remain")
     ]),
     pEl("", `Extraordinary sale for true collectors and resellers. The first ${max} early-entry names go in before the free 7:30 AM sign-up list is called.`),

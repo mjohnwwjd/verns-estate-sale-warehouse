@@ -1,0 +1,20 @@
+name = "verns-early-entry-api"
+main = "workers/early-entry-api/src/index.js"
+compatibility_date = "2026-07-02"
+workers_dev = true
+
+routes = [
+  { pattern = "estatesbyvern.com/api/early-entry/*", zone_name = "estatesbyvern.com" },
+  { pattern = "www.estatesbyvern.com/api/early-entry/*", zone_name = "estatesbyvern.com" }
+]
+
+[vars]
+SALE_ID = "wyoming-extraordinary-2026"
+MAX_PAID_SPOTS = "25"
+BASELINE_CLAIMED_SPOTS = "5"
+PRICE_CENTS = "2500"
+STRIPE_PAYMENT_LINK_ID = "plink_1ToqcYQ5qwZrUYmfs3Cwqvuq"
+
+[[kv_namespaces]]
+binding = "EARLY_ENTRY_KV"
+id = "f3445b7f6ffa437eb6e1548be82703cb"

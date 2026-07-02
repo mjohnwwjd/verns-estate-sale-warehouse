@@ -8,11 +8,11 @@ window.VERNS_EARLY_ENTRY_CONFIG = {
   venmoQrImage: "",
   price: "$25",
   maxPaidSpots: 25,
-  // Preview-only countdown until the Stripe-backed endpoint is connected.
-  spotCounterMode: "preview",
+  // Live endpoints are served by the Cloudflare Worker.
+  spotCounterMode: "live",
   previewPaidSpots: 5,
-  spotCounterEndpoint: "",
-  rosterEndpoint: "",
+  spotCounterEndpoint: "https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/count",
+  rosterEndpoint: "https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/roster",
   reservedSpots: [],
   freeSignupTime: "7:30 AM",
   nameMatchNote: "Please make sure your payment name matches your sign-up name."

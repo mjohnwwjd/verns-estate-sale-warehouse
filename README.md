@@ -206,7 +206,13 @@ previewPaidSpots: 5
 spotCounterEndpoint: ""
 ```
 
-That displays `20 spots remain` from the local config only. Before going live, set up a secure backend endpoint that reads Stripe and returns the paid/remaining count, then paste that endpoint into `spotCounterEndpoint` and switch `spotCounterMode` to `live`.
+The live counter and employee roster are designed to read from the Cloudflare Worker. Stripe should send `checkout.session.completed` events to:
+
+```text
+https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/stripe-webhook
+```
+
+The Worker stores completed Stripe sessions, returns the public spots remaining from `/api/early-entry/count`, and returns the staff read-off list from `/api/early-entry/roster`.
 
 To use the local mock checkout instead, clear `stripePaymentLink` and set:
 

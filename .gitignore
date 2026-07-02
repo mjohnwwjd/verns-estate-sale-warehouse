@@ -1,5 +1,7 @@
 .env
 .env.local
+.dev.vars
+.wrangler/
 data/estate-sales-cache.json
 node_modules/
 assets/img/today-staging/
