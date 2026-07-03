@@ -11,6 +11,11 @@ const STAFF_ACCOUNT_LABELS = {
   mike: "Mike",
   vern: "Vern"
 };
+const STALE_FACEBOOK_URL_PATTERNS = [
+  /facebook\.com\/people\/Quick-Flip/i,
+  /facebook\.com\/p\/Quick-Flip/i,
+  /61590076124139/
+];
 const DEFAULT_ESTATE_COMPANY_URL = "https://www.estatesales.net/companies/MI/Muskegon/49441/16076";
 const DEFAULT_ESTATE_SALE_URL = "";
 const ENDED_POPUP_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
@@ -144,11 +149,16 @@ function normalizeState(nextState) {
   const starter = window.VERNS_STARTER_DATA;
   const rawSettings = nextState.settings || {};
   const settings = { ...starter.settings, ...rawSettings };
+  if (isStaleFacebookUrl(settings.facebookUrl)) {
+    settings.facebookUrl = starter.settings.facebookUrl;
+  }
   if (rawSettings.contactInfoVersion !== CONTACT_INFO_VERSION) {
     settings.address = isOldAddress(rawSettings.address) ? starter.settings.address : settings.address;
     settings.phone = isOldPlaceholder(rawSettings.phone) ? starter.settings.phone : settings.phone;
     settings.email = isOldPlaceholder(rawSettings.email) ? starter.settings.email : settings.email;
-    settings.facebookUrl = rawSettings.facebookUrl || starter.settings.facebookUrl;
+    settings.facebookUrl = isStaleFacebookUrl(rawSettings.facebookUrl)
+      ? starter.settings.facebookUrl
+      : rawSettings.facebookUrl || starter.settings.facebookUrl;
     settings.hours = isOldHours(rawSettings.hours) ? starter.settings.hours : settings.hours;
     settings.shortHours = isOldShortHours(rawSettings.shortHours) ? starter.settings.shortHours : settings.shortHours;
     settings.location = isOldLocation(rawSettings.location) ? starter.settings.location : settings.location;
@@ -194,6 +204,10 @@ function normalizeState(nextState) {
 
 function removeDeprecatedPhotoItems(items) {
   return items.filter((item) => !DEPRECATED_PHOTO_ITEM_IDS.has(item.id));
+}
+
+function isStaleFacebookUrl(value) {
+  return STALE_FACEBOOK_URL_PATTERNS.some((pattern) => pattern.test(String(value || "")));
 }
 
 function isOldPlaceholder(value) {
