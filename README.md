@@ -196,14 +196,14 @@ stripePaymentLink: "https://buy.stripe.com/eVqfZj5MVdy1diF5LsaR200"
 paymentPreviewMode: false
 ```
 
-That lets the `Pay $25 & Sign Up Early` button open Stripe checkout for a `$25` Early Entry spot. The current page shows `20 spots remain` out of `25` so customers see limited availability.
+That lets the `Pay $25 & Sign Up Early` button open Stripe checkout for a `$25` Early Entry spot. The page checks the live Worker count before showing the public spots remaining.
 
-The visible spots-remaining countdown is currently in preview mode:
+The visible spots-remaining countdown uses the live Worker:
 
 ```text
-spotCounterMode: "preview"
-previewPaidSpots: 5
-spotCounterEndpoint: ""
+spotCounterMode: "live"
+previewPaidSpots: 7
+spotCounterEndpoint: "https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/count"
 ```
 
 The live counter and employee roster are designed to read from the Cloudflare Worker. Stripe should send `checkout.session.completed` events to:

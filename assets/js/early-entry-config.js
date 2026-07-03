@@ -1,5 +1,5 @@
 window.VERNS_EARLY_ENTRY_CONFIG = {
-  // Preview count starts at 5 claimed spots so the public page shows 20 spots remain.
+  // Fallback count mirrors the live roster when the Worker is temporarily unavailable.
   stripePaymentLink: "https://buy.stripe.com/eVqfZj5MVdy1diF5LsaR200",
   // Keep false while reviewing the Stripe sandbox checkout. Turn true to use the local mock checkout.
   paymentPreviewMode: false,
@@ -10,7 +10,7 @@ window.VERNS_EARLY_ENTRY_CONFIG = {
   maxPaidSpots: 25,
   // Live endpoints are served by the Cloudflare Worker.
   spotCounterMode: "live",
-  previewPaidSpots: 5,
+  previewPaidSpots: 7,
   spotCounterEndpoint: "https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/count",
   rosterEndpoint: "https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/roster",
   reservedSpots: [],

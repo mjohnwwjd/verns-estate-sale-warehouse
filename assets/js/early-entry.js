@@ -70,10 +70,28 @@
     });
   };
 
-  const loadSpotCounter = async () => {
-    updateSpotCounter(getPreviewCounter());
+  const showLiveCounterLoading = () => {
+    fillText("[data-early-entry-remaining]", "...");
+    fillText("[data-early-entry-remaining-text]", "checking live spots");
+    fillText("[data-early-entry-paid]", "...");
+    fillText("[data-early-entry-remaining-label]", "checking");
+    fillText("[data-early-entry-counter-max]", String(maxPaidSpots));
 
-    if (!spotCounterEndpoint || spotCounterMode !== "live") return;
+    const meterFill = document.querySelector("[data-early-entry-meter]");
+    if (meterFill) meterFill.style.width = "0%";
+
+    document.querySelectorAll("[data-early-entry-counter-note]").forEach((el) => {
+      el.textContent = "Checking live early-entry spots...";
+    });
+  };
+
+  const loadSpotCounter = async () => {
+    if (!spotCounterEndpoint || spotCounterMode !== "live") {
+      updateSpotCounter(getPreviewCounter());
+      return;
+    }
+
+    showLiveCounterLoading();
 
     try {
       const response = await fetch(spotCounterEndpoint, { cache: "no-store" });
@@ -86,6 +104,7 @@
         mode: "live"
       });
     } catch (error) {
+      updateSpotCounter(getPreviewCounter());
       document.querySelectorAll("[data-early-entry-counter-note]").forEach((el) => {
         el.textContent = "Spots are limited. Live count is temporarily unavailable.";
       });
