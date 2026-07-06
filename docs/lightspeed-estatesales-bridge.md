@@ -34,7 +34,7 @@ Use these values:
 
 - Integration Name: `Estates by Vern Sale Bridge`
 - Website: `https://estatesbyvern.com`
-- Redirect URI: `https://estatesbyvern.com/lightspeed/callback/`
+- Redirect URI: `https://estatesbyvern.com/lightspeed/callback`
 
 The signup form also requires contact name, email, phone, and terms acceptance. Submit only when you are ready to create the client ID and secret.
 
@@ -84,6 +84,7 @@ node scripts/lightspeed-exchange-code.mjs "PASTE_THE_FULL_REDIRECT_URL_HERE"
 ```
 
 Exchange it immediately. Lightspeed authorization codes are short lived.
+The exchange script also reads the Lightspeed account ID and stores it in `.env.lightspeed.local`.
 
 This writes:
 

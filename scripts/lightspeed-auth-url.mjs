@@ -22,7 +22,7 @@ function parseEnv(file) {
 
 const env = { ...parseEnv(path.join(root, '.env.lightspeed.example')), ...parseEnv(envPath), ...process.env };
 const clientId = env.LIGHTSPEED_CLIENT_ID;
-const redirectUri = env.LIGHTSPEED_REDIRECT_URI || 'https://estatesbyvern.com/lightspeed/callback/';
+const redirectUri = env.LIGHTSPEED_REDIRECT_URI || 'https://estatesbyvern.com/lightspeed/callback';
 const scope = env.LIGHTSPEED_SCOPE || 'employee:inventory_read';
 const authUrl = env.LIGHTSPEED_AUTH_URL || 'https://cloud.lightspeedapp.com/auth/oauth/authorize';
 

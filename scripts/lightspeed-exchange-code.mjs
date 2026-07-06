@@ -55,7 +55,7 @@ if (env.LIGHTSPEED_TOKEN_INCLUDE_REDIRECT_URI === 'true') {
   body.set('redirect_uri', env.LIGHTSPEED_REDIRECT_URI);
 }
 
-const tokenUrl = env.LIGHTSPEED_TOKEN_URL || 'https://cloud.merchantos.com/oauth/access_token.php';
+const tokenUrl = env.LIGHTSPEED_TOKEN_URL || 'https://cloud.lightspeedapp.com/auth/oauth/token';
 const response = await fetch(tokenUrl, {
   method: 'POST',
   headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -81,5 +81,33 @@ try {
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, JSON.stringify({ createdAt: new Date().toISOString(), ...token }, null, 2));
 
+const accountId = token.accountID || token.account_id || await fetchAccountId(token.access_token, env);
+if (accountId) {
+  const currentLocalEnv = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+  const nextLocalEnv = currentLocalEnv.match(/^LIGHTSPEED_ACCOUNT_ID=.*$/m)
+    ? currentLocalEnv.replace(/^LIGHTSPEED_ACCOUNT_ID=.*$/m, `LIGHTSPEED_ACCOUNT_ID=${accountId}`)
+    : `${currentLocalEnv.trimEnd()}\nLIGHTSPEED_ACCOUNT_ID=${accountId}\n`;
+  fs.writeFileSync(envPath, nextLocalEnv, { mode: 0o600 });
+  console.log(`Saved account ID ${accountId} to .env.lightspeed.local`);
+}
+
 console.log(`Saved token response to ${outPath}`);
 console.log('Do not commit or share that file.');
+
+async function fetchAccountId(accessToken, currentEnv) {
+  if (!accessToken) return '';
+
+  const apiBase = currentEnv.LIGHTSPEED_API_BASE || 'https://api.lightspeedapp.com/API/V3';
+  const response = await fetch(`${apiBase}/Account.json`, {
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+      accept: 'application/json',
+    },
+  });
+
+  if (!response.ok) return '';
+
+  const data = await response.json();
+  const account = Array.isArray(data.Account) ? data.Account[0] : data.Account;
+  return account?.accountID || account?.accountId || account?.id || '';
+}
