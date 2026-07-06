@@ -83,6 +83,8 @@ Copy the full redirected URL, then exchange the code locally:
 node scripts/lightspeed-exchange-code.mjs "PASTE_THE_FULL_REDIRECT_URL_HERE"
 ```
 
+Exchange it immediately. Lightspeed authorization codes are short lived.
+
 This writes:
 
 ```text

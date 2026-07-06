@@ -22,9 +22,9 @@ function parseEnv(file) {
 
 const env = { ...parseEnv(path.join(root, '.env.lightspeed.example')), ...parseEnv(envPath), ...process.env };
 const clientId = env.LIGHTSPEED_CLIENT_ID;
-const redirectUri = env.LIGHTSPEED_REDIRECT_URI || 'https://estatesbyvern.com/lightspeed/callback';
+const redirectUri = env.LIGHTSPEED_REDIRECT_URI || 'https://estatesbyvern.com/lightspeed/callback/';
 const scope = env.LIGHTSPEED_SCOPE || 'employee:inventory_read';
-const authUrl = env.LIGHTSPEED_AUTH_URL || 'https://cloud.lightspeedapp.com/oauth/authorize.php';
+const authUrl = env.LIGHTSPEED_AUTH_URL || 'https://cloud.lightspeedapp.com/auth/oauth/authorize';
 
 if (!clientId) {
   console.error('Missing LIGHTSPEED_CLIENT_ID. Register the API client, then copy .env.lightspeed.example to .env.lightspeed.local and fill it in.');
@@ -35,9 +35,12 @@ const state = crypto.randomBytes(16).toString('hex');
 const url = new URL(authUrl);
 url.searchParams.set('response_type', 'code');
 url.searchParams.set('client_id', clientId);
-url.searchParams.set('redirect_uri', redirectUri);
 url.searchParams.set('scope', scope);
 url.searchParams.set('state', state);
+
+if (env.LIGHTSPEED_AUTH_INCLUDE_REDIRECT_URI === 'true') {
+  url.searchParams.set('redirect_uri', redirectUri);
+}
 
 console.log('Open this URL while logged into Lightspeed:');
 console.log(url.toString());
