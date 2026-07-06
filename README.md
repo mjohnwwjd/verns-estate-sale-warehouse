@@ -197,6 +197,12 @@ output/lightspeed-estatesales/
 
 Open the generated `lightspeed-estatesales-review.html` for the visual review board. Use `upload-by-category/` for upload-ready image folders and `estate-sales-upload-checklist.md` to track what has been moved to EstateSales.NET. This bridge intentionally does not auto-publish to EstateSales.NET.
 
+To find the newest generated review pack:
+
+```bash
+npm run lightspeed:latest
+```
+
 ## Early Entry sign-up
 
 The public Early Entry page is:

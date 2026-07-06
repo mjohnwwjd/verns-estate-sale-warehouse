@@ -128,6 +128,12 @@ To stage only items matching a description search:
 npm run lightspeed:stage -- --limit 25 --search "lamp"
 ```
 
+To find the latest generated review pack:
+
+```sh
+npm run lightspeed:latest
+```
+
 The script creates a dated folder under:
 
 ```text

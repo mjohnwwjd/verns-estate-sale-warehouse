@@ -10,6 +10,7 @@
     "smoke": "node scripts/smoke-check.mjs",
     "lightspeed:pull": "node scripts/lightspeed-pull-items.mjs",
     "lightspeed:refresh": "node scripts/lightspeed-refresh-token.mjs",
+    "lightspeed:latest": "node scripts/lightspeed-latest-review.mjs",
     "lightspeed:stage": "node scripts/lightspeed-stage-estatesales.mjs"
   },
   "engines": {
