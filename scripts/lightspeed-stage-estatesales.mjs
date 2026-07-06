@@ -80,10 +80,12 @@ for (const item of items) {
 
 const csvPath = path.join(outDir, 'lightspeed-estatesales-review.csv');
 const mdPath = path.join(outDir, 'lightspeed-estatesales-review.md');
+const htmlPath = path.join(outDir, 'lightspeed-estatesales-review.html');
 const manifestPath = path.join(outDir, 'manifest.json');
 
 fs.writeFileSync(csvPath, toCsv(rows));
 fs.writeFileSync(mdPath, toMarkdown(rows));
+fs.writeFileSync(htmlPath, toHtml(rows));
 fs.writeFileSync(manifestPath, JSON.stringify({
   createdAt: new Date().toISOString(),
   accountId,
@@ -94,6 +96,7 @@ fs.writeFileSync(manifestPath, JSON.stringify({
   files: {
     csv: path.basename(csvPath),
     markdown: path.basename(mdPath),
+    html: path.basename(htmlPath),
     images: downloadImages ? 'images/' : null,
   },
 }, null, 2));
@@ -105,6 +108,7 @@ console.log(JSON.stringify({
   outDir,
   csvPath,
   mdPath,
+  htmlPath,
 }, null, 2));
 
 function parseArgs(rawArgs) {
@@ -371,6 +375,310 @@ function toMarkdown(rows) {
   }
 
   return `${lines.join('\n')}\n`;
+}
+
+function toHtml(rows) {
+  const grouped = groupBy(rows, (row) => row.suggestedEstateSalesCategory);
+  const categoryEntries = [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b));
+  const totalImages = rows.reduce((total, row) => total + row.imageCount, 0);
+  const generatedAt = new Date().toLocaleString();
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lightspeed to EstateSales.net Review</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #151515;
+      --paper: #f8f2df;
+      --gold: #f5c542;
+      --red: #bb1f2d;
+      --muted: #6b6658;
+      --line: #d4c69a;
+      --card: #fffaf0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
+    }
+
+    header {
+      background: #111;
+      color: #fff8df;
+      border-bottom: 6px solid var(--gold);
+      padding: 28px clamp(18px, 4vw, 48px);
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--gold);
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size: clamp(2rem, 7vw, 4.6rem);
+      line-height: 0.95;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    header p {
+      max-width: 820px;
+      margin: 14px 0 0;
+      font-size: 1rem;
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .pill {
+      border: 2px solid var(--gold);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--gold);
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    main {
+      padding: 24px clamp(14px, 3vw, 42px) 44px;
+    }
+
+    .category {
+      margin: 0 0 34px;
+    }
+
+    h2 {
+      display: inline-block;
+      margin: 0 0 14px;
+      border: 3px solid var(--red);
+      border-radius: 999px;
+      background: var(--red);
+      color: #fff;
+      padding: 7px 18px;
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    article {
+      display: flex;
+      flex-direction: column;
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--card);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    .photo {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 4 / 3;
+      background: #ded6be;
+      border-bottom: 3px solid var(--ink);
+    }
+
+    .photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .no-photo {
+      color: var(--muted);
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .body {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px;
+    }
+
+    h3 {
+      margin: 0;
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size: 1.55rem;
+      line-height: 1.02;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 8px;
+      margin: 0;
+      font-size: 0.92rem;
+    }
+
+    dt {
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    dd {
+      margin: 0;
+      font-weight: 700;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 74px;
+      resize: vertical;
+      border: 2px solid var(--line);
+      border-radius: 6px;
+      padding: 9px;
+      background: #fffdf6;
+      color: var(--ink);
+      font: 700 0.98rem Arial, Helvetica, sans-serif;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      border-radius: 6px;
+      background: #111;
+      color: var(--gold);
+      padding: 10px;
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      box-shadow: 0 4px 0 #000;
+    }
+
+    button.secondary {
+      background: var(--gold);
+      color: #111;
+      box-shadow: 0 4px 0 #b98615;
+    }
+
+    button:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #000;
+    }
+
+    footer {
+      padding: 20px clamp(14px, 3vw, 42px) 34px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    @media (max-width: 540px) {
+      .actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>EstateSales.net Review Board</h1>
+    <p>Review these Lightspeed items before posting. Photos and descriptions are staged locally only. Prices are internal reference unless Vern wants them public.</p>
+    <div class="stats">
+      <span class="pill">${rows.length} items</span>
+      <span class="pill">${totalImages} Lightspeed photos</span>
+      <span class="pill">Generated ${escapeHtml(generatedAt)}</span>
+    </div>
+  </header>
+  <main>
+    ${categoryEntries.map(([category, categoryRows]) => `
+      <section class="category">
+        <h2>${escapeHtml(category)}</h2>
+        <div class="grid">
+          ${categoryRows.map((row) => itemCardHtml(row)).join('\n')}
+        </div>
+      </section>
+    `).join('\n')}
+  </main>
+  <footer>
+    Use copy buttons for EstateSales.net captions. Use the image filenames beside each card when uploading photos.
+  </footer>
+  <script>
+    document.addEventListener('click', async (event) => {
+      const button = event.target.closest('button[data-copy]');
+      if (!button) return;
+      const target = document.getElementById(button.dataset.copy);
+      if (!target) return;
+      await navigator.clipboard.writeText(target.value || target.textContent || '');
+      const original = button.textContent;
+      button.textContent = 'Copied';
+      setTimeout(() => { button.textContent = original; }, 900);
+    });
+  </script>
+</body>
+</html>`;
+}
+
+function itemCardHtml(row) {
+  const imageFiles = String(row.imageFiles || '').split('; ').filter(Boolean);
+  const primaryImage = imageFiles[0] || '';
+  const descriptionId = `desc-${safeSlug(`${row.itemID}-${row.title}`)}`;
+  const titleId = `title-${safeSlug(`${row.itemID}-${row.title}`)}`;
+
+  return `<article>
+    <div class="photo">
+      ${primaryImage
+    ? `<img src="${escapeAttribute(primaryImage)}" alt="${escapeAttribute(row.title)}">`
+    : '<div class="no-photo">No Lightspeed photo</div>'}
+    </div>
+    <div class="body">
+      <h3 id="${titleId}">${escapeHtml(row.title)}</h3>
+      <dl>
+        <dt>ID</dt><dd>${escapeHtml(row.itemID)}</dd>
+        <dt>Price</dt><dd>${row.price ? `$${escapeHtml(row.price)}` : 'None'}</dd>
+        <dt>LightSpeed</dt><dd>${escapeHtml(row.lightspeedCategory)}</dd>
+        <dt>Photos</dt><dd>${imageFiles.length ? escapeHtml(imageFiles.join(', ')) : 'None'}</dd>
+      </dl>
+      <textarea id="${descriptionId}">${escapeHtml(row.estateSalesDescription)}</textarea>
+      <div class="actions">
+        <button class="secondary" data-copy="${descriptionId}" type="button">Copy Description</button>
+        <button data-copy="${titleId}" type="button">Copy Title</button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function escapeAttribute(value) {
+  return escapeHtml(value).replace(/`/g, '&#096;');
 }
 
 function timestampSlug() {
