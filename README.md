@@ -175,6 +175,28 @@ ESTATESALES_COMPANY_URL=https://www.estatesales.net/companies/MI/Muskegon/49441/
 
 See `data/estate-sales.example.json` for the fallback feed shape.
 
+## Stage Lightspeed items for EstateSales.NET
+
+Lightspeed is connected through the official read-only API on this Mac. To test the connection:
+
+```bash
+npm run lightspeed:pull -- 10
+```
+
+To generate a local EstateSales.NET review pack with item descriptions, suggested categories, internal prices, and downloaded Lightspeed photos:
+
+```bash
+npm run lightspeed:stage -- --limit 25
+```
+
+The output goes to:
+
+```text
+output/lightspeed-estatesales/
+```
+
+Review the Markdown/CSV and images first, then upload through the normal EstateSales.NET editor. This bridge intentionally does not auto-publish to EstateSales.NET.
+
 ## Early Entry sign-up
 
 The public Early Entry page is:

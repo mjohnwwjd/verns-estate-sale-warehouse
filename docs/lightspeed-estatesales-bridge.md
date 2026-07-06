@@ -108,6 +108,41 @@ To search by description:
 node scripts/lightspeed-pull-items.mjs 10 "test"
 ```
 
+If the access token is old, refresh it:
+
+```sh
+npm run lightspeed:refresh
+```
+
+## Stage Items for EstateSales.net Review
+
+Generate a local review pack from Lightspeed:
+
+```sh
+npm run lightspeed:stage -- --limit 25
+```
+
+To stage only items matching a description search:
+
+```sh
+npm run lightspeed:stage -- --limit 25 --search "lamp"
+```
+
+The script creates a dated folder under:
+
+```text
+output/lightspeed-estatesales/
+```
+
+Each staging folder includes:
+
+- `lightspeed-estatesales-review.md` for a human-readable category review sheet.
+- `lightspeed-estatesales-review.csv` for spreadsheet-style review.
+- `images/` with downloaded Lightspeed item photos when available.
+- `manifest.json` with run metadata.
+
+The staging script uses Lightspeed categories, joins photos by `itemID`, suggests EstateSales.net categories, and keeps prices for internal reference only. Review the wording before posting publicly.
+
 ## EstateSales.net Test Flow
 
 Create a private/unpublished test sale:
