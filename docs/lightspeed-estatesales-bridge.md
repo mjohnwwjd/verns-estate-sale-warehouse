@@ -138,10 +138,27 @@ Each staging folder includes:
 
 - `lightspeed-estatesales-review.md` for a human-readable category review sheet.
 - `lightspeed-estatesales-review.csv` for spreadsheet-style review.
+- `lightspeed-estatesales-review.html` for a visual review board with photos and copy buttons.
+- `estate-sales-upload-checklist.md` for category-by-category upload tracking.
 - `images/` with downloaded Lightspeed item photos when available.
+- `upload-by-category/` with upload-ready image folders grouped by suggested EstateSales.net category.
 - `manifest.json` with run metadata.
 
 The staging script uses Lightspeed categories, joins photos by `itemID`, suggests EstateSales.net categories, and keeps prices for internal reference only. Review the wording before posting publicly.
+
+## EstateSales.net Upload Workflow
+
+1. Run `npm run lightspeed:stage -- --limit 25`.
+2. Open the generated `lightspeed-estatesales-review.html`.
+3. Review each card, title, category, and photo.
+4. Open `estate-sales-upload-checklist.md`.
+5. In EstateSales.net, create or open the sale photo editor.
+6. Upload one folder at a time from `upload-by-category/`.
+7. Use the review board copy buttons for item titles/descriptions.
+8. Keep prices off the public captions unless Vern specifically wants them shown.
+9. Do a final EstateSales.net preview before publishing.
+
+This is intentionally a reviewed upload workflow. It avoids hidden EstateSales.net scraping or automatic publishing.
 
 ## EstateSales.net Test Flow
 

@@ -75,17 +75,22 @@ for (const item of items) {
     upc: item.upc || '',
     imageCount: images.length,
     imageFiles: imageFiles.join('; '),
+    uploadFiles: '',
   });
 }
+
+const uploadPackage = downloadImages ? createUploadPackage(rows, outDir) : null;
 
 const csvPath = path.join(outDir, 'lightspeed-estatesales-review.csv');
 const mdPath = path.join(outDir, 'lightspeed-estatesales-review.md');
 const htmlPath = path.join(outDir, 'lightspeed-estatesales-review.html');
+const uploadChecklistPath = path.join(outDir, 'estate-sales-upload-checklist.md');
 const manifestPath = path.join(outDir, 'manifest.json');
 
 fs.writeFileSync(csvPath, toCsv(rows));
 fs.writeFileSync(mdPath, toMarkdown(rows));
 fs.writeFileSync(htmlPath, toHtml(rows));
+fs.writeFileSync(uploadChecklistPath, toUploadChecklist(rows));
 fs.writeFileSync(manifestPath, JSON.stringify({
   createdAt: new Date().toISOString(),
   accountId,
@@ -97,6 +102,8 @@ fs.writeFileSync(manifestPath, JSON.stringify({
     csv: path.basename(csvPath),
     markdown: path.basename(mdPath),
     html: path.basename(htmlPath),
+    uploadChecklist: path.basename(uploadChecklistPath),
+    uploadFolders: uploadPackage ? 'upload-by-category/' : null,
     images: downloadImages ? 'images/' : null,
   },
 }, null, 2));
@@ -109,6 +116,8 @@ console.log(JSON.stringify({
   csvPath,
   mdPath,
   htmlPath,
+  uploadChecklistPath,
+  uploadByCategoryDir: uploadPackage?.uploadRoot || null,
 }, null, 2));
 
 function parseArgs(rawArgs) {
@@ -325,6 +334,49 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function createUploadPackage(rows, baseOutDir) {
+  const uploadRoot = path.join(baseOutDir, 'upload-by-category');
+  fs.mkdirSync(uploadRoot, { recursive: true });
+
+  const categoryNames = [...new Set(rows.map((row) => row.suggestedEstateSalesCategory))]
+    .sort((a, b) => a.localeCompare(b));
+  const categoryFolderByName = new Map(categoryNames.map((categoryName, index) => {
+    const folder = `${String(index + 1).padStart(2, '0')}-${safeSlug(categoryName)}`;
+    return [categoryName, folder];
+  }));
+  const countersByCategory = new Map();
+
+  for (const row of rows) {
+    const categoryFolder = categoryFolderByName.get(row.suggestedEstateSalesCategory) || '99-estate-highlights';
+    const categoryDir = path.join(uploadRoot, categoryFolder);
+    fs.mkdirSync(categoryDir, { recursive: true });
+
+    const imageFiles = String(row.imageFiles || '').split('; ').filter(Boolean);
+    const uploadFiles = [];
+
+    for (const [imageIndex, imageFile] of imageFiles.entries()) {
+      const sourcePath = path.join(baseOutDir, imageFile);
+      if (!fs.existsSync(sourcePath)) continue;
+
+      const next = (countersByCategory.get(categoryFolder) || 0) + 1;
+      countersByCategory.set(categoryFolder, next);
+
+      const filename = `${String(next).padStart(3, '0')}-${safeSlug(row.title)}-${row.itemID}-${imageIndex + 1}.jpg`;
+      const targetPath = path.join(categoryDir, filename);
+      fs.copyFileSync(sourcePath, targetPath);
+      uploadFiles.push(path.relative(baseOutDir, targetPath));
+    }
+
+    row.uploadFiles = uploadFiles.join('; ');
+  }
+
+  return {
+    uploadRoot,
+    categoryCount: categoryNames.length,
+    imageCount: rows.reduce((total, row) => total + String(row.uploadFiles || '').split('; ').filter(Boolean).length, 0),
+  };
+}
+
 function toCsv(rows) {
   const headers = [
     'itemID',
@@ -337,6 +389,7 @@ function toCsv(rows) {
     'upc',
     'imageCount',
     'imageFiles',
+    'uploadFiles',
   ];
 
   return [
@@ -348,6 +401,37 @@ function toCsv(rows) {
 function csvCell(value) {
   const string = String(value ?? '');
   return /[",\n]/.test(string) ? `"${string.replace(/"/g, '""')}"` : string;
+}
+
+function toUploadChecklist(rows) {
+  const grouped = groupBy(rows, (row) => row.suggestedEstateSalesCategory);
+  const lines = [
+    '# EstateSales.net Upload Checklist',
+    '',
+    `Generated: ${new Date().toLocaleString()}`,
+    '',
+    'Upload one category folder at a time. Copy the public description from the review board or this file. Prices are internal reference unless you choose to publish them.',
+    '',
+  ];
+
+  for (const [category, categoryRows] of [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    lines.push(`## ${category}`, '');
+    const categoryUploadFiles = categoryRows
+      .flatMap((row) => String(row.uploadFiles || '').split('; ').filter(Boolean));
+    const folder = categoryUploadFiles[0]?.split('/').slice(0, 2).join('/') || 'No upload folder';
+    lines.push(`Folder: \`${folder}\``, '');
+
+    for (const row of categoryRows) {
+      lines.push(`- [ ] ${row.title}`);
+      lines.push(`  - Description: ${row.estateSalesDescription}`);
+      if (row.price) lines.push(`  - Internal price: $${row.price}`);
+      lines.push(`  - Upload files: ${row.uploadFiles || 'No photo downloaded'}`);
+    }
+
+    lines.push('');
+  }
+
+  return `${lines.join('\n')}\n`;
 }
 
 function toMarkdown(rows) {
@@ -370,6 +454,7 @@ function toMarkdown(rows) {
       if (row.price) lines.push(`- Internal price: $${row.price}`);
       lines.push(`- EstateSales.net description: ${row.estateSalesDescription}`);
       lines.push(`- Photos: ${row.imageFiles || `${row.imageCount} Lightspeed image(s), not downloaded`}`);
+      if (row.uploadFiles) lines.push(`- Upload-ready files: ${row.uploadFiles}`);
       lines.push('');
     }
   }
@@ -653,11 +738,12 @@ function itemCardHtml(row) {
     </div>
     <div class="body">
       <h3 id="${titleId}">${escapeHtml(row.title)}</h3>
-      <dl>
+    <dl>
         <dt>ID</dt><dd>${escapeHtml(row.itemID)}</dd>
         <dt>Price</dt><dd>${row.price ? `$${escapeHtml(row.price)}` : 'None'}</dd>
         <dt>LightSpeed</dt><dd>${escapeHtml(row.lightspeedCategory)}</dd>
         <dt>Photos</dt><dd>${imageFiles.length ? escapeHtml(imageFiles.join(', ')) : 'None'}</dd>
+        <dt>Upload</dt><dd>${row.uploadFiles ? escapeHtml(row.uploadFiles) : 'No upload file'}</dd>
       </dl>
       <textarea id="${descriptionId}">${escapeHtml(row.estateSalesDescription)}</textarea>
       <div class="actions">

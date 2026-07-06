@@ -195,7 +195,7 @@ The output goes to:
 output/lightspeed-estatesales/
 ```
 
-Review the Markdown/CSV and images first, then upload through the normal EstateSales.NET editor. This bridge intentionally does not auto-publish to EstateSales.NET.
+Open the generated `lightspeed-estatesales-review.html` for the visual review board. Use `upload-by-category/` for upload-ready image folders and `estate-sales-upload-checklist.md` to track what has been moved to EstateSales.NET. This bridge intentionally does not auto-publish to EstateSales.NET.
 
 ## Early Entry sign-up
 

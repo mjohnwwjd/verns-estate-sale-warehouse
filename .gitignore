@@ -1,6 +1,7 @@
 .env
 .env.local
 .env.lightspeed.local
+.DS_Store
 .dev.vars
 .wrangler/
 data/estate-sales-cache.json
