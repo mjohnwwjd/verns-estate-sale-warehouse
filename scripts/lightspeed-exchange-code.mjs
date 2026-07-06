@@ -49,10 +49,13 @@ const body = new URLSearchParams({
   client_secret: env.LIGHTSPEED_CLIENT_SECRET,
   code,
   grant_type: 'authorization_code',
-  redirect_uri: env.LIGHTSPEED_REDIRECT_URI,
 });
 
-const tokenUrl = env.LIGHTSPEED_TOKEN_URL || 'https://cloud.lightspeedapp.com/oauth/access_token.php';
+if (env.LIGHTSPEED_TOKEN_INCLUDE_REDIRECT_URI === 'true') {
+  body.set('redirect_uri', env.LIGHTSPEED_REDIRECT_URI);
+}
+
+const tokenUrl = env.LIGHTSPEED_TOKEN_URL || 'https://cloud.merchantos.com/oauth/access_token.php';
 const response = await fetch(tokenUrl, {
   method: 'POST',
   headers: { 'content-type': 'application/x-www-form-urlencoded' },
