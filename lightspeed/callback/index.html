@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lightspeed Connected - Estates by Vern</title>
+    <style>
+      :root {
+        --gold: #f4c43f;
+        --ink: #151515;
+        --cream: #fff7df;
+        --gray: #d8d8cf;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #111;
+        color: var(--cream);
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      main {
+        width: min(720px, calc(100vw - 32px));
+        border: 4px solid var(--gold);
+        background: #1c1a16;
+        box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.4);
+        padding: 28px;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        color: var(--gold);
+        font-size: clamp(32px, 7vw, 58px);
+        line-height: 0.92;
+        text-transform: uppercase;
+      }
+
+      p {
+        font-size: 18px;
+        line-height: 1.45;
+      }
+
+      code {
+        display: block;
+        overflow-wrap: anywhere;
+        background: var(--cream);
+        color: var(--ink);
+        border: 2px solid var(--gray);
+        padding: 14px;
+        margin: 18px 0;
+      }
+
+      button {
+        width: 100%;
+        border: 0;
+        border-bottom: 7px solid #9e7610;
+        background: var(--gold);
+        color: var(--ink);
+        padding: 16px;
+        font-size: 18px;
+        font-weight: 900;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+
+      .warn {
+        border-left: 6px solid var(--gold);
+        padding-left: 12px;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Lightspeed Callback</h1>
+      <p>Copy this full URL and use it with the local token exchange script.</p>
+      <code id="callback-url"></code>
+      <button type="button" id="copy-url">Copy Full URL</button>
+      <p class="warn">Do not post this URL publicly. The code in it is temporary, but it still belongs to your store connection.</p>
+    </main>
+    <script>
+      const url = window.location.href;
+      document.getElementById('callback-url').textContent = url;
+      document.getElementById('copy-url').addEventListener('click', async () => {
+        await navigator.clipboard.writeText(url);
+        document.getElementById('copy-url').textContent = 'Copied';
+      });
+    </script>
+  </body>
+</html>
