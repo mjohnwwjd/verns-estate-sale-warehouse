@@ -3062,6 +3062,51 @@ textarea {
   padding: 1rem;
 }
 
+.estate-workflow-card {
+  border: 3px solid rgba(240, 192, 68, 0.55);
+  background: #fff9df;
+}
+
+.estate-workflow-card textarea[readonly] {
+  min-height: 112px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--ink);
+  background: #fffdf2;
+}
+
+.workflow-summary {
+  display: grid;
+  gap: 0.45rem;
+  border: 2px solid rgba(24, 25, 24, 0.14);
+  border-radius: var(--radius);
+  background: rgba(24, 25, 24, 0.04);
+  padding: 0.75rem;
+}
+
+.workflow-summary-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-weight: 800;
+}
+
+.workflow-summary-line strong {
+  color: var(--red);
+  text-transform: uppercase;
+}
+
+.workflow-summary-line span {
+  text-align: right;
+}
+
+.estate-workflow-checkbox {
+  align-self: end;
+  min-height: 48px;
+}
+
 .two-col {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

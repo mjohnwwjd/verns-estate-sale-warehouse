@@ -11,7 +11,12 @@ const limit = Number(args.limit || 25);
 const search = args.search || '';
 const downloadImages = args['skip-images'] !== 'true';
 const maxImages = Number(args['max-images'] || 1000);
+const minQoh = args['min-qoh'] === undefined ? null : Number(args['min-qoh']);
+const requireImages = args['require-images'] === 'true';
 const outDir = path.resolve(root, args.out || path.join('output', 'lightspeed-estatesales', timestampSlug()));
+if (args.clean === 'true') {
+  fs.rmSync(outDir, { recursive: true, force: true });
+}
 
 const env = { ...parseEnv(path.join(root, '.env.lightspeed.example')), ...parseEnv(envPath), ...process.env };
 let token = readToken();
@@ -28,17 +33,21 @@ const categoryById = new Map(categories.map((category) => [
   String(category.categoryID),
   category.fullPathName || category.name || `Category ${category.categoryID}`,
 ]));
+const categoryFilter = resolveCategoryFilter(categories, args);
 
 const itemParams = { limit };
 if (search) itemParams.description = search;
-const items = await fetchAll('Item.json', 'Item', itemParams, limit);
+if (categoryFilter?.categoryID) itemParams.categoryID = categoryFilter.categoryID;
+if (minQoh !== null) itemParams.load_relations = '["ItemShops"]';
+
+let items = await fetchAll('Item.json', 'Item', itemParams, limit);
+items = items.filter((item) => String(item.archived) !== 'true');
+if (minQoh !== null) {
+  items = items.filter((item) => quantityOnHand(item) >= minQoh);
+}
 const itemIds = new Set(items.map((item) => String(item.itemID)));
 
-const allImages = await fetchAll('Image.json', 'Image', { limit: 100 }, maxImages);
-const imagesByItemId = groupBy(
-  allImages.filter((image) => itemIds.has(String(image.itemID))),
-  (image) => String(image.itemID),
-);
+const imagesByItemId = await fetchImagesByItemIds([...itemIds], maxImages);
 
 fs.mkdirSync(outDir, { recursive: true });
 const imageDir = path.join(outDir, 'images');
@@ -49,6 +58,8 @@ for (const item of items) {
   const itemID = String(item.itemID);
   const categoryName = categoryById.get(String(item.categoryID)) || 'Uncategorized';
   const images = imagesByItemId.get(itemID) || [];
+  if (requireImages && images.length === 0) continue;
+
   const imageFiles = [];
 
   if (downloadImages) {
@@ -70,6 +81,7 @@ for (const item of items) {
     categoryID: item.categoryID || '',
     lightspeedCategory: categoryName,
     suggestedEstateSalesCategory: mapEstateSalesCategory(categoryName, item.description || ''),
+    quantityOnHand: quantityOnHand(item),
     price: priceDefault(item),
     customSku: item.customSku || '',
     upc: item.upc || '',
@@ -96,6 +108,9 @@ fs.writeFileSync(manifestPath, JSON.stringify({
   accountId,
   limit,
   search,
+  categoryFilter,
+  minQoh,
+  requireImages,
   itemCount: rows.length,
   imageDownload: downloadImages,
   files: {
@@ -221,6 +236,22 @@ async function fetchAll(endpoint, nodeName, params = {}, maxRecords = Infinity) 
   return results;
 }
 
+async function fetchImagesByItemIds(itemIds, maxRecords = Infinity) {
+  const grouped = new Map();
+  let imageCount = 0;
+
+  for (const itemID of itemIds) {
+    if (imageCount >= maxRecords) break;
+
+    const remaining = maxRecords - imageCount;
+    const images = await fetchAll('Image.json', 'Image', { itemID, limit: 100 }, remaining);
+    grouped.set(String(itemID), images);
+    imageCount += images.length;
+  }
+
+  return grouped;
+}
+
 async function apiJson(endpointOrUrl) {
   const url = endpointOrUrl.startsWith('http') ? endpointOrUrl : buildApiUrl(endpointOrUrl);
   const response = await fetch(url, {
@@ -286,9 +317,63 @@ function priceDefault(item) {
   return priceList.find((price) => price.useType === 'Default')?.amount || priceList[0]?.amount || '';
 }
 
+function quantityOnHand(item) {
+  const itemShops = item.ItemShops?.ItemShop;
+  const shops = Array.isArray(itemShops) ? itemShops : itemShops ? [itemShops] : [];
+  const shopQuantities = shops
+    .map((shop) => Number(shop.qoh))
+    .filter(Number.isFinite);
+
+  if (shopQuantities.length) return Math.max(...shopQuantities);
+
+  const directQuantity = Number(item.qoh);
+  return Number.isFinite(directQuantity) ? directQuantity : 0;
+}
+
+function resolveCategoryFilter(categories, parsedArgs) {
+  if (parsedArgs['category-id']) {
+    const match = categories.find((category) => String(category.categoryID) === String(parsedArgs['category-id']));
+    if (!match) fail(`No Lightspeed category found for ID ${parsedArgs['category-id']}.`);
+    return {
+      categoryID: String(match.categoryID),
+      name: match.fullPathName || match.name || `Category ${match.categoryID}`,
+    };
+  }
+
+  const categoryCode = parsedArgs['category-code'];
+  if (categoryCode) {
+    const pattern = new RegExp(`\\(${escapeRegExp(categoryCode)}\\)`, 'i');
+    const match = categories.find((category) => {
+      const name = category.fullPathName || category.name || '';
+      return pattern.test(name);
+    });
+    if (!match) fail(`No Lightspeed category found for code ${categoryCode}.`);
+    return {
+      categoryID: String(match.categoryID),
+      name: match.fullPathName || match.name || `Category ${match.categoryID}`,
+    };
+  }
+
+  const categoryName = parsedArgs['category-name'];
+  if (categoryName) {
+    const wanted = categoryName.toLowerCase();
+    const match = categories.find((category) => {
+      const name = String(category.fullPathName || category.name || '').toLowerCase();
+      return name === wanted || name.includes(wanted);
+    });
+    if (!match) fail(`No Lightspeed category found for name ${categoryName}.`);
+    return {
+      categoryID: String(match.categoryID),
+      name: match.fullPathName || match.name || `Category ${match.categoryID}`,
+    };
+  }
+
+  return null;
+}
+
 function cleanTitle(value) {
   return String(value)
-    .replace(/^\s*\([A-Z]\)\s*/i, '')
+    .replace(/^\s*\([A-Z0-9]+\)\s*/i, '')
     .replace(/\s+/g, ' ')
     .replace(/\buntested\b/gi, '')
     .trim();
@@ -303,6 +388,7 @@ function mapEstateSalesCategory(categoryName, description) {
   const text = `${categoryName} ${description}`.toLowerCase();
   const rules = [
     ['Lamps & Lighting', ['lamp', 'lighting', 'chandelier', 'sconce', 'torch', 'torchiere']],
+    ['Clothing, Jewelry & Accessories', ['purse', 'handbag', 'bag', 'wallet', 'clothing', 'coat', 'dress', 'hat', 'jewelry', 'necklace']],
     ['Sporting Goods', ['sport', 'bike', 'golf', 'fishing', 'fishfinder', 'exercise', 'dumbbell', 'hockey']],
     ['Furniture, Mirrors & Rugs', ['furniture', 'chair', 'stool', 'table', 'dresser', 'cabinet', 'bookcase', 'mirror', 'rug', 'sofa']],
     ['Glassware, Pottery & China', ['glass', 'pyrex', 'pottery', 'china', 'ceramic', 'lladro', 'vase', 'bowl']],
@@ -326,7 +412,7 @@ function wordMatches(text, word) {
 function isPublicCategoryName(categoryName) {
   return categoryName
     && categoryName !== 'Uncategorized'
-    && !/^\W*\([a-z]\)/i.test(categoryName)
+    && !/^\s*\([a-z0-9]+\)/i.test(categoryName)
     && !/vern|estate$/i.test(categoryName);
 }
 
@@ -384,6 +470,7 @@ function toCsv(rows) {
     'estateSalesDescription',
     'lightspeedCategory',
     'suggestedEstateSalesCategory',
+    'quantityOnHand',
     'price',
     'customSku',
     'upc',
@@ -406,11 +493,11 @@ function csvCell(value) {
 function toUploadChecklist(rows) {
   const grouped = groupBy(rows, (row) => row.suggestedEstateSalesCategory);
   const lines = [
-    '# EstateSales.net Upload Checklist',
+    '# EstateSales.NET Upload Checklist',
     '',
     `Generated: ${new Date().toLocaleString()}`,
     '',
-    'Upload one category folder at a time. Copy the public description from the review board or this file. Prices are internal reference unless you choose to publish them.',
+    'Upload one category folder at a time. Copy the public description from the review board or this file. Prices are internal reference unless Vern chooses to publish them.',
     '',
   ];
 
@@ -424,6 +511,7 @@ function toUploadChecklist(rows) {
     for (const row of categoryRows) {
       lines.push(`- [ ] ${row.title}`);
       lines.push(`  - Description: ${row.estateSalesDescription}`);
+      lines.push(`  - Quantity on hand: ${row.quantityOnHand}`);
       if (row.price) lines.push(`  - Internal price: $${row.price}`);
       lines.push(`  - Upload files: ${row.uploadFiles || 'No photo downloaded'}`);
     }
@@ -437,11 +525,11 @@ function toUploadChecklist(rows) {
 function toMarkdown(rows) {
   const grouped = groupBy(rows, (row) => row.suggestedEstateSalesCategory);
   const lines = [
-    '# Lightspeed to EstateSales.net Review',
+    '# Lightspeed to EstateSales.NET Review',
     '',
     `Generated: ${new Date().toLocaleString()}`,
     '',
-    'Use this as the review sheet before uploading to EstateSales.net. Prices are included for internal reference only; remove prices from customer-facing EstateSales.net captions unless Vern wants them shown.',
+    'Use this as the review sheet before uploading to EstateSales.NET. Prices are included for internal reference only; remove prices from customer-facing EstateSales.NET captions unless Vern wants them shown.',
     '',
   ];
 
@@ -451,8 +539,9 @@ function toMarkdown(rows) {
       lines.push(`### ${row.title}`);
       lines.push(`- Lightspeed ID: ${row.itemID}`);
       lines.push(`- Lightspeed category: ${row.lightspeedCategory}`);
+      lines.push(`- Quantity on hand: ${row.quantityOnHand}`);
       if (row.price) lines.push(`- Internal price: $${row.price}`);
-      lines.push(`- EstateSales.net description: ${row.estateSalesDescription}`);
+      lines.push(`- EstateSales.NET description: ${row.estateSalesDescription}`);
       lines.push(`- Photos: ${row.imageFiles || `${row.imageCount} Lightspeed image(s), not downloaded`}`);
       if (row.uploadFiles) lines.push(`- Upload-ready files: ${row.uploadFiles}`);
       lines.push('');
@@ -473,7 +562,7 @@ function toHtml(rows) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lightspeed to EstateSales.net Review</title>
+  <title>Lightspeed to EstateSales.NET Review</title>
   <style>
     :root {
       color-scheme: light;
@@ -687,8 +776,8 @@ function toHtml(rows) {
 </head>
 <body>
   <header>
-    <h1>EstateSales.net Review Board</h1>
-    <p>Review these Lightspeed items before posting. Photos and descriptions are staged locally only. Prices are internal reference unless Vern wants them public.</p>
+    <h1>EstateSales.NET Review Board</h1>
+    <p>Review these Lightspeed items before posting. Photos and descriptions are staged locally only. Prices stay internal unless Vern wants them public.</p>
     <div class="stats">
       <span class="pill">${rows.length} items</span>
       <span class="pill">${totalImages} Lightspeed photos</span>
@@ -706,7 +795,7 @@ function toHtml(rows) {
     `).join('\n')}
   </main>
   <footer>
-    Use copy buttons for EstateSales.net captions. Use the image filenames beside each card when uploading photos.
+    Use copy buttons for EstateSales.NET titles and descriptions. Use the image filenames beside each card when uploading photos.
   </footer>
   <script>
     document.addEventListener('click', async (event) => {
@@ -738,17 +827,18 @@ function itemCardHtml(row) {
     </div>
     <div class="body">
       <h3 id="${titleId}">${escapeHtml(row.title)}</h3>
-    <dl>
+      <dl>
         <dt>ID</dt><dd>${escapeHtml(row.itemID)}</dd>
+        <dt>Qty on hand</dt><dd>${escapeHtml(row.quantityOnHand)}</dd>
         <dt>Price</dt><dd>${row.price ? `$${escapeHtml(row.price)}` : 'None'}</dd>
-        <dt>LightSpeed</dt><dd>${escapeHtml(row.lightspeedCategory)}</dd>
+        <dt>Lightspeed</dt><dd>${escapeHtml(row.lightspeedCategory)}</dd>
         <dt>Photos</dt><dd>${imageFiles.length ? escapeHtml(imageFiles.join(', ')) : 'None'}</dd>
         <dt>Upload</dt><dd>${row.uploadFiles ? escapeHtml(row.uploadFiles) : 'No upload file'}</dd>
       </dl>
       <textarea id="${descriptionId}">${escapeHtml(row.estateSalesDescription)}</textarea>
       <div class="actions">
-        <button class="secondary" data-copy="${descriptionId}" type="button">Copy Description</button>
-        <button data-copy="${titleId}" type="button">Copy Title</button>
+        <button class="secondary" data-copy="${descriptionId}" type="button">Copy EstateSales Description</button>
+        <button data-copy="${titleId}" type="button">Copy Item Title</button>
       </div>
     </div>
   </article>`;

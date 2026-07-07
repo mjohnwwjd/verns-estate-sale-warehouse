@@ -149,6 +149,10 @@ function normalizeState(nextState) {
   const starter = window.VERNS_STARTER_DATA;
   const rawSettings = nextState.settings || {};
   const settings = { ...starter.settings, ...rawSettings };
+  settings.estateSalesWorkflow = normalizeEstateSalesWorkflow(
+    rawSettings.estateSalesWorkflow,
+    starter.settings.estateSalesWorkflow
+  );
   if (isStaleFacebookUrl(settings.facebookUrl)) {
     settings.facebookUrl = starter.settings.facebookUrl;
   }
@@ -260,6 +264,29 @@ function mergeStarterSaleImages(sales, starterSales) {
     ...sale,
     image: sale.image || starterImages.get(sale.id) || ""
   }));
+}
+
+function normalizeEstateSalesWorkflow(rawWorkflow = {}, starterWorkflow = {}) {
+  const workflow = {
+    ...(starterWorkflow || {}),
+    ...(rawWorkflow && typeof rawWorkflow === "object" ? rawWorkflow : {})
+  };
+  const saleId = String(workflow.saleId || estateSalesNumericIdFromUrl(workflow.estateSalesUrl) || "").trim();
+  const saleTitle = String(workflow.saleTitle || "Current estate sale").trim();
+  const categoryCode = String(workflow.lightspeedCategoryCode || "").trim().toUpperCase();
+  const categoryName = String(workflow.lightspeedCategoryName || "").trim();
+  return {
+    saleTitle,
+    estateSalesUrl: String(workflow.estateSalesUrl || "").trim(),
+    saleId,
+    lightspeedCategoryCode: categoryCode,
+    lightspeedCategoryName: categoryName,
+    lightspeedCategoryId: String(workflow.lightspeedCategoryId || "").trim(),
+    minQoh: wholeNumber(workflow.minQoh, 1, 0),
+    requireImages: workflow.requireImages !== false,
+    outputSlug: workflow.outputSlug || workflowOutputSlug(saleTitle, categoryCode || categoryName || saleId),
+    lastUpdated: String(workflow.lastUpdated || "").trim()
+  };
 }
 
 function saveState() {
@@ -799,10 +826,61 @@ function renderSettings() {
     settingsForm.salesAutoSync.checked = settings.salesAutoSync !== false;
   }
 
+  renderEstateSalesWorkflowSettings();
+
   const syncStatus = $("[data-sales-sync-status]");
   if (syncStatus) {
     syncStatus.textContent = lastSalesSyncStatus || "Daily sync uses Vern's backend. EstateSales.NET page-checking stays disabled on the server unless permission is configured.";
   }
+}
+
+function renderEstateSalesWorkflowSettings() {
+  const form = $("[data-estate-workflow-form]");
+  if (!form) return;
+
+  const workflow = normalizeEstateSalesWorkflow(
+    state.settings.estateSalesWorkflow,
+    window.VERNS_STARTER_DATA?.settings?.estateSalesWorkflow
+  );
+  const saleId = workflow.saleId || estateSalesNumericIdFromUrl(workflow.estateSalesUrl);
+  const command = estateSalesWorkflowCommand(workflow);
+  form.saleTitle.value = workflow.saleTitle || "";
+  form.estateSalesUrl.value = workflow.estateSalesUrl || "";
+  form.saleId.value = saleId || "";
+  form.outputSlug.value = workflow.outputSlug || workflowOutputSlug(workflow.saleTitle, workflow.lightspeedCategoryCode || workflow.lightspeedCategoryName || saleId);
+  form.lightspeedCategoryName.value = workflow.lightspeedCategoryName || "";
+  form.lightspeedCategoryCode.value = workflow.lightspeedCategoryCode || "";
+  form.lightspeedCategoryId.value = workflow.lightspeedCategoryId || "";
+  form.minQoh.value = workflow.minQoh ?? 1;
+  form.requireImages.checked = workflow.requireImages !== false;
+  form.stageCommand.value = command;
+
+  const openLink = $("[data-estate-workflow-open]");
+  if (openLink) {
+    openLink.href = estateSalesPicturesUrl({ ...workflow, saleId });
+  }
+
+  const summary = $("[data-estate-workflow-summary]");
+  if (summary) {
+    summary.replaceChildren(
+      workflowSummaryLine("EstateSales target", saleId ? `Sale ${saleId}` : "Add sale URL or sale ID"),
+      workflowSummaryLine("Lightspeed pull", workflowCategoryLabel(workflow)),
+      workflowSummaryLine("Filter", `${workflow.minQoh}+ in stock${workflow.requireImages ? ", pictures required" : ""}`)
+    );
+  }
+
+  const status = $("[data-estate-workflow-status]");
+  if (status) {
+    status.textContent = workflow.lastUpdated
+      ? `Saved ${new Date(workflow.lastUpdated).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}. This does not publish anything.`
+      : "Ready. Save this target before staging the next sale.";
+  }
+}
+
+function workflowSummaryLine(label, value) {
+  const row = divEl("workflow-summary-line");
+  row.append(strongEl(label), spanEl("", value));
+  return row;
 }
 
 function directionsUrl(address) {
@@ -2767,6 +2845,42 @@ function bindContentTool() {
     maybeRefreshAuthorizedSales(true);
   });
 
+  $("[data-estate-workflow-form]")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const workflow = estateSalesWorkflowFromForm(form);
+    if (workflow.estateSalesUrl && !isEstateSalesUrl(workflow.estateSalesUrl)) {
+      alert("Use a valid https://www.estatesales.net URL for the target sale.");
+      return;
+    }
+    state.settings = {
+      ...state.settings,
+      estateSalesWorkflow: {
+        ...workflow,
+        lastUpdated: new Date().toISOString()
+      }
+    };
+    saveState();
+    renderAll();
+  });
+
+  $("[data-copy-estate-workflow-command]")?.addEventListener("click", (event) => {
+    const command = $("[data-estate-workflow-command]");
+    copyField(command, event.currentTarget);
+  });
+
+  $("[data-reset-estate-workflow]")?.addEventListener("click", () => {
+    state.settings = {
+      ...state.settings,
+      estateSalesWorkflow: normalizeEstateSalesWorkflow(
+        window.VERNS_STARTER_DATA?.settings?.estateSalesWorkflow,
+        window.VERNS_STARTER_DATA?.settings?.estateSalesWorkflow
+      )
+    };
+    saveState();
+    renderAll();
+  });
+
   $("[data-estate-sale-form]")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -2896,6 +3010,57 @@ function renderPricingSettings() {
   form.marketplacePercent.value = state.settings.marketplacePercent ?? 90;
   form.clearanceMarkdownPercent.value = state.settings.clearanceMarkdownPercent ?? 75;
   form.defaultPricingBasis.value = state.settings.defaultPricingBasis || "market";
+}
+
+function estateSalesWorkflowFromForm(form) {
+  const data = Object.fromEntries(new FormData(form));
+  const estateSalesUrl = String(data.estateSalesUrl || "").trim();
+  const saleId = String(data.saleId || estateSalesNumericIdFromUrl(estateSalesUrl) || "").replace(/\D/g, "");
+  const saleTitle = String(data.saleTitle || "").trim() || "Current estate sale";
+  const lightspeedCategoryCode = String(data.lightspeedCategoryCode || "").trim().toUpperCase();
+  const lightspeedCategoryName = String(data.lightspeedCategoryName || "").trim();
+  const lightspeedCategoryId = String(data.lightspeedCategoryId || "").trim().replace(/[^\d]/g, "");
+  return normalizeEstateSalesWorkflow({
+    saleTitle,
+    estateSalesUrl,
+    saleId,
+    lightspeedCategoryCode,
+    lightspeedCategoryName,
+    lightspeedCategoryId,
+    minQoh: data.minQoh,
+    requireImages: data.requireImages === "on",
+    outputSlug: String(data.outputSlug || "").trim() || workflowOutputSlug(saleTitle, lightspeedCategoryCode || lightspeedCategoryName || saleId)
+  }, window.VERNS_STARTER_DATA?.settings?.estateSalesWorkflow);
+}
+
+function estateSalesWorkflowCommand(workflow) {
+  const current = normalizeEstateSalesWorkflow(workflow, window.VERNS_STARTER_DATA?.settings?.estateSalesWorkflow);
+  const parts = ["npm", "run", "lightspeed:stage", "--"];
+  if (current.lightspeedCategoryId) {
+    parts.push("--category-id", shellQuote(current.lightspeedCategoryId));
+  } else if (current.lightspeedCategoryCode) {
+    parts.push("--category-code", shellQuote(current.lightspeedCategoryCode));
+  } else if (current.lightspeedCategoryName) {
+    parts.push("--category-name", shellQuote(current.lightspeedCategoryName));
+  }
+  parts.push("--min-qoh", String(current.minQoh ?? 1));
+  if (current.requireImages) parts.push("--require-images");
+  parts.push("--limit", "100", "--clean", "--out", shellQuote(`output/lightspeed-estatesales/${current.outputSlug || workflowOutputSlug(current.saleTitle, current.lightspeedCategoryCode || current.saleId)}`));
+  return parts.join(" ");
+}
+
+function estateSalesPicturesUrl(workflow) {
+  const url = String(workflow?.estateSalesUrl || "").trim();
+  if (isEstateSalesUrl(url) && /\/account\/sale-wizard\/pictures\/\d+/i.test(new URL(url).pathname)) return url;
+  const saleId = String(workflow?.saleId || estateSalesNumericIdFromUrl(url) || "").replace(/\D/g, "");
+  if (saleId) return `https://www.estatesales.net/account/sale-wizard/pictures/${saleId}`;
+  return isEstateSalesUrl(url) ? url : "https://www.estatesales.net/account/sale-wizard";
+}
+
+function workflowCategoryLabel(workflow) {
+  if (workflow.lightspeedCategoryId) return `Category ID ${workflow.lightspeedCategoryId}`;
+  if (workflow.lightspeedCategoryCode) return `Code ${workflow.lightspeedCategoryCode}`;
+  return workflow.lightspeedCategoryName || "Add category";
 }
 
 function renderEstateSaleAdmin() {
@@ -3312,10 +3477,32 @@ function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function wholeNumber(value, fallback, min = 0) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(min, Math.round(number));
+}
+
 function clampPercent(value, fallback, min = 0, max = 95) {
   const number = Number(value);
   if (!Number.isFinite(number)) return fallback;
   return Math.max(min, Math.min(max, number));
+}
+
+function workflowOutputSlug(...values) {
+  const source = values.filter(Boolean).join(" ").trim() || "current-estate-sale";
+  return source
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "current-estate-sale";
+}
+
+function shellQuote(value) {
+  const text = String(value || "");
+  if (/^[A-Za-z0-9_./:@=-]+$/.test(text)) return text;
+  return `"${text.replace(/(["\\$`])/g, "\\$1")}"`;
 }
 
 function roundPrice(value) {
@@ -3355,11 +3542,16 @@ function displayDate(value) {
 }
 
 function estateSaleIdFromUrl(value) {
+  const numeric = estateSalesNumericIdFromUrl(value);
+  return numeric ? `estate-sale-${numeric}` : "";
+}
+
+function estateSalesNumericIdFromUrl(value) {
   try {
     const url = new URL(value);
     const parts = url.pathname.split("/").filter(Boolean);
     const numeric = parts.findLast((part) => /^\d{5,}$/.test(part));
-    return numeric ? `estate-sale-${numeric}` : "";
+    return numeric || "";
   } catch {
     return "";
   }

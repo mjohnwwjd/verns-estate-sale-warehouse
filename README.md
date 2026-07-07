@@ -203,6 +203,27 @@ To find the newest generated review pack:
 npm run lightspeed:latest
 ```
 
+### Set the current sale workflow
+
+In the employee area, open `Settings` and use `EstateSales workflow target` before each new sale.
+
+That manager-only form stores the current:
+
+- EstateSales.NET sale wizard or pictures URL
+- EstateSales.NET sale ID
+- Lightspeed category code, name, or category ID
+- minimum quantity-on-hand filter
+- photo-required setting
+- output folder slug
+
+After saving, use `Copy Command` to stage the matching Lightspeed items. Use `Open Sale Pictures` to jump to the target EstateSales.NET sale picture manager. This workflow makes local review cards and does not publish anything automatically.
+
+Example command:
+
+```bash
+npm run lightspeed:stage -- --category-id 123 --min-qoh 1 --require-images --limit 100 --clean --out output/lightspeed-estatesales/current-estate-sale
+```
+
 ## Early Entry sign-up
 
 The public Early Entry page is:
@@ -217,20 +238,27 @@ Payment settings live in:
 assets/js/early-entry-config.js
 ```
 
-The current local draft points to the live Stripe Payment Link:
+The current local draft is set for Wave 2 Early Entry:
 
 ```text
-stripePaymentLink: "https://buy.stripe.com/eVqfZj5MVdy1diF5LsaR200"
+price: "$20"
+maxPaidSpots: 40
+waveOneSpots: 20
+waveTwoStartSpot: 21
+waveTwoSpots: 20
+stripePaymentLink: ""
 paymentPreviewMode: false
 ```
 
-That lets the `Pay $25 & Sign Up Early` button open Stripe checkout for a `$25` Early Entry spot. The page checks the live Worker count before showing the public spots remaining.
+The original 20 early-entry buyers keep spots 1-20 and enter first. Wave 2 buyers receive spots 21-40 at $20 per person and enter immediately after the first group.
+
+Do not reconnect the old $25 Stripe Payment Link to the Wave 2 button. Create a new $20 Stripe Payment Link, then add that URL to `stripePaymentLink` and update the Worker `STRIPE_PAYMENT_LINK_ID` before publishing the live payment button.
 
 The visible spots-remaining countdown uses the live Worker:
 
 ```text
 spotCounterMode: "live"
-previewPaidSpots: 7
+previewPaidSpots: 20
 spotCounterEndpoint: "https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/count"
 ```
 
@@ -249,7 +277,7 @@ paymentPreviewMode: true
 paymentPreviewUrl: "payment-preview.html"
 ```
 
-If both Stripe and preview mode are off, the page falls back to Venmo at `@ebuyingstore` and clearly says Venmo sign-ups must be manually confirmed.
+When `paymentPendingMessage` is set and `stripePaymentLink` is empty, the public button is disabled and tells customers the Wave 2 checkout is being connected.
 
 ## 1M Project donation bar
 

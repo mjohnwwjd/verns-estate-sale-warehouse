@@ -95,6 +95,9 @@ async function checkCorePages() {
   expect(previewResponse.ok, `payment-preview.html returned ${previewResponse.status}`);
   expect(previewHtml.includes("Checkout Preview | Vern's Estate Sale Warehouse"), "payment preview page missing title");
   expect(previewHtml.includes("Preview only"), "payment preview page missing preview-only warning");
+  expect(previewHtml.includes("Wave 2 Early Entry Checkout"), "payment preview page missing Wave 2 checkout copy");
+  expect(previewHtml.includes("$20.00"), "payment preview page missing Wave 2 price");
+  expect(!previewHtml.includes("$25.00"), "payment preview page still shows old early-entry price");
 }
 
 async function checkStaticLinksAndDropdowns() {

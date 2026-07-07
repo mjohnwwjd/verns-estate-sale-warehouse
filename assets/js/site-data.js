@@ -16,6 +16,18 @@ window.VERNS_STARTER_DATA = {
     salesSyncUrl: "/api/estate-sales/sync",
     salesAutoSync: false,
     lastSalesSyncAt: "",
+    estateSalesWorkflow: {
+      saleTitle: "Current estate sale",
+      estateSalesUrl: "",
+      saleId: "",
+      lightspeedCategoryCode: "",
+      lightspeedCategoryName: "",
+      lightspeedCategoryId: "",
+      minQoh: 1,
+      requireImages: true,
+      outputSlug: "current-estate-sale",
+      lastUpdated: ""
+    },
     contactInfoVersion: "2026-06-05-hero-facts",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
     demoContentVersion: "2026-06-23-wyoming-extraordinary-sale",
