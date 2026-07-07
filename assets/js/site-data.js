@@ -45,7 +45,7 @@ window.VERNS_STARTER_DATA = {
       dateSummary: "Jul 9-12, 2026",
       hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM; Sun 8:30 AM-2 PM",
       status: "upcoming",
-      note: "Rare and unusual antiques, Art Deco lighting, pottery, glass, sculpture, furniture, tools, garden pieces, and reseller-friendly estate-sale pricing. Address releases on EstateSales.NET before the sale.",
+      note: "Rare and unusual antiques, Art Deco lighting, pottery, glass, sculpture, furniture, tools, garden pieces, and reseller-friendly estate-sale pricing. Paid spots 1-20 enter first, then Wave 2 is called five at a time after the first 10 minutes before free sign-ups. Address releases on EstateSales.NET before the sale.",
       image: "assets/img/sale-wyoming-extraordinary-main.jpg",
       buttonLabel: "Open official listing",
       lastReviewed: "2026-06-23"

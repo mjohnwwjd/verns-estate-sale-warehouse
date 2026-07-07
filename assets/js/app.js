@@ -1246,7 +1246,7 @@ function renderEarlyEntrySaleCard() {
       remainingCount,
       spanEl("early-entry-card-count-copy", "spots remain")
     ]),
-    pEl("", `Original spots 1-${waveOne} enter first. Wave 2 buyers receive spots ${waveTwoStart}-${waveTwoEnd} and enter immediately after the first group.`),
+    pEl("", `Original spots 1-${waveOne} enter first. After the first 10 minutes, Wave 2 spots ${waveTwoStart}-${waveTwoEnd} are called five at a time before the free list.`),
     button
   );
   return card;

@@ -90,7 +90,7 @@
         return;
       }
       if (paid >= waveOneSpots) {
-        el.textContent = `Wave 2 is open because of demand. The next paid spot is #${nextSpot}; spots 1-${waveOneSpots} enter first.`;
+        el.textContent = `Wave 2 is open because of demand. Next paid spot is #${nextSpot}; spots 1-${waveOneSpots} enter first, then Wave 2 is called five at a time.`;
         return;
       }
       el.textContent = counter.mode === "live"
