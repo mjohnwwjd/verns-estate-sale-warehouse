@@ -246,13 +246,13 @@ maxPaidSpots: 40
 waveOneSpots: 20
 waveTwoStartSpot: 21
 waveTwoSpots: 20
-stripePaymentLink: ""
+stripePaymentLink: "https://buy.stripe.com/cNi3cxejrfG91zXddUaR201"
 paymentPreviewMode: false
 ```
 
 The original 20 early-entry buyers keep spots 1-20 and enter first. Wave 2 buyers receive spots 21-40 at $20 per person. After the first 10 minutes, Wave 2 is called in groups of five before the free sign-up list.
 
-Do not reconnect the old $25 Stripe Payment Link to the Wave 2 button. Create a new $20 Stripe Payment Link, then add that URL to `stripePaymentLink` and update the Worker `STRIPE_PAYMENT_LINK_ID` before publishing the live payment button.
+Do not reconnect the old $25 Stripe Payment Link to the Wave 2 button. The live Wave 2 Stripe Payment Link is capped to 20 completed payments and uses Worker `STRIPE_PAYMENT_LINK_ID=plink_1TqNO1Q5qwZrUYmfQMjyhtZt`.
 
 The visible spots-remaining countdown uses the live Worker:
 

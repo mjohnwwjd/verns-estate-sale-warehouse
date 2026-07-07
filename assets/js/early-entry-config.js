@@ -1,10 +1,10 @@
 window.VERNS_EARLY_ENTRY_CONFIG = {
   // Fallback count mirrors the live roster when the Worker is temporarily unavailable.
-  stripePaymentLink: "",
-  // Keep false while reviewing the Stripe sandbox checkout. Turn true to use the local mock checkout.
+  stripePaymentLink: "https://buy.stripe.com/cNi3cxejrfG91zXddUaR201",
+  // Keep false while using the live Stripe checkout. Turn true only for local mock checkout testing.
   paymentPreviewMode: false,
   paymentPreviewUrl: "payment-preview.html",
-  paymentPendingMessage: "Wave 2 checkout is being connected. Original spots 1-20 are sold out; the next paid spot will be #21.",
+  paymentPendingMessage: "",
   venmoUsername: "@ebuyingstore",
   venmoQrImage: "",
   price: "$20",
