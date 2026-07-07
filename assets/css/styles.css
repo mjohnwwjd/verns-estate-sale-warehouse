@@ -598,6 +598,13 @@ h3 {
   transform: translateY(-2px);
 }
 
+.btn.is-disabled,
+.btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.68;
+  pointer-events: none;
+}
+
 .btn-gold {
   background: var(--gold);
   box-shadow: 0 5px 0 var(--gold-dark);
@@ -2637,6 +2644,18 @@ html[data-yellow-band-variant="tight"] .visit-actions {
 .early-entry-payment-note {
   border-left: 6px solid var(--gold);
   padding-left: 0.75rem;
+}
+
+.early-entry-next-line {
+  border-radius: 10px;
+  background: rgba(240, 192, 68, 0.14);
+  color: #fff8dc !important;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 0.96rem !important;
+  font-weight: 1000;
+  letter-spacing: 0;
+  padding: 0.72rem 0.9rem;
+  text-transform: uppercase;
 }
 
 .venmo-box {

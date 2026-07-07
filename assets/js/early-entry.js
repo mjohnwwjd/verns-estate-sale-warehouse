@@ -1,12 +1,13 @@
 (function () {
   const config = window.VERNS_EARLY_ENTRY_CONFIG || {};
   const storageKey = "vernsWebsiteStateV1";
-  const price = config.price || "$25";
-  const maxPaidSpots = config.maxPaidSpots || 25;
+  const price = config.price || "$20";
+  const maxPaidSpots = config.maxPaidSpots || 40;
   const freeSignupTime = config.freeSignupTime || "7:30 AM";
   const stripePaymentLink = String(config.stripePaymentLink || "").trim();
   const paymentPreviewUrl = String(config.paymentPreviewUrl || "payment-preview.html").trim();
   const paymentPreviewMode = Boolean(config.paymentPreviewMode && !stripePaymentLink && paymentPreviewUrl);
+  const paymentPendingMessage = String(config.paymentPendingMessage || "").trim();
   const spotCounterEndpoint = String(config.spotCounterEndpoint || "").trim();
   const spotCounterMode = String(config.spotCounterMode || (spotCounterEndpoint ? "live" : "preview")).trim();
   const venmoUsername = String(config.venmoUsername || "@ebuyingstore").trim();
@@ -18,6 +19,10 @@
     if (!Number.isFinite(number)) return min;
     return Math.min(max, Math.max(min, Math.round(number)));
   };
+
+  const waveOneSpots = clampCount(config.waveOneSpots, 1, maxPaidSpots);
+  const waveTwoStartSpot = clampCount(config.waveTwoStartSpot, waveOneSpots + 1, maxPaidSpots);
+  const waveTwoSpots = clampCount(config.waveTwoSpots, 1, maxPaidSpots);
 
   const getPreviewCounter = () => {
     const reservedCount = Array.isArray(config.reservedSpots) ? config.reservedSpots.length : 0;
@@ -44,6 +49,13 @@
     });
   };
 
+  const fillStaticWaveText = () => {
+    fillText("[data-early-entry-wave-one]", String(waveOneSpots));
+    fillText("[data-early-entry-wave-two]", String(waveTwoSpots));
+    fillText("[data-early-entry-wave-two-start]", String(waveTwoStartSpot));
+    fillText("[data-early-entry-wave-two-end]", String(Math.min(maxPaidSpots, waveTwoStartSpot + waveTwoSpots - 1)));
+  };
+
   const updateSpotCounter = (counter) => {
     const max = clampCount(counter.max, 1, 9999);
     const paid = clampCount(counter.paid, 0, max);
@@ -52,21 +64,31 @@
     const meterFill = document.querySelector("[data-early-entry-meter]");
     const meterPercent = Math.max(0, Math.min(100, (remaining / max) * 100));
     const remainingLabel = remaining === 1 ? "spot remains" : "spots remain";
+    const nextSpot = remaining > 0 ? Math.min(max, paid + 1) : max;
 
     fillText("[data-early-entry-remaining]", String(remaining));
     fillText("[data-early-entry-remaining-text]", `${remaining} ${remainingLabel}`);
     fillText("[data-early-entry-paid]", String(paid));
     fillText("[data-early-entry-remaining-label]", remainingLabel);
     fillText("[data-early-entry-counter-max]", String(max));
+    fillText("[data-early-entry-next-spot]", String(nextSpot));
 
     if (meterFill) {
       meterFill.style.width = `${meterPercent}%`;
     }
 
     document.querySelectorAll("[data-early-entry-counter-note]").forEach((el) => {
+      if (remaining <= 0) {
+        el.textContent = "All paid early-entry spots are currently claimed. The free 7:30 AM sign-up list still runs at the sale.";
+        return;
+      }
+      if (paid >= waveOneSpots) {
+        el.textContent = `Wave 2 is open because of demand. The next paid spot is #${nextSpot}; spots 1-${waveOneSpots} enter first.`;
+        return;
+      }
       el.textContent = counter.mode === "live"
         ? "Live count updates as early-entry payments are completed."
-        : "Early-entry spots are limited. When they are gone, use the free 7:30 AM sign-up list at the sale.";
+        : `Wave 2 starts at spot #${waveTwoStartSpot}. Free sign-up begins at ${freeSignupTime}.`;
     });
   };
 
@@ -116,6 +138,7 @@
     fillText("[data-early-entry-max]", String(maxPaidSpots));
     fillText("[data-free-signup-time]", freeSignupTime);
     fillText("[data-venmo-username]", venmoUsername);
+    fillStaticWaveText();
     loadSpotCounter();
 
     const payButton = document.querySelector("[data-early-entry-pay-button]");
@@ -125,15 +148,27 @@
     const venmoQr = document.querySelector("[data-venmo-qr]");
 
     if (payButton) {
-      payButton.href = stripePaymentLink || (paymentPreviewMode ? paymentPreviewUrl : venmoUrl);
-      payButton.target = paymentPreviewMode ? "_self" : "_blank";
-      if (paymentPreviewMode) payButton.removeAttribute("rel");
-      else payButton.rel = "noopener";
-      payButton.textContent = stripePaymentLink || paymentPreviewMode ? `Pay ${price} & Sign Up Early` : `Pay ${price} with Venmo`;
+      if (paymentPendingMessage && !stripePaymentLink && !paymentPreviewMode) {
+        payButton.removeAttribute("href");
+        payButton.removeAttribute("target");
+        payButton.removeAttribute("rel");
+        payButton.setAttribute("aria-disabled", "true");
+        payButton.classList.add("is-disabled");
+        payButton.textContent = "Wave 2 checkout coming soon";
+        payButton.addEventListener("click", (event) => event.preventDefault());
+      } else {
+        payButton.href = stripePaymentLink || (paymentPreviewMode ? paymentPreviewUrl : venmoUrl);
+        payButton.target = paymentPreviewMode ? "_self" : "_blank";
+        if (paymentPreviewMode) payButton.removeAttribute("rel");
+        else payButton.rel = "noopener";
+        payButton.textContent = stripePaymentLink || paymentPreviewMode ? `Pay ${price} & Sign Up Early` : `Pay ${price} with Venmo`;
+      }
     }
 
     if (payNote) {
-      payNote.textContent = stripePaymentLink
+      payNote.textContent = paymentPendingMessage && !stripePaymentLink && !paymentPreviewMode
+        ? paymentPendingMessage
+        : stripePaymentLink
         ? `Limited to available early-entry spots. Free in-person sign-up begins at ${freeSignupTime} at the sale location.`
         : paymentPreviewMode
           ? `Preview mode only: this shows the customer flow, but no payment will be collected. The real Stripe link will be capped to the available early-entry spots.`
@@ -141,11 +176,11 @@
     }
 
     if (stripeSetupNote) {
-      stripeSetupNote.hidden = Boolean(stripePaymentLink);
+      stripeSetupNote.hidden = Boolean(stripePaymentLink || paymentPendingMessage);
     }
 
     if (venmoBox) {
-      venmoBox.hidden = Boolean(stripePaymentLink || paymentPreviewMode);
+      venmoBox.hidden = Boolean(stripePaymentLink || paymentPreviewMode || paymentPendingMessage);
     }
 
     if (venmoQr && config.venmoQrImage) {

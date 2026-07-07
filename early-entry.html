@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Early Entry Sign-Up for Vern's Estate Sale Warehouse estate sales."
+      content="Wave 2 Early Entry Sign-Up for Vern's Estate Sale Warehouse estate sales."
     />
-    <title>Early Entry Sign-Up | Vern's Estate Sale Warehouse</title>
+    <title>Wave 2 Early Entry | Vern's Estate Sale Warehouse</title>
     <meta name="theme-color" content="#171512" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -16,11 +16,11 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="assets/img/app/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="assets/img/app/apple-touch-icon.png" />
-    <link rel="stylesheet" href="assets/css/styles.css?v=20260703-counter-live-fix" />
-    <script src="assets/js/site-data.js?v=20260703-counter-live-fix" defer></script>
-    <script src="assets/js/app.js?v=20260703-counter-live-fix" defer></script>
-    <script src="assets/js/early-entry-config.js?v=20260703-counter-live-fix" defer></script>
-    <script src="assets/js/early-entry.js?v=20260703-counter-live-fix" defer></script>
+    <link rel="stylesheet" href="assets/css/styles.css?v=20260706-wave2-early-entry" />
+    <script src="assets/js/site-data.js?v=20260706-wave2-early-entry" defer></script>
+    <script src="assets/js/app.js?v=20260706-wave2-early-entry" defer></script>
+    <script src="assets/js/early-entry-config.js?v=20260706-wave2-early-entry" defer></script>
+    <script src="assets/js/early-entry.js?v=20260706-wave2-early-entry" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -32,15 +32,17 @@
           <img src="assets/img/logo-vern-option-2.png" alt="Vern's Estate Sale Warehouse" />
           <div>
             <p class="eyebrow">Vern's Estate Sale Warehouse</p>
-            <h1>Early Entry Sign-Up</h1>
+            <h1>Wave 2 Early Entry</h1>
           </div>
         </div>
         <p class="early-entry-page-lede">
-          This extraordinary estate sale is for true collectors, antique buyers, and
-          resellers. The house is small but packed front to back with rare, unusual,
-          and hard-to-find pieces, so early entry is limited to the first
-          <strong data-early-entry-max>25</strong> early-entry spots at
-          <strong data-early-entry-price>$25</strong> per person.
+          The first 20 early-entry spots sold out fast, so because of demand we
+          are opening 20 additional Wave 2 spots at
+          <strong data-early-entry-price>$20</strong> per person. Original
+          buyers keep spots 1-<span data-early-entry-wave-one>20</span> and
+          enter first. Wave 2 buyers receive spots
+          <span data-early-entry-wave-two-start>21</span>-<span data-early-entry-wave-two-end>40</span>
+          and enter immediately after the first group.
         </p>
         <div class="early-entry-spots-strip" aria-label="Early entry spots remaining">
           <div>
@@ -48,7 +50,7 @@
             <span class="early-entry-spots-label" data-early-entry-remaining-label>checking</span>
           </div>
           <p data-early-entry-counter-note>
-            Early-entry spots are limited. When they are gone, use the free 7:30 AM sign-up list at the sale.
+            Wave 2 is open because of demand. The next paid spot is #<span data-early-entry-next-spot>21</span>.
           </p>
         </div>
       </section>
@@ -56,19 +58,20 @@
       <section class="section-shell early-entry-details" aria-labelledby="early-entry-rules-title">
         <div class="early-entry-rules-card">
           <p class="eyebrow">How it works</p>
-          <h2 id="early-entry-rules-title">Early list first, free list after</h2>
+          <h2 id="early-entry-rules-title">Wave 1 first, Wave 2 next</h2>
           <p>
-            The first <span data-early-entry-max>25</span> early-entry names
-            will be called before any names from the free sign-up sheet.
+            Original early-entry buyers keep their place in line. Spots
+            1-<span data-early-entry-wave-one>20</span> will be called first.
           </p>
           <p>
-            After the first <span data-early-entry-max>25</span> early sign-up spots,
-            the regular free sign-up sheet will be placed at the sale location at
-            <span data-free-signup-time>7:30 AM</span>.
+            The 20 added Wave 2 spots are spots
+            <span data-early-entry-wave-two-start>21</span>-<span data-early-entry-wave-two-end>40</span>
+            at <span data-early-entry-price>$20</span> per person. These names
+            will be called immediately after the first group.
           </p>
           <p>
-            The free sign-up list begins after the first <span data-early-entry-max>25</span>
-            early-entry customers, or after however many early-entry customers signed up.
+            The free sign-up list begins at <span data-free-signup-time>7:30 AM</span>
+            and will be called after the paid early-entry list.
           </p>
           <p>
             Each person needs their own early-entry spot. Please make sure your payment
@@ -81,23 +84,25 @@
         </div>
 
         <aside class="early-entry-payment-card" aria-label="Early entry payment">
-          <span class="early-entry-price-badge" data-early-entry-price>$25</span>
-          <h2>Reserve early entry</h2>
+          <span class="early-entry-price-badge" data-early-entry-price>$20</span>
+          <h2>Reserve Wave 2</h2>
           <div class="early-entry-spots-meter" aria-label="Early entry spot meter">
             <div class="early-entry-spots-meter-top">
               <strong><span data-early-entry-remaining>...</span> left</strong>
-              <span><span data-early-entry-paid>...</span> of <span data-early-entry-counter-max>25</span> claimed</span>
+              <span><span data-early-entry-paid>...</span> of <span data-early-entry-counter-max>40</span> claimed</span>
             </div>
             <div class="early-entry-meter-track" aria-hidden="true">
               <span data-early-entry-meter></span>
             </div>
           </div>
-          <a class="btn btn-gold early-entry-pay-button" href="https://buy.stripe.com/eVqfZj5MVdy1diF5LsaR200" data-early-entry-pay-button>
-            Pay $25 &amp; Sign Up Early
+          <p class="early-entry-next-line">
+            Next paid spot: #<span data-early-entry-next-spot>21</span>
+          </p>
+          <a class="btn btn-gold early-entry-pay-button" data-early-entry-pay-button>
+            Wave 2 checkout coming soon
           </a>
           <p class="early-entry-payment-note" data-early-entry-payment-note>
-            Limited to available early-entry spots.
-            Free in-person sign-up begins at 7:30 AM at the sale location.
+            Wave 2 checkout is being connected. Original spots 1-20 are sold out; the next paid spot will be #21.
           </p>
           <div class="venmo-box" data-venmo-box hidden>
             <p class="eyebrow">Venmo fallback</p>

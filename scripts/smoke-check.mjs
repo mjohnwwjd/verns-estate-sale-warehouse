@@ -69,7 +69,7 @@ async function checkCorePages() {
   expect(html.includes("apple-mobile-web-app-capable"), "home page missing Apple mobile app metadata");
   expect(html.includes("data-estate-sales-grid"), "home page missing estate sales grid");
   expect(html.includes("data-early-entry-remaining"), "home page missing early-entry spots counter");
-  expect(html.includes("true collectors"), "home page missing approved early-entry collector copy");
+  expect(html.includes("Early Entry Sold Out - 20 More Spots Opening at $20"), "home page missing Wave 2 early-entry copy");
   expect(!html.includes("Want to be one of the first shoppers inside"), "old early-entry lead copy is back");
   expect(html.indexOf('id="sales"') < html.indexOf('id="photos"'), "sales section should appear before floor photos");
   expect(!html.includes("Mona Lake Frontage Estate Sale"), "ended Mona Lake sale should not be hardcoded into the public homepage");
@@ -85,10 +85,10 @@ async function checkCorePages() {
   const earlyEntryResponse = await fetch(`${origin}/early-entry.html?smoke=1`);
   const earlyEntryHtml = await earlyEntryResponse.text();
   expect(earlyEntryResponse.ok, `early-entry.html returned ${earlyEntryResponse.status}`);
-  expect(earlyEntryHtml.includes("Early Entry Sign-Up | Vern's Estate Sale Warehouse"), "early-entry page missing title");
-  expect(earlyEntryHtml.includes("Pay $25 &amp; Sign Up Early"), "early-entry page missing live Stripe payment button");
+  expect(earlyEntryHtml.includes("Wave 2 Early Entry | Vern's Estate Sale Warehouse"), "early-entry page missing title");
+  expect(earlyEntryHtml.includes("Wave 2 checkout coming soon"), "early-entry page missing Wave 2 checkout state");
   expect(earlyEntryHtml.includes("data-early-entry-meter"), "early-entry page missing spots meter");
-  expect(earlyEntryHtml.includes("packed front to back"), "early-entry page missing approved sale description");
+  expect(earlyEntryHtml.includes("data-early-entry-wave-two-start"), "early-entry page missing Wave 2 numbering copy");
 
   const previewResponse = await fetch(`${origin}/payment-preview.html?smoke=1`);
   const previewHtml = await previewResponse.text();

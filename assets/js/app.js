@@ -476,6 +476,7 @@ function closeEmployeePanel() {
   const panel = $("[data-employee-panel]");
   panel.hidden = true;
   document.body.classList.remove("employee-open");
+  stopEarlyEntryRosterAutoRefresh();
   if (location.hash === "#employee") {
     history.replaceState(null, "", location.pathname + location.search);
   }
@@ -678,7 +679,12 @@ function setEmployeeTab(tab) {
     panel.classList.toggle("is-active", panel.dataset.tabPanel === tab);
     if (panel.dataset.tabPanel === tab) panel.scrollTop = 0;
   });
-  if (tab === "early-entry") renderEarlyEntryRoster();
+  if (tab === "early-entry") {
+    refreshEarlyEntryRoster({ silent: true });
+    startEarlyEntryRosterAutoRefresh();
+  } else {
+    stopEarlyEntryRosterAutoRefresh();
+  }
 }
 
 function populateCategorySelects() {
@@ -875,7 +881,17 @@ function earlyEntryConfig() {
 
 function getEarlyEntryMaxSpots() {
   const max = Number(earlyEntryConfig().maxPaidSpots);
-  return Number.isFinite(max) ? Math.max(1, Math.round(max)) : 25;
+  return Number.isFinite(max) ? Math.max(1, Math.round(max)) : 40;
+}
+
+function getEarlyEntryWaveOneSpots() {
+  const value = Number(earlyEntryConfig().waveOneSpots);
+  return Number.isFinite(value) ? Math.max(1, Math.round(value)) : 20;
+}
+
+function getEarlyEntryWaveTwoStartSpot() {
+  const value = Number(earlyEntryConfig().waveTwoStartSpot);
+  return Number.isFinite(value) ? Math.max(1, Math.round(value)) : getEarlyEntryWaveOneSpots() + 1;
 }
 
 function earlyEntryReservedSpots() {
@@ -938,8 +954,6 @@ function bindEarlyEntryTool() {
     event.preventDefault();
     addManualEarlyEntrySpot(event.currentTarget);
   });
-
-  startEarlyEntryRosterAutoRefresh();
 }
 
 function startEarlyEntryRosterAutoRefresh() {
@@ -948,6 +962,12 @@ function startEarlyEntryRosterAutoRefresh() {
   earlyEntryRosterTimer = window.setInterval(() => {
     refreshEarlyEntryRoster({ silent: true });
   }, EARLY_ENTRY_ROSTER_REFRESH_MS);
+}
+
+function stopEarlyEntryRosterAutoRefresh() {
+  if (!earlyEntryRosterTimer) return;
+  window.clearInterval(earlyEntryRosterTimer);
+  earlyEntryRosterTimer = null;
 }
 
 function staffApiHeaders(extra = {}) {
@@ -1121,9 +1141,12 @@ function earlyEntryRosterRow(row) {
 function renderEarlyEntrySaleCard() {
   const spots = getEarlyEntryPreviewCounts();
   const card = articleEl("estate-sale-card early-entry-sale-card");
-  const price = earlyEntryConfig().price || "$25";
-  const max = getEarlyEntryMaxSpots();
-  const button = linkEl("btn btn-gold", "early-entry.html", `Pay ${price} & Sign Up Early`);
+  const price = earlyEntryConfig().price || "$20";
+  const waveOne = getEarlyEntryWaveOneSpots();
+  const waveTwoStart = getEarlyEntryWaveTwoStartSpot();
+  const waveTwoEnd = getEarlyEntryMaxSpots();
+  const nextSpot = spots.remaining > 0 ? Math.min(waveTwoEnd, spots.paid + 1) : waveTwoEnd;
+  const button = linkEl("btn btn-gold", "early-entry.html", "View Wave 2 Details");
   button.target = "_self";
   button.removeAttribute("rel");
   const remainingLimit = spanEl("early-entry-card-limit", `${spots.remaining} spots remain`);
@@ -1134,18 +1157,18 @@ function renderEarlyEntrySaleCard() {
   card.append(
     divEl("sale-image-wrap early-entry-card-art", [
       spanEl("early-entry-card-price", price),
-      spanEl("early-entry-card-title", "Early Entry"),
+      spanEl("early-entry-card-title", "Wave 2"),
       remainingLimit
     ]),
-    spanEl("tag sale-card-badge early-entry-sale-badge", "Early Sign-Up"),
+    spanEl("tag sale-card-badge early-entry-sale-badge", "20 more spots"),
     headingEl("h3", "Wyoming Extraordinary Estate Sale"),
-    pEl("sale-location", `${price} early entry spots live now`),
-    pEl("sale-date", `${price} per person`),
+    pEl("sale-location", `Wave 2 early entry is ${price} per person`),
+    pEl("sale-date", `Next paid spot: #${nextSpot}`),
     divEl("early-entry-card-count", [
       remainingCount,
       spanEl("early-entry-card-count-copy", "spots remain")
     ]),
-    pEl("", `Extraordinary sale for true collectors and resellers. The first ${max} early-entry names go in before the free 7:30 AM sign-up list is called.`),
+    pEl("", `Original spots 1-${waveOne} enter first. Wave 2 buyers receive spots ${waveTwoStart}-${waveTwoEnd} and enter immediately after the first group.`),
     button
   );
   return card;
