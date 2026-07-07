@@ -1247,6 +1247,7 @@ function renderEarlyEntrySaleCard() {
       spanEl("early-entry-card-count-copy", "spots remain")
     ]),
     pEl("", `Original spots 1-${waveOne} enter first. After the first 10 minutes, Wave 2 spots ${waveTwoStart}-${waveTwoEnd} are called five at a time before the free list.`),
+    pEl("early-entry-card-disclaimer", "Entry only; does not apply toward purchases."),
     button
   );
   return card;

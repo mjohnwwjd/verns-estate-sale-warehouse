@@ -88,6 +88,7 @@ async function checkCorePages() {
   expect(earlyEntryResponse.ok, `early-entry.html returned ${earlyEntryResponse.status}`);
   expect(earlyEntryHtml.includes("Wave 2 Early Entry | Vern's Estate Sale Warehouse"), "early-entry page missing title");
   expect(earlyEntryHtml.includes("Pay $20 &amp; Sign Up Early"), "early-entry page missing live Wave 2 checkout button text");
+  expect(earlyEntryHtml.includes("Entry only; does not apply toward purchases."), "early-entry page missing entry-only disclaimer");
   expect(earlyEntryHtml.includes("data-early-entry-meter"), "early-entry page missing spots meter");
   expect(earlyEntryHtml.includes("data-early-entry-wave-two-start"), "early-entry page missing Wave 2 numbering copy");
   expect(earlyEntryHtml.includes("groups of five after the first 10 minutes"), "early-entry page missing staged Wave 2 entry copy");

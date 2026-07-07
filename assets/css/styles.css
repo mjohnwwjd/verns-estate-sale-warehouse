@@ -799,6 +799,12 @@ h3 {
   font-weight: 800;
 }
 
+.early-entry-callout .early-entry-fine-print {
+  color: rgba(255, 248, 220, 0.82);
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
 .early-entry-callout-counter {
   display: grid;
   min-width: 150px;
@@ -1432,6 +1438,13 @@ dd {
   font-weight: 1000;
   line-height: 0.92;
   text-transform: uppercase;
+}
+
+.early-entry-card-disclaimer {
+  margin: -0.2rem 0 0;
+  color: #535756;
+  font-size: 0.88rem;
+  font-weight: 900;
 }
 
 .estate-sale-card h3,
@@ -2644,6 +2657,13 @@ html[data-yellow-band-variant="tight"] .visit-actions {
 .early-entry-payment-note {
   border-left: 6px solid var(--gold);
   padding-left: 0.75rem;
+}
+
+.early-entry-entry-only-note {
+  margin-top: -0.2rem;
+  color: #fff8dc;
+  font-size: 0.92rem;
+  font-weight: 900;
 }
 
 .early-entry-next-line {
