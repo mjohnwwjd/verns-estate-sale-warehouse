@@ -13,6 +13,8 @@
   const venmoUsername = String(config.venmoUsername || "@ebuyingstore").trim();
   const venmoHandle = venmoUsername.replace(/^@/, "");
   const venmoUrl = `https://venmo.com/${encodeURIComponent(venmoHandle)}`;
+  let spotCounterRequestInFlight = false;
+  let lastSpotCounterCheckAt = 0;
 
   const clampCount = (value, min, max) => {
     const number = Number(value);
@@ -23,6 +25,11 @@
   const waveOneSpots = clampCount(config.waveOneSpots, 1, maxPaidSpots);
   const waveTwoStartSpot = clampCount(config.waveTwoStartSpot, waveOneSpots + 1, maxPaidSpots);
   const waveTwoSpots = clampCount(config.waveTwoSpots, 1, maxPaidSpots);
+  const publicCounterRefreshMs = (() => {
+    const value = Number(config.publicCounterRefreshMs);
+    if (!Number.isFinite(value) || value <= 0) return 3 * 60 * 1000;
+    return Math.max(60 * 1000, Math.min(10 * 60 * 1000, Math.round(value)));
+  })();
 
   const getPreviewCounter = () => {
     const reservedCount = Array.isArray(config.reservedSpots) ? config.reservedSpots.length : 0;
@@ -107,13 +114,16 @@
     });
   };
 
-  const loadSpotCounter = async () => {
+  const loadSpotCounter = async ({ silent = false } = {}) => {
     if (!spotCounterEndpoint || spotCounterMode !== "live") {
       updateSpotCounter(getPreviewCounter());
       return;
     }
 
-    showLiveCounterLoading();
+    if (spotCounterRequestInFlight) return;
+    spotCounterRequestInFlight = true;
+    lastSpotCounterCheckAt = Date.now();
+    if (!silent) showLiveCounterLoading();
 
     try {
       const response = await fetch(spotCounterEndpoint, { cache: "no-store" });
@@ -130,7 +140,24 @@
       document.querySelectorAll("[data-early-entry-counter-note]").forEach((el) => {
         el.textContent = "Spots are limited. Live count is temporarily unavailable.";
       });
+    } finally {
+      spotCounterRequestInFlight = false;
     }
+  };
+
+  const startPublicCounterAutoRefresh = () => {
+    if (!spotCounterEndpoint || spotCounterMode !== "live" || !publicCounterRefreshMs) return;
+
+    window.setInterval(() => {
+      if (document.hidden) return;
+      loadSpotCounter({ silent: true });
+    }, publicCounterRefreshMs);
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) return;
+      if (Date.now() - lastSpotCounterCheckAt < publicCounterRefreshMs) return;
+      loadSpotCounter({ silent: true });
+    });
   };
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -140,6 +167,7 @@
     fillText("[data-venmo-username]", venmoUsername);
     fillStaticWaveText();
     loadSpotCounter();
+    startPublicCounterAutoRefresh();
 
     const payButton = document.querySelector("[data-early-entry-pay-button]");
     const payNote = document.querySelector("[data-early-entry-payment-note]");

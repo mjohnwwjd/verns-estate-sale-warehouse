@@ -89,6 +89,10 @@ async function checkCorePages() {
   expect(earlyEntryHtml.includes("Wave 2 checkout coming soon"), "early-entry page missing Wave 2 checkout state");
   expect(earlyEntryHtml.includes("data-early-entry-meter"), "early-entry page missing spots meter");
   expect(earlyEntryHtml.includes("data-early-entry-wave-two-start"), "early-entry page missing Wave 2 numbering copy");
+  const earlyEntryConfig = await readFile(path.join(root, "assets/js/early-entry-config.js"), "utf8");
+  const earlyEntryScript = await readFile(path.join(root, "assets/js/early-entry.js"), "utf8");
+  expect(earlyEntryConfig.includes("publicCounterRefreshMs: 180000"), "early-entry config missing public counter refresh interval");
+  expect(earlyEntryScript.includes("visibilitychange"), "early-entry script missing visible-tab counter refresh");
 
   const previewResponse = await fetch(`${origin}/payment-preview.html?smoke=1`);
   const previewHtml = await previewResponse.text();

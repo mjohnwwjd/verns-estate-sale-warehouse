@@ -14,6 +14,7 @@ window.VERNS_EARLY_ENTRY_CONFIG = {
   waveTwoStartSpot: 21,
   // Live endpoints are served by the Cloudflare Worker.
   spotCounterMode: "live",
+  publicCounterRefreshMs: 180000,
   previewPaidSpots: 20,
   spotCounterEndpoint: "https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/count",
   rosterEndpoint: "https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/roster",
