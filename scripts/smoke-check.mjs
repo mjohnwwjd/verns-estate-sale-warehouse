@@ -94,7 +94,7 @@ async function checkCorePages() {
   expect(earlyEntryHtml.includes("groups of five after the first 10 minutes"), "early-entry page missing staged Wave 2 entry copy");
   const earlyEntryConfig = await readFile(path.join(root, "assets/js/early-entry-config.js"), "utf8");
   const earlyEntryScript = await readFile(path.join(root, "assets/js/early-entry.js"), "utf8");
-  expect(earlyEntryConfig.includes("https://buy.stripe.com/cNi3cxejrfG91zXddUaR201"), "early-entry config missing live Wave 2 Stripe link");
+  expect(earlyEntryConfig.includes("https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/checkout"), "early-entry config missing live Worker checkout gate");
   expect(earlyEntryConfig.includes('paymentPendingMessage: ""'), "early-entry config should not leave Wave 2 checkout pending");
   expect(earlyEntryConfig.includes("publicCounterRefreshMs: 180000"), "early-entry config missing public counter refresh interval");
   expect(earlyEntryScript.includes("visibilitychange"), "early-entry script missing visible-tab counter refresh");

@@ -11,9 +11,12 @@ routes = [
 [vars]
 SALE_ID = "wyoming-extraordinary-2026"
 MAX_PAID_SPOTS = "40"
-BASELINE_CLAIMED_SPOTS = "0"
+BASELINE_CLAIMED_SPOTS = "2"
+RESERVED_SPOTS_JSON = '[{"spot":1,"name":"Reed","source":"Reserved","status":"Reserved","notes":"Front of early-entry list"},{"spot":2,"name":"Lanna","source":"Reserved","status":"Reserved","notes":"Front of early-entry list"}]'
 PRICE_CENTS = "2000"
 STRIPE_PAYMENT_LINK_ID = "plink_1TqNO1Q5qwZrUYmfQMjyhtZt"
+STRIPE_CHECKOUT_URL = "https://buy.stripe.com/cNi3cxejrfG91zXddUaR201"
+SOLD_OUT_REDIRECT_URL = "https://estatesbyvern.com/early-entry.html?sold-out=1"
 
 [[kv_namespaces]]
 binding = "EARLY_ENTRY_KV"

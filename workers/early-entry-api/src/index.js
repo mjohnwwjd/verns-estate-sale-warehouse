@@ -19,6 +19,10 @@ export default {
         return json(await countResponse(env), { origin });
       }
 
+      if (url.pathname === "/api/early-entry/checkout" && request.method === "GET") {
+        return checkoutRedirect(env);
+      }
+
       if (url.pathname === "/api/early-entry/roster" && request.method === "GET") {
         requireStaffAccess(request, env);
         return json(await rosterResponse(env), { origin });
@@ -80,6 +84,18 @@ async function countResponse(env) {
     baselineClaimedSpots: config.baselineClaimedSpots,
     updatedAt: new Date().toISOString()
   };
+}
+
+async function checkoutRedirect(env) {
+  const count = await countResponse(env);
+  const soldOutUrl = clean(env.SOLD_OUT_REDIRECT_URL) || "https://estatesbyvern.com/early-entry.html?sold-out=1";
+  const checkoutUrl = clean(env.STRIPE_CHECKOUT_URL);
+
+  if (count.remainingSpots <= 0 || !checkoutUrl) {
+    return Response.redirect(soldOutUrl, 302);
+  }
+
+  return Response.redirect(checkoutUrl, 302);
 }
 
 async function rosterResponse(env) {
