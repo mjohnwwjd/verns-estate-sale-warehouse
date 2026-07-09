@@ -69,6 +69,7 @@ async function checkCorePages() {
   expect(html.includes("apple-mobile-web-app-capable"), "home page missing Apple mobile app metadata");
   expect(html.includes("data-estate-sales-grid"), "home page missing estate sales grid");
   expect(!html.includes("early-entry.html"), "home page still links to early-entry page");
+  expect(!html.includes("assets/js/early-entry.js"), "home page still loads public early-entry counter script");
   expect(!html.includes("data-early-entry-remaining"), "home page still shows early-entry spots counter");
   expect(!html.includes("Early Entry Sold Out"), "home page still shows early-entry promo copy");
   expect(!html.includes("first 10 minutes"), "home page still shows staged early-entry timing");
@@ -93,11 +94,10 @@ async function checkCorePages() {
   expect(!earlyEntryHtml.includes("data-early-entry-pay-button"), "early-entry page still has payment button hook");
   expect(!earlyEntryHtml.includes("Pay $"), "early-entry page still shows payment button copy");
   const earlyEntryConfig = await readFile(path.join(root, "assets/js/early-entry-config.js"), "utf8");
-  const earlyEntryScript = await readFile(path.join(root, "assets/js/early-entry.js"), "utf8");
   expect(earlyEntryConfig.includes('stripePaymentLink: ""'), "early-entry config should not expose a checkout link");
   expect(earlyEntryConfig.includes("Early entry is closed now that the sale is underway."), "early-entry config missing closed payment message");
-  expect(earlyEntryConfig.includes("publicCounterRefreshMs: 180000"), "early-entry config missing public counter refresh interval");
-  expect(earlyEntryScript.includes("visibilitychange"), "early-entry script missing visible-tab counter refresh");
+  expect(earlyEntryConfig.includes('spotCounterEndpoint: ""'), "early-entry config should not expose a public count endpoint");
+  expect(earlyEntryConfig.includes("spotCounterMode: \"closed\""), "early-entry config should mark public counting closed");
 
   const previewResponse = await fetch(`${origin}/payment-preview.html?smoke=1`);
   const previewHtml = await previewResponse.text();

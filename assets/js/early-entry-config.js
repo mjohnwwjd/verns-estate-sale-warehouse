@@ -12,11 +12,12 @@ window.VERNS_EARLY_ENTRY_CONFIG = {
   waveOneSpots: 20,
   waveTwoSpots: 20,
   waveTwoStartSpot: 21,
-  // Live endpoints are served by the Cloudflare Worker.
-  spotCounterMode: "live",
-  publicCounterRefreshMs: 180000,
+  // Public counting is closed now that the sale is underway.
+  spotCounterMode: "closed",
+  publicCounterRefreshMs: 0,
   previewPaidSpots: 20,
-  spotCounterEndpoint: "https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/count",
+  spotCounterEndpoint: "",
+  // Staff roster remains available from the Cloudflare Worker for internal records.
   rosterEndpoint: "https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/roster",
   reservedSpots: [
     {
