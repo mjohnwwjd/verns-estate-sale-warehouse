@@ -68,9 +68,10 @@ async function checkCorePages() {
   expect(html.includes('rel="manifest"'), "home page missing web app manifest link");
   expect(html.includes("apple-mobile-web-app-capable"), "home page missing Apple mobile app metadata");
   expect(html.includes("data-estate-sales-grid"), "home page missing estate sales grid");
-  expect(html.includes("data-early-entry-remaining"), "home page missing early-entry spots counter");
-  expect(html.includes("Early Entry Sold Out - 20 More Spots Opening at $20"), "home page missing Wave 2 early-entry copy");
-  expect(html.includes("first 10 minutes"), "home page missing staged Wave 2 entry timing");
+  expect(!html.includes("early-entry.html"), "home page still links to early-entry page");
+  expect(!html.includes("data-early-entry-remaining"), "home page still shows early-entry spots counter");
+  expect(!html.includes("Early Entry Sold Out"), "home page still shows early-entry promo copy");
+  expect(!html.includes("first 10 minutes"), "home page still shows staged early-entry timing");
   expect(!html.includes("Want to be one of the first shoppers inside"), "old early-entry lead copy is back");
   expect(html.indexOf('id="sales"') < html.indexOf('id="photos"'), "sales section should appear before floor photos");
   expect(!html.includes("Mona Lake Frontage Estate Sale"), "ended Mona Lake sale should not be hardcoded into the public homepage");
@@ -86,16 +87,15 @@ async function checkCorePages() {
   const earlyEntryResponse = await fetch(`${origin}/early-entry.html?smoke=1`);
   const earlyEntryHtml = await earlyEntryResponse.text();
   expect(earlyEntryResponse.ok, `early-entry.html returned ${earlyEntryResponse.status}`);
-  expect(earlyEntryHtml.includes("Wave 2 Early Entry | Vern's Estate Sale Warehouse"), "early-entry page missing title");
-  expect(earlyEntryHtml.includes("Pay $20 &amp; Sign Up Early"), "early-entry page missing live Wave 2 checkout button text");
-  expect(earlyEntryHtml.includes("Entry only; does not apply toward purchases."), "early-entry page missing entry-only disclaimer");
-  expect(earlyEntryHtml.includes("data-early-entry-meter"), "early-entry page missing spots meter");
-  expect(earlyEntryHtml.includes("data-early-entry-wave-two-start"), "early-entry page missing Wave 2 numbering copy");
-  expect(earlyEntryHtml.includes("groups of five after the first 10 minutes"), "early-entry page missing staged Wave 2 entry copy");
+  expect(earlyEntryHtml.includes("Early Entry Closed | Vern's Estate Sale Warehouse"), "early-entry page missing closed title");
+  expect(earlyEntryHtml.includes("Early Entry Is Closed"), "early-entry page missing closed heading");
+  expect(earlyEntryHtml.includes("Early-entry payment is no longer available"), "early-entry page missing closed payment notice");
+  expect(!earlyEntryHtml.includes("data-early-entry-pay-button"), "early-entry page still has payment button hook");
+  expect(!earlyEntryHtml.includes("Pay $"), "early-entry page still shows payment button copy");
   const earlyEntryConfig = await readFile(path.join(root, "assets/js/early-entry-config.js"), "utf8");
   const earlyEntryScript = await readFile(path.join(root, "assets/js/early-entry.js"), "utf8");
-  expect(earlyEntryConfig.includes("https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/checkout"), "early-entry config missing live Worker checkout gate");
-  expect(earlyEntryConfig.includes('paymentPendingMessage: ""'), "early-entry config should not leave Wave 2 checkout pending");
+  expect(earlyEntryConfig.includes('stripePaymentLink: ""'), "early-entry config should not expose a checkout link");
+  expect(earlyEntryConfig.includes("Early entry is closed now that the sale is underway."), "early-entry config missing closed payment message");
   expect(earlyEntryConfig.includes("publicCounterRefreshMs: 180000"), "early-entry config missing public counter refresh interval");
   expect(earlyEntryScript.includes("visibilitychange"), "early-entry script missing visible-tab counter refresh");
 

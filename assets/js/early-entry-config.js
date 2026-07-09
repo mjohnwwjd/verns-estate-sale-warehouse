@@ -1,10 +1,10 @@
 window.VERNS_EARLY_ENTRY_CONFIG = {
   // Fallback count mirrors the live roster when the Worker is temporarily unavailable.
-  stripePaymentLink: "https://verns-early-entry-api.mjohnwwjd.workers.dev/api/early-entry/checkout",
+  stripePaymentLink: "",
   // Keep false while using the live Stripe checkout. Turn true only for local mock checkout testing.
   paymentPreviewMode: false,
   paymentPreviewUrl: "payment-preview.html",
-  paymentPendingMessage: "",
+  paymentPendingMessage: "Early entry is closed now that the sale is underway.",
   venmoUsername: "@ebuyingstore",
   venmoQrImage: "",
   price: "$20",

@@ -947,9 +947,7 @@ function renderEstateSales() {
     return;
   }
 
-  const cards = sales.map(renderEstateSaleCard);
-  cards.splice(Math.min(1, cards.length), 0, renderEarlyEntrySaleCard());
-  grid.replaceChildren(...cards);
+  grid.replaceChildren(...sales.map(renderEstateSaleCard));
   if (note) note.textContent = "Times can move. Open the yellow buttons for official EstateSales.NET listings and final terms.";
 }
 
@@ -1214,43 +1212,6 @@ function earlyEntryRosterRow(row) {
     item.append(remove);
   }
   return item;
-}
-
-function renderEarlyEntrySaleCard() {
-  const spots = getEarlyEntryPreviewCounts();
-  const card = articleEl("estate-sale-card early-entry-sale-card");
-  const price = earlyEntryConfig().price || "$20";
-  const waveOne = getEarlyEntryWaveOneSpots();
-  const waveTwoStart = getEarlyEntryWaveTwoStartSpot();
-  const waveTwoEnd = getEarlyEntryMaxSpots();
-  const nextSpot = spots.remaining > 0 ? Math.min(waveTwoEnd, spots.paid + 1) : waveTwoEnd;
-  const button = linkEl("btn btn-gold", "early-entry.html", "View Wave 2 Details");
-  button.target = "_self";
-  button.removeAttribute("rel");
-  const remainingLimit = spanEl("early-entry-card-limit", `${spots.remaining} spots remain`);
-  remainingLimit.dataset.earlyEntryRemainingText = "";
-  const remainingCount = spanEl("early-entry-card-count-number", String(spots.remaining));
-  remainingCount.dataset.earlyEntryRemaining = "";
-
-  card.append(
-    divEl("sale-image-wrap early-entry-card-art", [
-      spanEl("early-entry-card-price", price),
-      spanEl("early-entry-card-title", "Wave 2"),
-      remainingLimit
-    ]),
-    spanEl("tag sale-card-badge early-entry-sale-badge", "20 more spots"),
-    headingEl("h3", "Wyoming Extraordinary Estate Sale"),
-    pEl("sale-location", `Wave 2 early entry is ${price} per person`),
-    pEl("sale-date", `Next paid spot: #${nextSpot}`),
-    divEl("early-entry-card-count", [
-      remainingCount,
-      spanEl("early-entry-card-count-copy", "spots remain")
-    ]),
-    pEl("", `Original spots 1-${waveOne} enter first. After the first 10 minutes, Wave 2 spots ${waveTwoStart}-${waveTwoEnd} are called five at a time before the free list.`),
-    pEl("early-entry-card-disclaimer", "Entry only; does not apply toward purchases."),
-    button
-  );
-  return card;
 }
 
 function renderEstateSaleCard(sale) {
