@@ -1230,6 +1230,34 @@ dd {
   box-shadow: 6px 6px 0 rgba(24, 25, 24, 0.18);
 }
 
+.sale-discount-schedule-card {
+  display: block;
+  overflow: hidden;
+  border: 4px solid var(--ink);
+  border-radius: 7px;
+  background: var(--ink);
+  box-shadow:
+    7px 7px 0 rgba(24, 25, 24, 0.22),
+    inset 0 0 0 2px rgba(240, 192, 68, 0.28);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.sale-discount-schedule-card:hover,
+.sale-discount-schedule-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow:
+    8px 9px 0 rgba(24, 25, 24, 0.26),
+    0 0 0 3px rgba(240, 192, 68, 0.42);
+}
+
+.sale-discount-schedule-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .sale-image-wrap {
   position: relative;
   overflow: hidden;
