@@ -1154,7 +1154,7 @@ async function refreshEarlyEntryRoster({ silent = false } = {}) {
       createdAt: item.createdAt || item.created || new Date().toISOString(),
       locked: item.locked !== false
     }));
-    earlyEntryRosterLastSync = `Live check ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+    earlyEntryRosterLastSync = `Roster synced ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
     saveState();
     renderAll();
   } catch {
