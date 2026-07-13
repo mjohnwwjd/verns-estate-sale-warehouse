@@ -45,8 +45,8 @@ window.VERNS_STARTER_DATA = {
       dateSummary: "Jul 16-18, 2026",
       hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
       status: "upcoming",
-      note: "Packed three-level Spring Lake estate sale with Fenton glass, Coach purses, furniture, collectibles, household items, exercise gear, decor, garage finds, and resale potential. Address releases on EstateSales.NET after 9 AM Wednesday, July 15.",
-      image: "assets/img/sale-spring-lake-collage.jpg",
+      note: "Packed three-level Spring Lake estate sale with Fenton glass, Coach purses, furniture, collectibles, household items, bicycle, decor, garage finds, and resale potential. Address releases on EstateSales.NET after 9 AM Wednesday, July 15.",
+      image: "assets/img/sale-spring-lake-bicycle-collage.jpg",
       buttonLabel: "Open official listing",
       lastReviewed: "2026-07-13"
     },
