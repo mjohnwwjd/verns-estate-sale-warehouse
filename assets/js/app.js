@@ -1178,7 +1178,9 @@ function renderEarlyEntryRoster() {
     : "Manual backup mode. Add names here only if live roster sync is unavailable.";
 
   if (summary) {
-    summary.textContent = `${counts.paid} early-entry spots claimed. ${remainingSpots} spots remain out of ${counts.max}.`;
+    summary.textContent = earlyEntryConfig().spotCounterMode === "closed"
+      ? `${counts.paid} early-entry names are saved for staff records. Public sign-up is closed.`
+      : `${counts.paid} early-entry spots claimed. ${remainingSpots} spots remain out of ${counts.max}.`;
   }
   if (status) {
     status.textContent = earlyEntryRosterLastSync || (String(earlyEntryConfig().rosterEndpoint || "").trim() ? "Ready for live sync" : "Manual backup mode");

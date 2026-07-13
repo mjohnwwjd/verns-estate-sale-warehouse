@@ -95,7 +95,7 @@ async function checkCorePages() {
   expect(!earlyEntryHtml.includes("Pay $"), "early-entry page still shows payment button copy");
   const earlyEntryConfig = await readFile(path.join(root, "assets/js/early-entry-config.js"), "utf8");
   expect(earlyEntryConfig.includes('stripePaymentLink: ""'), "early-entry config should not expose a checkout link");
-  expect(earlyEntryConfig.includes("Early entry is closed now that the sale is underway."), "early-entry config missing closed payment message");
+  expect(earlyEntryConfig.includes("Early entry is closed now that the sale has ended."), "early-entry config missing closed payment message");
   expect(earlyEntryConfig.includes('spotCounterEndpoint: ""'), "early-entry config should not expose a public count endpoint");
   expect(earlyEntryConfig.includes("spotCounterMode: \"closed\""), "early-entry config should mark public counting closed");
 

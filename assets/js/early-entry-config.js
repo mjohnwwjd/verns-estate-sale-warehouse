@@ -4,7 +4,7 @@ window.VERNS_EARLY_ENTRY_CONFIG = {
   // Keep false while using the live Stripe checkout. Turn true only for local mock checkout testing.
   paymentPreviewMode: false,
   paymentPreviewUrl: "payment-preview.html",
-  paymentPendingMessage: "Early entry is closed now that the sale is underway.",
+  paymentPendingMessage: "Early entry is closed now that the sale has ended.",
   venmoUsername: "@ebuyingstore",
   venmoQrImage: "",
   price: "$20",
@@ -12,7 +12,7 @@ window.VERNS_EARLY_ENTRY_CONFIG = {
   waveOneSpots: 20,
   waveTwoSpots: 20,
   waveTwoStartSpot: 21,
-  // Public counting is closed now that the sale is underway.
+  // Public counting is closed now that the sale has ended.
   spotCounterMode: "closed",
   publicCounterRefreshMs: 0,
   previewPaidSpots: 20,

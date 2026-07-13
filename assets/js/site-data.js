@@ -3,7 +3,7 @@ const todayPhotoItems = Array.isArray(window.VERNS_TODAY_PHOTO_ITEMS) ? window.V
 window.VERNS_STARTER_DATA = {
   settings: {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
-    saleUrl: "https://www.estatesales.net/MI/Wyoming/49519/4971918",
+    saleUrl: "",
     embedUrl: "",
     address: "1663 West Sherman Boulevard, Norton Shores, MI 49441",
     phone: "(616) 638-3873",
@@ -44,11 +44,11 @@ window.VERNS_STARTER_DATA = {
       city: "Wyoming, MI",
       dateSummary: "Jul 9-12, 2026",
       hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM; Sun 8:30 AM-2 PM",
-      status: "live",
-      note: "The sale is underway. Rare and unusual antiques, Art Deco lighting, pottery, glass, sculpture, furniture, tools, garden pieces, and reseller-friendly estate-sale pricing are available while they last. Open the official EstateSales.NET listing for current photos, terms, and details.",
+      status: "ended",
+      note: "This sale has ended. Open the official EstateSales.NET listing for archived photos, terms, and details.",
       image: "assets/img/sale-wyoming-extraordinary-main.jpg",
-      buttonLabel: "Open official listing",
-      lastReviewed: "2026-06-23"
+      buttonLabel: "Open archived listing",
+      lastReviewed: "2026-07-13"
     },
     {
       id: "estate-sale-mona-lake-tools-4958901",
