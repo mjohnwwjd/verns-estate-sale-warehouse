@@ -3,7 +3,7 @@ const todayPhotoItems = Array.isArray(window.VERNS_TODAY_PHOTO_ITEMS) ? window.V
 window.VERNS_STARTER_DATA = {
   settings: {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
-    saleUrl: "",
+    saleUrl: "https://www.estatesales.net/MI/Spring-Lake/49456/4982283",
     embedUrl: "",
     address: "1663 West Sherman Boulevard, Norton Shores, MI 49441",
     phone: "(616) 638-3873",
@@ -37,6 +37,19 @@ window.VERNS_STARTER_DATA = {
     defaultPricingBasis: "market"
   },
   estateSales: [
+    {
+      id: "estate-sale-spring-lake-packed-4982283",
+      title: "Spring Lake Estate Sale - Packed 3 Level House",
+      url: "https://www.estatesales.net/MI/Spring-Lake/49456/4982283",
+      city: "Spring Lake, MI",
+      dateSummary: "Jul 16-18, 2026",
+      hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
+      status: "upcoming",
+      note: "Packed three-level Spring Lake estate sale with clean furniture, useful household items, collectibles, decor, storage, garage-style finds, and resale potential. Address releases on EstateSales.NET after 9 AM Wednesday, July 15.",
+      image: "https://picturescdn.estatesales.net/4982283/1-1/02cd36eb-3562-41dc-9392-ddb827680a2b.jpg",
+      buttonLabel: "Open official listing",
+      lastReviewed: "2026-07-13"
+    },
     {
       id: "estate-sale-wyoming-extraordinary-4971918",
       title: "Wyoming Extraordinary Estate Sale - Rare & Unusual Antiques",
