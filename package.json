@@ -11,7 +11,8 @@
     "lightspeed:pull": "node scripts/lightspeed-pull-items.mjs",
     "lightspeed:refresh": "node scripts/lightspeed-refresh-token.mjs",
     "lightspeed:latest": "node scripts/lightspeed-latest-review.mjs",
-    "lightspeed:stage": "node scripts/lightspeed-stage-estatesales.mjs"
+    "lightspeed:stage": "node scripts/lightspeed-stage-estatesales.mjs",
+    "estatesales:monitor": "node scripts/estate-sales-monitor.mjs"
   },
   "engines": {
     "node": ">=20"

@@ -13,6 +13,7 @@ const downloadImages = args['skip-images'] !== 'true';
 const maxImages = Number(args['max-images'] || 1000);
 const minQoh = args['min-qoh'] === undefined ? null : Number(args['min-qoh']);
 const requireImages = args['require-images'] === 'true';
+const requirePrice = args['require-price'] === 'true';
 const outDir = path.resolve(root, args.out || path.join('output', 'lightspeed-estatesales', timestampSlug()));
 if (args.clean === 'true') {
   fs.rmSync(outDir, { recursive: true, force: true });
@@ -44,6 +45,9 @@ let items = await fetchAll('Item.json', 'Item', itemParams, limit);
 items = items.filter((item) => String(item.archived) !== 'true');
 if (minQoh !== null) {
   items = items.filter((item) => quantityOnHand(item) >= minQoh);
+}
+if (requirePrice) {
+  items = items.filter((item) => hasPositivePrice(item));
 }
 const itemIds = new Set(items.map((item) => String(item.itemID)));
 
@@ -111,6 +115,7 @@ fs.writeFileSync(manifestPath, JSON.stringify({
   categoryFilter,
   minQoh,
   requireImages,
+  requirePrice,
   itemCount: rows.length,
   imageDownload: downloadImages,
   files: {
@@ -317,6 +322,11 @@ function priceDefault(item) {
   return priceList.find((price) => price.useType === 'Default')?.amount || priceList[0]?.amount || '';
 }
 
+function hasPositivePrice(item) {
+  const price = Number(String(priceDefault(item)).replace(/[^0-9.]/g, ''));
+  return Number.isFinite(price) && price > 0;
+}
+
 function quantityOnHand(item) {
   const itemShops = item.ItemShops?.ItemShop;
   const shops = Array.isArray(itemShops) ? itemShops : itemShops ? [itemShops] : [];
@@ -390,7 +400,7 @@ function mapEstateSalesCategory(categoryName, description) {
     ['Lamps & Lighting', ['lamp', 'lighting', 'chandelier', 'sconce', 'torch', 'torchiere']],
     ['Clothing, Jewelry & Accessories', ['purse', 'handbag', 'bag', 'wallet', 'clothing', 'coat', 'dress', 'hat', 'jewelry', 'necklace']],
     ['Sporting Goods', ['sport', 'bike', 'golf', 'fishing', 'fishfinder', 'exercise', 'dumbbell', 'hockey']],
-    ['Furniture, Mirrors & Rugs', ['furniture', 'chair', 'stool', 'table', 'dresser', 'cabinet', 'bookcase', 'mirror', 'rug', 'sofa']],
+    ['Furniture, Mirrors & Rugs', ['furniture', 'chair', 'stool', 'table', 'dresser', 'cabinet', 'bookcase', 'mirror', 'rug', 'sofa', 'rocker', 'bench', 'plant stand']],
     ['Glassware, Pottery & China', ['glass', 'pyrex', 'pottery', 'china', 'ceramic', 'lladro', 'vase', 'bowl']],
     ['Art, Clocks, Books & Paper', ['art', 'clock', 'painting', 'print', 'book', 'comic', 'paper', 'record', 'lp']],
     ['Tools, Garage & Outdoor', ['tool', 'garage', 'outdoor', 'garden', 'power', 'saw', 'drill']],
@@ -412,7 +422,7 @@ function wordMatches(text, word) {
 function isPublicCategoryName(categoryName) {
   return categoryName
     && categoryName !== 'Uncategorized'
-    && !/^\s*\([a-z0-9]+\)/i.test(categoryName)
+    && !/^\s*\(+[a-z0-9]+\)/i.test(categoryName)
     && !/vern|estate$/i.test(categoryName);
 }
 

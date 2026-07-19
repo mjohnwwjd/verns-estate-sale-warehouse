@@ -843,59 +843,42 @@
           <form class="tool-card estate-workflow-card" data-estate-workflow-form>
             <h3>EstateSales workflow target</h3>
             <p class="compliance-note">
-              Set this before each sale. It tells the Lightspeed staging workflow which category to pull and which EstateSales.NET sale should receive the pictures. It only stages review cards; it does not publish anything.
+              Before each sale, enter the Lightspeed category code and the EstateSales.NET target. Use the not-live sale-wizard URL while building the sale, then add the live public URL after the listing is published. The workflow stages items only when they have quantity, a price, and a picture. It does not publish anything.
             </p>
-            <label>
-              Sale nickname
-              <input name="saleTitle" placeholder="Current estate sale" />
-            </label>
-            <label>
-              EstateSales.NET sale wizard or pictures URL
-              <input name="estateSalesUrl" placeholder="https://www.estatesales.net/account/sale-wizard/pictures/1234567" />
-            </label>
-            <div class="two-col">
-              <label>
-                Sale ID
-                <input name="saleId" inputmode="numeric" placeholder="1234567" />
-              </label>
-              <label>
-                Output folder slug
-                <input name="outputSlug" placeholder="current-estate-sale" />
-              </label>
-            </div>
-            <label>
-              Lightspeed category name
-              <input name="lightspeedCategoryName" placeholder="Estate sale category name" />
-            </label>
             <div class="two-col">
               <label>
                 Lightspeed category code
-                <input name="lightspeedCategoryCode" placeholder="ABC" autocapitalize="characters" />
+                <input name="lightspeedCategoryCode" required placeholder="MJO" autocapitalize="characters" />
               </label>
               <label>
-                Lightspeed category ID, if known
-                <input name="lightspeedCategoryId" inputmode="numeric" placeholder="123" />
+                Sale status
+                <select name="saleStatus" data-estate-workflow-status-select>
+                  <option value="not-live">Not live yet</option>
+                  <option value="live">Live / published</option>
+                </select>
               </label>
             </div>
-            <div class="two-col">
-              <label>
-                Minimum quantity on hand
-                <input name="minQoh" type="number" min="0" step="1" />
-              </label>
-              <label class="checkbox-row estate-workflow-checkbox">
-                <input name="requireImages" type="checkbox" />
-                <span>Only stage items with pictures</span>
-              </label>
-            </div>
+            <label>
+              Not-live sale-wizard pictures URL
+              <input name="saleWizardUrl" required placeholder="https://www.estatesales.net/account/sale-wizard/pictures/4988427" />
+            </label>
+            <label>
+              Live public sale URL
+              <input name="liveSaleUrl" placeholder="Paste live public URL after publish" />
+            </label>
+            <p class="compliance-note">
+              Daily check plan: while the sale is not live, watch the sale-wizard URL for new staged items and check whether the public URL has started working. After it goes live, keep the same sale ID and use the live URL for remaining updates.
+            </p>
             <div class="workflow-summary" data-estate-workflow-summary></div>
             <label>
               Staging command
               <textarea name="stageCommand" rows="4" readonly data-estate-workflow-command></textarea>
             </label>
             <div class="button-row">
-              <button class="btn btn-gold" type="submit">Save Current Sale Workflow</button>
+              <button class="btn btn-gold" type="submit">Save Category + Sale URL</button>
               <button class="btn btn-dark" type="button" data-copy-estate-workflow-command>Copy Command</button>
               <a class="btn btn-quiet" href="https://www.estatesales.net/account/sale-wizard" target="_blank" rel="noopener" data-estate-workflow-open>Open Sale Pictures</a>
+              <a class="btn btn-quiet" href="https://www.estatesales.net/" target="_blank" rel="noopener" data-estate-workflow-live-open>Open Live Listing</a>
               <button class="btn btn-quiet" type="button" data-reset-estate-workflow>Reset Workflow</button>
             </div>
             <p class="compliance-note" data-estate-workflow-status>

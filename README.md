@@ -209,20 +209,60 @@ In the employee area, open `Settings` and use `EstateSales workflow target` befo
 
 That manager-only form stores the current:
 
-- EstateSales.NET sale wizard or pictures URL
-- EstateSales.NET sale ID
-- Lightspeed category code, name, or category ID
-- minimum quantity-on-hand filter
-- photo-required setting
-- output folder slug
+- Lightspeed category code, such as `MJO`
+- Sale status: `Not live yet` or `Live / published`
+- Not-live sale-wizard pictures URL, such as `https://www.estatesales.net/account/sale-wizard/pictures/4988427`
+- Live public sale URL after the listing is published
 
-After saving, use `Copy Command` to stage the matching Lightspeed items. Use `Open Sale Pictures` to jump to the target EstateSales.NET sale picture manager. This workflow makes local review cards and does not publish anything automatically.
+After saving, use `Copy Command` to stage matching Lightspeed items with quantity on hand, a price, and at least one picture. Use `Open Sale Pictures` to jump to the target EstateSales.NET sale picture manager. This workflow makes local review cards and does not publish anything automatically. Once the sale is public, the public listing URL can be used too.
+
+Daily checks should use the sale-wizard URL while the sale is not live, then alert staff when the public sale URL starts returning successfully. After the sale is live, keep the same sale ID and continue staging late additions with the live URL saved.
 
 Example command:
 
 ```bash
-npm run lightspeed:stage -- --category-id 123 --min-qoh 1 --require-images --limit 100 --clean --out output/lightspeed-estatesales/current-estate-sale
+npm run lightspeed:stage -- --category-code MJO --min-qoh 1 --require-price --require-images --limit 100 --clean --out output/lightspeed-estatesales/4988427-mjo
 ```
+
+### Daily EstateSales.NET monitor
+
+The local monitor checks the current workflow at 9 AM and 5 PM when this Mac is awake and logged in.
+
+It watches:
+
+- whether the public EstateSales.NET URL has gone live
+- whether the sale-wizard pictures URL is still reachable
+- whether new Lightspeed items in the selected category have quantity, price, and pictures
+- whether the current run changed from the last run
+
+Run it manually any time:
+
+```bash
+npm run estatesales:monitor
+```
+
+The current automation target lives in:
+
+```text
+data/estate-sales-workflow.json
+```
+
+Reports are written to:
+
+```text
+output/estate-sales-monitor/latest/estate-sales-monitor-report.md
+```
+
+To install or refresh the Mac schedule:
+
+```bash
+mkdir -p ~/Library/LaunchAgents
+cp automation/com.ebuyingstore.verns-estatesales-monitor.plist ~/Library/LaunchAgents/
+launchctl unload ~/Library/LaunchAgents/com.ebuyingstore.verns-estatesales-monitor.plist 2>/dev/null || true
+launchctl load ~/Library/LaunchAgents/com.ebuyingstore.verns-estatesales-monitor.plist
+```
+
+This monitor does not silently publish, delete, or move EstateSales.NET photos. Exact posted-photo counts inside the private EstateSales.NET picture manager still need either an approved API or a deliberate logged-in browser automation step.
 
 ## Early Entry sign-up
 
