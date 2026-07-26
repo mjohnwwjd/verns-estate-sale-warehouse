@@ -50,7 +50,7 @@ window.VERNS_STARTER_DATA = {
       hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
       status: "upcoming",
       note: "Upcoming Vern estate sale in Twin Lake. Open the official EstateSales.NET listing for photos, final address timing, terms, and any schedule updates.",
-      image: "https://picturescdn.estatesales.net/4992714/1-2/59c33a2d-d5b0-428d-90b6-155e9c36d92e.jpg",
+      image: "assets/img/sale-twin-lake-wizard-of-oz-title.png",
       buttonLabel: "Open official listing",
       lastReviewed: "2026-07-25"
     },
