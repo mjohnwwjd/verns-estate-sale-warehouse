@@ -1324,6 +1324,27 @@ dd {
   box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
 }
 
+.sale-ended-ribbon {
+  position: absolute;
+  top: 42%;
+  left: -14%;
+  right: -14%;
+  z-index: 1;
+  display: block;
+  border-block: 3px solid #fff8dc;
+  background: rgba(139, 30, 30, 0.94);
+  color: #fff8dc;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: 0.14em;
+  padding: 0.25rem 1rem 0.18rem;
+  text-align: center;
+  text-shadow: 2px 2px 0 rgba(24, 21, 18, 0.45);
+  transform: rotate(-9deg);
+  box-shadow: 0 6px 0 rgba(24, 21, 18, 0.25);
+}
+
 .sale-card-badge {
   justify-self: center;
   max-width: min(100%, 17rem);

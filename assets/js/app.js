@@ -21,7 +21,7 @@ const DEFAULT_ESTATE_SALE_URL = "";
 const ENDED_POPUP_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
 const ENDED_MONA_LAKE_SALE_URL = "https://www.estatesales.net/MI/Norton-Shores/49441/4958901";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-07-02-hide-ended-mona-lake";
+const DEMO_CONTENT_VERSION = "2026-07-25-twin-lake-sale";
 const CONTACT_INFO_VERSION = "2026-06-05-hero-facts";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -60,6 +60,9 @@ const DEPRECATED_PHOTO_ITEM_IDS = new Set([
   "today-2026-06-03-img-4163",
   "today-2026-06-03-img-4164",
   "today-2026-06-03-img-4165"
+]);
+const DEPRECATED_ESTATE_SALE_IDS = new Set([
+  "estate-sale-spring-lake-packed-4982283"
 ]);
 
 let state = loadState();
@@ -171,7 +174,9 @@ function normalizeState(nextState) {
   let featured = Array.isArray(nextState.featured) ? nextState.featured : starter.featured;
   let specials = Array.isArray(nextState.specials) ? nextState.specials : starter.specials;
   let photoItems = removeDeprecatedPhotoItems(Array.isArray(nextState.photoItems) ? nextState.photoItems : starter.photoItems);
-  let estateSales = mergeStarterSaleImages(Array.isArray(nextState.estateSales) ? nextState.estateSales : starter.estateSales, starter.estateSales);
+  let estateSales = removeDeprecatedEstateSales(
+    mergeStarterSaleImages(Array.isArray(nextState.estateSales) ? nextState.estateSales : starter.estateSales, starter.estateSales)
+  );
   if (rawSettings.saleImageAssignmentVersion !== SALE_IMAGE_ASSIGNMENT_VERSION) {
     estateSales = applySaleImageAssignments(estateSales);
     settings.saleImageAssignmentVersion = SALE_IMAGE_ASSIGNMENT_VERSION;
@@ -179,7 +184,7 @@ function normalizeState(nextState) {
   if (rawSettings.demoContentVersion !== DEMO_CONTENT_VERSION) {
     featured = mergeSeedById(featured, starter.featured);
     specials = mergeSeedById(specials, starter.specials);
-    estateSales = mergeSeedById(estateSales, starter.estateSales);
+    estateSales = removeDeprecatedEstateSales(mergeSeedById(estateSales, starter.estateSales));
     photoItems = mergeSeedById(photoItems, starter.photoItems);
     photoItems = removeDeprecatedPhotoItems(photoItems);
     if (!getLiveEstateSaleUrl(rawSettings.saleUrl) || isEndedPopUpSaleUrl(rawSettings.saleUrl) || isInactiveStarterSaleUrl(rawSettings.saleUrl, starter.estateSales)) {
@@ -190,7 +195,7 @@ function normalizeState(nextState) {
   if (isInactiveStarterSaleUrl(settings.saleUrl, starter.estateSales)) {
     settings.saleUrl = starter.settings.saleUrl || DEFAULT_ESTATE_SALE_URL;
   }
-  estateSales = mergeSeedById(estateSales, starter.estateSales);
+  estateSales = removeDeprecatedEstateSales(mergeSeedById(estateSales, starter.estateSales));
 
   return {
     settings,
@@ -208,6 +213,10 @@ function normalizeState(nextState) {
 
 function removeDeprecatedPhotoItems(items) {
   return items.filter((item) => !DEPRECATED_PHOTO_ITEM_IDS.has(item.id));
+}
+
+function removeDeprecatedEstateSales(items) {
+  return items.filter((item) => !DEPRECATED_ESTATE_SALE_IDS.has(item.id));
 }
 
 function isStaleFacebookUrl(value) {
@@ -1268,6 +1277,9 @@ function saleImageEl(sale) {
       imageEl("assets/img/placeholder-furniture.svg", ""),
       spanEl("sale-image-missing", "Add main sale photo")
     );
+  }
+  if (["ended", "past"].includes(sale.status)) {
+    wrap.append(spanEl("sale-ended-ribbon", "ENDED"));
   }
   return wrap;
 }

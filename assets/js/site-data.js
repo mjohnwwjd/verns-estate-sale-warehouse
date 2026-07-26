@@ -3,7 +3,7 @@ const todayPhotoItems = Array.isArray(window.VERNS_TODAY_PHOTO_ITEMS) ? window.V
 window.VERNS_STARTER_DATA = {
   settings: {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
-    saleUrl: "https://www.estatesales.net/MI/Spring-Lake/49456/4982283",
+    saleUrl: "https://www.estatesales.net/MI/Twin-Lake/49457/4992714",
     embedUrl: "",
     address: "1663 West Sherman Boulevard, Norton Shores, MI 49441",
     phone: "(616) 638-3873",
@@ -42,17 +42,17 @@ window.VERNS_STARTER_DATA = {
   },
   estateSales: [
     {
-      id: "estate-sale-spring-lake-packed-4982283",
-      title: "Spring Lake Estate Sale - Packed 3 Level House",
-      url: "https://www.estatesales.net/MI/Spring-Lake/49456/4982283",
-      city: "Spring Lake, MI",
-      dateSummary: "Jul 16-18, 2026",
+      id: "estate-sale-twin-lake-wizard-of-oz-4992714",
+      title: "Twin Lake Wizard of Oz",
+      url: "https://www.estatesales.net/MI/Twin-Lake/49457/4992714",
+      city: "Twin Lake, MI",
+      dateSummary: "Jul 30-Aug 1, 2026",
       hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
       status: "upcoming",
-      note: "Packed three-level Spring Lake estate sale with Fenton glass, Coach purses, furniture, collectibles, household items, bicycle, decor, garage finds, and resale potential. Address releases on EstateSales.NET after 9 AM Wednesday, July 15.",
-      image: "assets/img/sale-spring-lake-bicycle-collage.jpg",
+      note: "Upcoming Vern estate sale in Twin Lake. Open the official EstateSales.NET listing for photos, final address timing, terms, and any schedule updates.",
+      image: "https://picturescdn.estatesales.net/4992714/1-2/59c33a2d-d5b0-428d-90b6-155e9c36d92e.jpg",
       buttonLabel: "Open official listing",
-      lastReviewed: "2026-07-13"
+      lastReviewed: "2026-07-25"
     },
     {
       id: "estate-sale-wyoming-extraordinary-4971918",
