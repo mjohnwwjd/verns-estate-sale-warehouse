@@ -35,6 +35,12 @@ Then open:
 http://localhost:8080/
 ```
 
+Localhost preview responses use `Cache-Control: no-store`, and the app removes any older Vern's service-worker app-shell cache on `localhost` or `127.0.0.1`. This keeps development reloads current. The published site still registers its service worker and keeps install/offline support.
+
+## Optional shared employee workspace
+
+Potential Customers can switch from on-device storage to an authenticated Supabase workspace. Configuration is blank by default, so local preview continues to work without external calls or credentials. The SQL migration, RLS model, employee-auth setup, public client configuration, and explicit one-time local-record migration are documented in [`docs/supabase-employee-workspace.md`](docs/supabase-employee-workspace.md).
+
 Run the local checks:
 
 ```bash

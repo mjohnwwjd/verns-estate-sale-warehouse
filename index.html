@@ -13,6 +13,34 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Vern's" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <script>
+      (() => {
+        const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
+        if (!localHosts.has(location.hostname) || !("serviceWorker" in navigator)) return;
+        const reloadKey = "vernsLocalPreviewCacheResetV1";
+        const hadController = Boolean(navigator.serviceWorker.controller);
+        Promise.all([
+          navigator.serviceWorker.getRegistrations()
+            .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister()))),
+          "caches" in window
+            ? caches.keys().then((keys) => Promise.all(
+              keys
+                .filter((key) => key.startsWith("verns-estate-sale-warehouse-"))
+                .map((key) => caches.delete(key))
+            ))
+            : Promise.resolve()
+        ]).then(() => {
+          if (hadController && sessionStorage.getItem(reloadKey) !== "yes") {
+            sessionStorage.setItem(reloadKey, "yes");
+            location.reload();
+          } else if (!hadController) {
+            sessionStorage.removeItem(reloadKey);
+          }
+        }).catch(() => {
+          // Local preview still works without the cleanup; app.js repeats it.
+        });
+      })();
+    </script>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="assets/img/app/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="assets/img/app/apple-touch-icon.png" />
@@ -20,7 +48,11 @@
     <script src="assets/js/today-photo-items.js?v=20260725-twin-lake-title-image" defer></script>
     <script src="assets/js/site-data.js?v=20260725-twin-lake-title-image" defer></script>
     <script src="assets/js/early-entry-config.js?v=20260725-twin-lake-title-image" defer></script>
-    <script src="assets/js/app.js?v=20260725-twin-lake-title-image" defer></script>
+    <script src="assets/js/customer-migration.js?v=20260727-customer-recovery" defer></script>
+    <script src="assets/js/supabase-config.js?v=20260727-shared-workspace" defer></script>
+    <script src="assets/js/supabase-workspace.js?v=20260727-shared-workspace" defer></script>
+    <script src="assets/js/google-calendar-config.js?v=20260727-calendar-sale-dates" defer></script>
+    <script src="assets/js/app.js?v=20260727-calendar-sale-dates" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -647,6 +679,49 @@
             <span class="workflow-phase-badge">Phase 1 · On this device</span>
           </section>
 
+          <section class="tool-card shared-workspace-card" data-shared-workspace-card>
+            <div class="shared-workspace-heading">
+              <div>
+                <p class="eyebrow">Customer data location</p>
+                <h3 data-shared-workspace-title>Local Preview mode</h3>
+                <p data-shared-workspace-description>
+                  Supabase is not configured. Potential Customers are saved only in this browser.
+                </p>
+              </div>
+              <span class="shared-workspace-badge is-local" data-shared-workspace-badge>Local Preview</span>
+            </div>
+            <form class="shared-workspace-login" data-shared-workspace-login hidden>
+              <div class="two-col">
+                <label>
+                  Approved employee email
+                  <input name="email" type="email" autocomplete="username" required />
+                </label>
+                <label>
+                  Supabase password
+                  <input name="password" type="password" autocomplete="current-password" required />
+                </label>
+              </div>
+              <button class="btn btn-dark" type="submit">Connect shared workspace</button>
+            </form>
+            <div class="shared-workspace-actions" data-shared-workspace-actions hidden>
+              <span data-shared-workspace-user></span>
+              <button class="tiny-btn" type="button" data-shared-workspace-refresh>Refresh shared customers</button>
+              <button class="tiny-btn" type="button" data-shared-workspace-signout>Sign out of shared workspace</button>
+            </div>
+            <div class="shared-workspace-migration" data-shared-workspace-migration hidden>
+              <p>
+                <strong data-local-migration-count>0 local records</strong> are available on this browser.
+                Upload is never automatic.
+              </p>
+              <button class="btn btn-gold" type="button" data-local-migration-upload>
+                Review and upload local records
+              </button>
+            </div>
+            <p class="customer-recovery-status" data-shared-workspace-status role="status" aria-live="polite">
+              Local backup and recovery remain available.
+            </p>
+          </section>
+
           <div class="customer-workflow-grid">
             <form class="tool-card customer-intake-card" data-potential-customer-form>
               <input name="id" type="hidden" />
@@ -790,6 +865,19 @@
                   </label>
                 </div>
                 <button class="tiny-btn customer-search-clear" type="button" data-potential-customer-search-clear hidden>Clear search</button>
+                <div class="customer-backup-actions">
+                  <button class="tiny-btn" type="button" data-customer-backup-export>Export customer backup</button>
+                  <label class="tiny-btn customer-backup-import">
+                    Import customer backup
+                    <input type="file" accept="application/json" data-customer-backup-import hidden />
+                  </label>
+                </div>
+                <p class="customer-recovery-status" data-customer-recovery-status role="status" aria-live="polite">
+                  Checking this browser for previously saved customers…
+                </p>
+                <p class="customer-origin-note">
+                  Localhost, 127.0.0.1, and estatesbyvern.com keep separate browser records. Use Export customer backup, then Import customer backup to move records without deleting either copy.
+                </p>
               </div>
               <div class="customer-record-list" data-potential-customer-list></div>
             </section>
@@ -814,9 +902,13 @@
               </section>
               <section class="customer-action-card">
                 <span class="customer-action-step">2</span>
-                <h4>Prepare Vern's visit</h4>
-                <p>Download a standard calendar file with the customer, meeting time, address, and notes.</p>
-                <button class="btn btn-dark" type="button" data-customer-calendar-download>Download calendar event (.ics)</button>
+                <h4>Check calendar &amp; schedule visit</h4>
+                <p>Open Vern's Google Calendar to check availability, then review the prefilled customer meeting before adding it.</p>
+                <div class="button-row calendar-action-row">
+                  <button class="btn btn-dark" type="button" data-customer-calendar-open>Open Vern's calendar</button>
+                  <button class="btn btn-gold" type="button" data-customer-calendar-review>Review &amp; add meeting</button>
+                </div>
+                <small data-customer-calendar-status>Automatic conflict checking and sync activate after Vern authorizes Google.</small>
               </section>
               <section class="customer-action-card">
                 <span class="customer-action-step">3</span>
@@ -864,6 +956,23 @@
                 <p class="contract-field-status" data-contract-field-status role="status"></p>
               </section>
               <section class="contract-edit-card">
+                <fieldset class="contract-sale-dates">
+                  <legend>Scheduled sale dates <span>(required before signature)</span></legend>
+                  <div class="contract-sale-date-grid">
+                    <label>
+                      Sale starts
+                      <input type="date" data-contract-sale-start />
+                    </label>
+                    <label>
+                      Sale ends
+                      <input type="date" data-contract-sale-end />
+                    </label>
+                  </div>
+                  <p>Use the same date for a one-day sale. These dates fill the existing Section 10 blank.</p>
+                  <strong data-contract-sale-dates-preview>No sale dates selected</strong>
+                  <button class="btn btn-dark" type="button" data-contract-sale-calendar>Review sale dates in Google Calendar</button>
+                  <small data-contract-sale-calendar-status>Automatic calendar holds activate after Vern authorizes Google.</small>
+                </fieldset>
                 <label>
                   Special Notes or Agreements <span class="optional-label">(optional)</span>
                   <textarea data-contract-special-notes rows="4" maxlength="320" placeholder="Appears in section 12: Other special notes or agreements"></textarea>
@@ -902,12 +1011,12 @@
               </section>
               <label class="contract-details-confirm">
                 <input type="checkbox" data-contract-details-confirm />
-                I confirm the Client, Phone, Sale Site Address, check/report address, and Special Notes or Agreements are ready for read-only contract review.
+                I confirm the Client, Phone, Sale Site Address, scheduled sale dates, check/report address, and Special Notes or Agreements are ready for read-only contract review.
               </label>
               <div class="contract-review-callout">
                 <div>
                   <strong>Review the full agreement with the customer</strong>
-                  <span>Opens both unchanged pages with the saved Client, Phone, and Sale Site Address filled in.</span>
+                  <span>Opens both unchanged pages with the saved customer details and scheduled sale dates filled in.</span>
                 </div>
                 <a
                   class="btn btn-gold contract-review-button"

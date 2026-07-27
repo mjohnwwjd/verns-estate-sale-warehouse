@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import vm from "node:vm";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const port = String(process.env.SMOKE_PORT || 18080);
@@ -22,6 +23,8 @@ try {
   await waitForServer();
   await checkCorePages();
   await checkStaticLinksAndDropdowns();
+  await checkCustomerMigration();
+  await checkSupabaseScaffold();
   await checkLocalAssets();
   await checkPwaAssets();
   await checkPrivateStaticFiles();
@@ -135,10 +138,22 @@ async function checkStaticLinksAndDropdowns() {
   expect(html.includes('data-tab="customers"'), "employee tools missing Potential Customers tab");
   expect(html.includes("data-potential-customer-form"), "employee tools missing potential-customer intake form");
   expect(html.includes("data-potential-customer-save-status"), "potential-customer intake missing visible save confirmation");
+  expect(html.includes("vernsLocalPreviewCacheResetV1"), "home page missing local-preview stale-service-worker escape hatch");
   expect(html.includes("data-potential-customer-search"), "saved customers missing search field");
   expect(html.includes("data-potential-customer-status-filter"), "saved customers missing filing-status filter");
   expect(html.includes("data-potential-customer-sort"), "saved customers missing sort control");
-  expect(html.includes("data-customer-calendar-download"), "potential-customer workspace missing calendar handoff");
+  expect(html.includes("data-customer-recovery-status"), "saved customers missing recovery status");
+  expect(html.includes("data-customer-backup-export"), "saved customers missing customer-backup export");
+  expect(html.includes("data-customer-backup-import"), "saved customers missing customer-backup import");
+  expect(html.includes("data-shared-workspace-card"), "Potential Customers missing shared-workspace mode panel");
+  expect(html.includes("data-shared-workspace-login"), "shared workspace missing authenticated employee sign-in");
+  expect(html.includes("data-local-migration-upload"), "shared workspace missing explicit local-record upload");
+  expect(html.includes("assets/js/supabase-config.js"), "home page missing public Supabase configuration");
+  expect(html.includes("assets/js/supabase-workspace.js"), "home page missing Supabase workspace boundary");
+  expect(html.includes("Localhost, 127.0.0.1, and estatesbyvern.com keep separate browser records"), "saved customers missing cross-origin migration guidance");
+  expect(html.includes("data-customer-calendar-open"), "potential-customer workspace missing Vern's calendar action");
+  expect(html.includes("data-customer-calendar-review"), "potential-customer workspace missing prefilled Google Calendar meeting action");
+  expect(!html.includes("Download calendar event (.ics)"), "employee workflow should not use the confusing calendar download");
   expect(html.includes("data-customer-contract-open"), "potential-customer workspace missing contract preparation action");
   expect(html.includes("data-view-onsite-contract"), "contract preparation missing Onsite Contract review action");
   expect(html.includes('href="onsite-contract-viewer.html"'), "Onsite Contract review action missing inline viewer");
@@ -149,6 +164,9 @@ async function checkStaticLinksAndDropdowns() {
   expect(/name="saleSiteState"[^>]*required/.test(html), "potential-customer intake missing required sale-site state");
   expect(/name="saleSiteZip"[^>]*required/.test(html), "potential-customer intake missing required sale-site ZIP");
   expect(html.includes("data-contract-special-notes"), "Contract Prep missing editable Special Notes or Agreements");
+  expect(html.includes("data-contract-sale-start"), "Contract Prep missing sale start date");
+  expect(html.includes("data-contract-sale-end"), "Contract Prep missing sale end date");
+  expect(html.includes("data-contract-sale-calendar"), "Contract Prep missing sale-date calendar review");
   expect(html.includes('name="checkAddressMode"'), "potential-customer intake missing check/report address choice");
   expect(html.includes("data-contract-check-address-mode"), "Contract Prep missing check/report address choice");
   expect(html.includes("data-contract-mailing-address-fields"), "Contract Prep missing different mailing-address fields");
@@ -159,6 +177,12 @@ async function checkStaticLinksAndDropdowns() {
   expect(appScript.includes("vernsEmployeeCustomersV1"), "potential customers missing dedicated durable browser database");
   expect(appScript.includes("persistPotentialCustomersToDatabase"), "potential-customer save missing durable storage path");
   expect(appScript.includes("customerSearchText"), "potential-customer search mapping is missing");
+  expect(appScript.includes("syncPotentialCustomerMeetingToGoogle(savedRecord, { automatic: true })"), "customer save missing automatic Google Calendar sync boundary");
+  expect(appScript.includes("checkFreeBusy"), "Google Calendar handoff missing conflict-check request");
+  const calendarConfig = await readFile(path.join(root, "assets/js/google-calendar-config.js"), "utf8");
+  expect(/calendarId:\s*""/.test(calendarConfig), "checked-in Google Calendar ID should await Vern's authorization");
+  expect(/syncEndpoint:\s*""/.test(calendarConfig), "checked-in calendar sync endpoint should remain blank until secure setup");
+  expect(!/clientSecret|refreshToken|accessToken\s*:/i.test(calendarConfig), "public Calendar config must not contain OAuth secrets or tokens");
 
   const requiredSelects = [
     "data-category-select",
@@ -172,6 +196,112 @@ async function checkStaticLinksAndDropdowns() {
     expect(new RegExp(`<select[^>]*${attribute}`, "i").test(html), `missing select ${attribute}`);
   }
 
+}
+
+async function checkCustomerMigration() {
+  const source = await readFile(path.join(root, "assets/js/customer-migration.js"), "utf8");
+  const context = {};
+  vm.runInNewContext(source, context);
+  const migration = context.VERNS_CUSTOMER_MIGRATION;
+  expect(Boolean(migration?.mergeRecords), "customer migration helper did not load");
+  if (!migration?.mergeRecords) return;
+
+  const legacyRecord = {
+    id: "potential-customer-legacy-1",
+    firstName: "Pat",
+    lastName: "Customer",
+    phone: "(231) 555-0100",
+    address: "10 Legacy Street, Muskegon MI 49442",
+    meetingDate: "2026-07-29",
+    meetingTime: "10:00",
+    notes: "Original localStorage record",
+    updatedAt: "2026-07-26T10:00:00.000Z"
+  };
+  const indexedRecord = {
+    ...legacyRecord,
+    saleSiteStreet: "10 Legacy Street",
+    saleSiteCity: "Muskegon",
+    saleSiteState: "MI",
+    saleSiteZip: "49442",
+    notes: "Recovered into IndexedDB",
+    updatedAt: "2026-07-27T10:00:00.000Z"
+  };
+  const recovered = migration.mergeRecords(
+    [[legacyRecord], [indexedRecord, { ...indexedRecord }]],
+    (record) => ({ ...record })
+  );
+  expect(recovered.length === 1, "legacy and IndexedDB copies should recover as one customer");
+  expect(recovered[0]?.notes === "Recovered into IndexedDB", "customer migration should keep the newest recovered values");
+
+  const withoutId = { ...legacyRecord };
+  delete withoutId.id;
+  const recoveredWithoutId = migration.mergeRecords([[withoutId], [{ ...withoutId }]], (record) => ({ ...record }));
+  expect(recoveredWithoutId.length === 1, "legacy records without IDs should not duplicate");
+  expect(/^potential-customer-recovered-/.test(recoveredWithoutId[0]?.id || ""), "legacy records without IDs need a stable recovered ID");
+}
+
+async function checkSupabaseScaffold() {
+  const source = await readFile(path.join(root, "assets/js/supabase-workspace.js"), "utf8");
+  const context = {};
+  vm.runInNewContext(source, context);
+  const workspace = context.VERNS_SUPABASE;
+  expect(Boolean(workspace?.createWorkspace), "Supabase workspace helper did not load");
+  expect(workspace?.configured({ url: "", anonKey: "" }) === false, "blank Supabase configuration must stay local");
+  expect(
+    workspace?.configured({
+      url: "https://project-ref.supabase.co",
+      anonKey: "public-anon-key-value-that-is-long-enough-for-validation"
+    }) === true,
+    "valid public Supabase configuration should enable connection scaffolding"
+  );
+
+  const databaseRecord = workspace?.toDatabaseRecord({
+    id: "potential-customer-fixture",
+    firstName: "Shared",
+    lastName: "Customer",
+    phone: "2315550100",
+    email: "shared@example.com",
+    saleSiteStreet: "100 Shared Way",
+    saleSiteCity: "Norton Shores",
+    saleSiteState: "mi",
+    saleSiteZip: "49441",
+    meetingDate: "2026-08-02",
+    meetingTime: "14:30",
+    specialNotesAgreements: "Fixture agreement",
+    checkAddressMode: "same",
+    status: "potential"
+  });
+  expect(databaseRecord?.local_record_id === "potential-customer-fixture", "Supabase mapping missing stable local record ID");
+  expect(databaseRecord?.sale_site_city === "Norton Shores", "Supabase mapping missing structured sale-site city");
+  expect(databaseRecord?.sale_site_state === "MI", "Supabase mapping should normalize sale-site state");
+  expect(databaseRecord?.special_notes_agreements === "Fixture agreement", "Supabase mapping missing special notes");
+  expect(databaseRecord?.sale_start_date === null, "Supabase mapping should leave unknown sale start date blank");
+
+  const config = await readFile(path.join(root, "assets/js/supabase-config.js"), "utf8");
+  expect(/url:\s*""/.test(config), "checked-in Supabase URL must remain blank");
+  expect(/anonKey:\s*""/.test(config), "checked-in Supabase anon key must remain blank");
+  expect(!/service[_-]?role\s*[:=]\s*["'][^"']+/i.test(config), "Supabase browser config must not contain a service-role value");
+
+  const migration = await readFile(
+    path.join(root, "supabase/migrations/202607270001_employee_potential_customers.sql"),
+    "utf8"
+  );
+  expect(migration.includes("alter table public.potential_customers enable row level security"), "Supabase migration must enable customer RLS");
+  expect(migration.includes("to authenticated"), "Supabase migration must scope policies to authenticated users");
+  expect(migration.includes("private.is_active_employee()"), "Supabase migration missing active-employee gate");
+  expect(migration.includes("record_potential_customer_signed"), "Supabase migration missing atomic signed-contract code function");
+  expect(migration.includes("pg_advisory_xact_lock"), "customer-code assignment must be concurrency-safe");
+  expect(migration.includes("sale_start_date date"), "shared customer schema missing sale start date");
+  expect(migration.includes("scheduled_sale_dates_valid"), "shared customer schema missing sale-date validation");
+  const calendarFunction = await readFile(
+    path.join(root, "supabase/functions/google-calendar-sync/index.ts"),
+    "utf8"
+  );
+  expect(calendarFunction.includes("supabase.auth.getUser"), "Calendar function must verify the employee session");
+  expect(calendarFunction.includes("employee_profiles"), "Calendar function must require an active employee");
+  expect(calendarFunction.includes("conflictingEvents"), "Calendar function must check for scheduling conflicts");
+  expect(calendarFunction.includes("stableEventId"), "Calendar function must prevent duplicate customer events");
+  expect(calendarFunction.includes('env("GOOGLE_OAUTH_CLIENT_SECRET")'), "Calendar function missing server-side OAuth secret boundary");
 }
 
 async function checkLocalAssets() {
@@ -221,6 +351,7 @@ async function checkLocalAssets() {
   expect(viewerHtml.includes("data-contract-client"), "Onsite Contract viewer missing Client prefill");
   expect(viewerHtml.includes("data-contract-phone"), "Onsite Contract viewer missing Phone prefill");
   expect(viewerHtml.includes("data-contract-address"), "Onsite Contract viewer missing Sale Site Address prefill");
+  expect(viewerHtml.includes("data-contract-sale-dates"), "Onsite Contract viewer missing Section 10 scheduled sale dates");
   expect(viewerHtml.includes("data-contract-special-notes"), "Onsite Contract viewer missing Special Notes or Agreements prefill");
   expect(viewerHtml.includes("data-contract-mailing"), "Onsite Contract viewer missing check/report address prefill");
   expect(viewerHtml.includes("Customer signature activates after secure signature integration"), "Onsite Contract viewer missing in-place customer signature placeholder");
@@ -253,6 +384,8 @@ async function checkLocalAssets() {
     saleSiteCity: "Norton Shores",
     saleSiteState: "MI",
     saleSiteZip: "49441",
+    saleStartDate: "2026-08-07",
+    saleEndDate: "2026-08-09",
     specialNotesAgreements: "Keep the family piano out of the sale.",
     checkAddressMode: "different",
     mailingStreet: "200 Mailing Ave",
@@ -266,6 +399,7 @@ async function checkLocalAssets() {
   expect(renderedContract.clientName === "Jamie Customer", "Onsite Contract viewer did not map Client");
   expect(renderedContract.primaryPhone === "(231) 555-0100", "Onsite Contract viewer did not map Phone");
   expect(renderedContract.saleSiteAddress === "100 Sale Site Rd, Unit B, Norton Shores MI 49441", "Onsite Contract viewer did not map structured Sale Site Address");
+  expect(renderedContract.scheduledSaleDates === "Aug 7, 2026 - Aug 9, 2026", "Onsite Contract viewer did not map scheduled sale dates");
   expect(renderedContract.specialNotesOrAgreements.includes("family piano"), "Onsite Contract viewer did not map Special Notes or Agreements");
   expect(renderedContract.checkAndReportAddress === "200 Mailing Ave, Suite 3, Muskegon MI 49440", "Onsite Contract viewer did not map different check/report address");
   expect(renderedContract.customerSignatureDate === "07/27/2026", "customer signature date must use the verified timestamp");
@@ -276,6 +410,8 @@ async function checkLocalAssets() {
     lastName: "Seller",
     phone: "(231) 555-0199",
     address: "300 Same Address St, Muskegon, MI 49442",
+    saleStartDate: "2026-08-15",
+    saleEndDate: "2026-08-15",
     checkAddressMode: "same"
   });
   expect(sameAddressContract.checkAndReportAddress === "300 Same Address St, Muskegon MI 49442", "Onsite Contract viewer did not prefill sale-site address for check/report");
@@ -284,6 +420,8 @@ async function checkLocalAssets() {
   expect(appScript.includes("checkAndReportAddress:"), "contract payload missing check/report address");
   expect(appScript.includes("mailingAddress,"), "contract payload missing structured mailing address");
   expect(appScript.includes("saleSiteAddress,"), "contract payload missing structured sale-site address");
+  expect(appScript.includes("scheduledSale:"), "contract payload missing structured scheduled sale dates");
+  expect(appScript.includes("scheduledSaleDates:"), "contract payload missing Section 10 sale-date display value");
   expect(appScript.includes('timestampAuthority: "verified-signature-provider"'), "contract payload must require provider-verified signature dates");
   expect(appScript.includes("applyVerifiedSignatureDates: true"), "contract payload must request automatic verified signature dates");
   expect(appScript.includes(".map(normalizePotentialCustomerRecord)"), "potential-customer state missing legacy address migration");
@@ -294,6 +432,7 @@ function loadContractViewerValues(script) {
     "[data-contract-client]",
     "[data-contract-phone]",
     "[data-contract-address]",
+    "[data-contract-sale-dates]",
     "[data-contract-special-notes]",
     "[data-contract-mailing]",
     "[data-viewer-status]",
@@ -357,6 +496,13 @@ async function checkPwaAssets() {
   expect(serviceWorkerText.includes("onsite-contract-viewer.html"), "service worker missing Onsite Contract viewer");
   expect(serviceWorkerText.includes("assets/docs/onsite-contract-page-1.png"), "service worker missing Onsite Contract page 1");
   expect(serviceWorkerText.includes("assets/docs/onsite-contract-page-2.png"), "service worker missing Onsite Contract page 2");
+  expect(serviceWorkerText.includes("assets/js/onsite-contract-viewer.js"), "service worker missing current customer-storage resolver");
+  expect(serviceWorkerText.includes("assets/js/google-calendar-config.js"), "service worker missing public Google Calendar configuration");
+
+  const appResponse = await fetch(`${origin}/assets/js/app.js`);
+  expect((appResponse.headers.get("cache-control") || "").includes("no-store"), "local preview app.js must disable browser caching");
+  const appText = await appResponse.text();
+  expect(appText.includes("clearLocalPreviewServiceWorkerCaches"), "app.js missing local-preview service-worker cleanup");
 }
 
 async function checkPrivateStaticFiles() {

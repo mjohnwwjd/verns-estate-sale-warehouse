@@ -1,4 +1,4 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260727-verified-signature-dates";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260727-calendar-sale-dates";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -10,6 +10,7 @@ const APP_SHELL = [
   "./assets/css/styles.css",
   "./assets/js/today-photo-items.js",
   "./assets/js/site-data.js",
+  "./assets/js/google-calendar-config.js",
   "./assets/js/app.js",
   "./assets/js/early-entry-config.js",
   "./assets/js/early-entry.js",
