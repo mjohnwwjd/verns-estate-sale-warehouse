@@ -225,6 +225,10 @@ async function checkLocalAssets() {
   expect(viewerHtml.includes("data-contract-mailing"), "Onsite Contract viewer missing check/report address prefill");
   expect(viewerHtml.includes("Customer signature activates after secure signature integration"), "Onsite Contract viewer missing in-place customer signature placeholder");
   expect(viewerHtml.includes("representative signature activates after secure signature integration"), "Onsite Contract viewer missing in-place representative signature placeholder");
+  expect(/\.contract-field-notes\s*\{[^}]*top:\s*27\.8%/s.test(viewerHtml), "section 12 notes overlay must stay below sections 10 and 11");
+  expect(/\.contract-field-mailing\s*\{[^}]*top:\s*41\.65%/s.test(viewerHtml), "check/report address must align with its page-2 blank");
+  expect(/\.signature-service-client\s*\{[^}]*top:\s*48\.65%/s.test(viewerHtml), "customer signature placeholder must align with the printed signature line");
+  expect(/\.signature-service-vern\s*\{[^}]*top:\s*56\.55%/s.test(viewerHtml), "representative signature placeholder must align with the printed signature line");
   expect(viewerHtml.includes("assets/js/onsite-contract-viewer.js"), "Onsite Contract viewer missing current customer-storage resolver");
   const viewerScript = await readFile(path.join(root, "assets/js/onsite-contract-viewer.js"), "utf8");
   expect(Boolean(viewerScript), "Onsite Contract viewer missing customer-prefill script");
