@@ -2,6 +2,7 @@ const STORAGE_KEY = "vernsWebsiteStateV1";
 const CUSTOMER_DATABASE_NAME = "vernsEmployeeCustomersV1";
 const CUSTOMER_DATABASE_STORE = "workflow";
 const CUSTOMER_DATABASE_RECORD_KEY = "potentialCustomers";
+const CUSTOMER_RECOVERY_BACKUP_KEY = "vernsPotentialCustomersRecoveryV1";
 const EMPLOYEE_SESSION_KEY = "vernsEmployeeUnlocked";
 const EMPLOYEE_PROFILE_KEY = "vernsEmployeeProfile";
 const STAFF_NAME_KEY = "vernsStaffName";
@@ -83,6 +84,12 @@ let potentialCustomerStatusFilter = "all";
 let potentialCustomerSort = "meeting";
 let justSavedPotentialCustomerId = "";
 let customerDatabaseReady = false;
+let customerRecoveryComplete = false;
+let sharedCustomerWorkspace = null;
+let sharedCustomerWorkspaceMode = "local";
+let sharedCustomerSyncTimer = null;
+let localCustomerRecordsForMigration = [];
+let sharedWorkspaceWasConnected = false;
 let lastSalesSyncStatus = "";
 let earlyEntryRosterLastSync = "";
 let earlyEntryRosterTimer = null;
@@ -111,7 +118,7 @@ function init() {
   bindContentTool();
   bindImportExport();
   renderAll();
-  hydratePotentialCustomersFromDatabase();
+  hydratePotentialCustomersFromDatabase().then(initializeSharedCustomerWorkspace);
   registerServiceWorker();
   settleHashScroll();
   window.addEventListener("load", settleHashScroll, { once: true });
@@ -329,7 +336,19 @@ function normalizeEstateSalesWorkflow(rawWorkflow = {}, starterWorkflow = {}) {
 }
 
 function saveState() {
-  const snapshot = customerDatabaseReady ? { ...state, potentialCustomers: [] } : state;
+  if (isSharedCustomerWorkspaceConnected()) {
+    const snapshot = { ...state, potentialCustomers: [] };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+      queueSharedPotentialCustomerSync();
+      return true;
+    } catch (error) {
+      console.error("Could not save Vern's non-customer browser data.", error);
+      return false;
+    }
+  }
+  const recoveryBackupSaved = customerDatabaseReady ? saveCustomerRecoveryBackup() : false;
+  const snapshot = customerDatabaseReady && recoveryBackupSaved ? { ...state, potentialCustomers: [] } : state;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
     if (customerDatabaseReady) persistPotentialCustomersToDatabase().catch(() => {});
@@ -338,6 +357,23 @@ function saveState() {
     console.error("Could not save Vern's employee data.", error);
     return false;
   }
+}
+
+function isSharedCustomerWorkspaceConnected() {
+  return sharedCustomerWorkspaceMode === "connected" && Boolean(sharedCustomerWorkspace?.user);
+}
+
+function queueSharedPotentialCustomerSync() {
+  window.clearTimeout(sharedCustomerSyncTimer);
+  sharedCustomerSyncTimer = window.setTimeout(async () => {
+    if (!isSharedCustomerWorkspaceConnected()) return;
+    try {
+      await sharedCustomerWorkspace.upsertCustomers(state.potentialCustomers);
+      setSharedWorkspaceStatus("Shared customer changes saved.", "success");
+    } catch (error) {
+      setSharedWorkspaceStatus(`Shared save failed: ${error.message}`, "error");
+    }
+  }, 350);
 }
 
 function openCustomerDatabase() {
@@ -369,6 +405,7 @@ async function persistPotentialCustomersToDatabase() {
 }
 
 async function hydratePotentialCustomersFromDatabase() {
+  setCustomerRecoveryStatus("Checking this browser for previously saved customers…");
   try {
     const database = await openCustomerDatabase();
     const storedRecords = await new Promise((resolve, reject) => {
@@ -377,21 +414,232 @@ async function hydratePotentialCustomersFromDatabase() {
       request.addEventListener("success", () => resolve(Array.isArray(request.result) ? request.result : []));
       request.addEventListener("error", () => reject(request.error || new Error("Saved customers could not be loaded.")));
     });
-    const recordsById = new Map();
-    [...storedRecords, ...state.potentialCustomers].forEach((rawRecord) => {
-      const record = normalizePotentialCustomerRecord(rawRecord);
-      const previous = recordsById.get(record.id);
-      if (!previous || String(record.updatedAt || "").localeCompare(String(previous.updatedAt || "")) >= 0) {
-        recordsById.set(record.id, record);
-      }
-    });
-    state.potentialCustomers = Array.from(recordsById.values());
+    const recoverySources = readPotentialCustomerRecoverySources();
+    state.potentialCustomers = mergePotentialCustomerRecords([storedRecords, ...recoverySources]);
     customerDatabaseReady = true;
     await persistPotentialCustomersToDatabase();
     saveState();
+    customerRecoveryComplete = true;
     renderPotentialCustomers();
+    setCustomerRecoveryStatus(
+      state.potentialCustomers.length
+        ? `Recovered and loaded ${state.potentialCustomers.length} saved ${state.potentialCustomers.length === 1 ? "customer" : "customers"} on this browser.`
+        : "Recovery check complete. No customer records were found on this browser.",
+      "success"
+    );
   } catch (error) {
     console.error("Customer database is unavailable; using browser storage fallback.", error);
+    state.potentialCustomers = mergePotentialCustomerRecords(readPotentialCustomerRecoverySources());
+    customerRecoveryComplete = true;
+    renderPotentialCustomers();
+    setCustomerRecoveryStatus(
+      state.potentialCustomers.length
+        ? `Recovered ${state.potentialCustomers.length} ${state.potentialCustomers.length === 1 ? "customer" : "customers"} from browser backup. IndexedDB is unavailable, so export a customer backup now.`
+        : "Customer recovery could not access this browser's database. Try Export data from the browser where the record was originally saved.",
+      state.potentialCustomers.length ? "success" : "error"
+    );
+  }
+}
+
+function readPotentialCustomerRecoverySources() {
+  const sources = [state.potentialCustomers];
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (!key) continue;
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) || "null");
+      if (Array.isArray(parsed?.potentialCustomers)) sources.push(parsed.potentialCustomers);
+      if (Array.isArray(parsed?.records) && /customer/i.test(String(parsed?.type || key))) sources.push(parsed.records);
+    } catch {
+      // Non-JSON browser-storage entries are unrelated.
+    }
+  }
+  return sources;
+}
+
+function mergePotentialCustomerRecords(collections) {
+  const migration = window.VERNS_CUSTOMER_MIGRATION;
+  if (!migration?.mergeRecords) {
+    return collections.flat().filter((record) => record && typeof record === "object").map(normalizePotentialCustomerRecord);
+  }
+  return migration.mergeRecords(collections, normalizePotentialCustomerRecord);
+}
+
+function saveCustomerRecoveryBackup() {
+  try {
+    localStorage.setItem(CUSTOMER_RECOVERY_BACKUP_KEY, JSON.stringify({
+      type: "verns-potential-customer-recovery",
+      savedAt: new Date().toISOString(),
+      potentialCustomers: state.potentialCustomers
+    }));
+    return true;
+  } catch (error) {
+    console.error("Could not update customer recovery backup.", error);
+    return false;
+  }
+}
+
+function setCustomerRecoveryStatus(message, stateName = "") {
+  const status = $("[data-customer-recovery-status]");
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle("is-success", stateName === "success");
+  status.classList.toggle("is-error", stateName === "error");
+}
+
+async function initializeSharedCustomerWorkspace() {
+  localCustomerRecordsForMigration = mergePotentialCustomerRecords([state.potentialCustomers]);
+  const factory = window.VERNS_SUPABASE;
+  if (!factory?.createWorkspace) {
+    sharedCustomerWorkspaceMode = "local";
+    renderSharedCustomerWorkspace({
+      mode: "error",
+      message: "Shared-workspace code is unavailable. Customer records remain local."
+    });
+    return;
+  }
+  sharedCustomerWorkspace = factory.createWorkspace(
+    window.VERNS_SUPABASE_CONFIG || {},
+    handleSharedCustomerWorkspaceState
+  );
+  await sharedCustomerWorkspace.initialize();
+}
+
+function handleSharedCustomerWorkspaceState(workspaceState) {
+  const wasConnected = sharedCustomerWorkspaceMode === "connected";
+  sharedCustomerWorkspaceMode = workspaceState.mode === "connected"
+    ? "connected"
+    : workspaceState.mode === "signed-out"
+      ? "signed-out"
+      : workspaceState.mode === "connecting"
+        ? "connecting"
+        : workspaceState.mode === "error"
+          ? "error"
+          : "local";
+  renderSharedCustomerWorkspace(workspaceState);
+  if (sharedCustomerWorkspaceMode === "connected") {
+    sharedWorkspaceWasConnected = true;
+    loadSharedPotentialCustomers();
+  } else if (wasConnected || (sharedWorkspaceWasConnected && sharedCustomerWorkspaceMode === "signed-out")) {
+    state.potentialCustomers = mergePotentialCustomerRecords([localCustomerRecordsForMigration]);
+    selectedPotentialCustomerId = "";
+    renderPotentialCustomers();
+  }
+}
+
+function renderSharedCustomerWorkspace(workspaceState = {}) {
+  const mode = sharedCustomerWorkspaceMode;
+  const connected = mode === "connected";
+  const configured = mode !== "local";
+  const title = $("[data-shared-workspace-title]");
+  const description = $("[data-shared-workspace-description]");
+  const badge = $("[data-shared-workspace-badge]");
+  const login = $("[data-shared-workspace-login]");
+  const actions = $("[data-shared-workspace-actions]");
+  const migration = $("[data-shared-workspace-migration]");
+  const user = $("[data-shared-workspace-user]");
+  const count = $("[data-local-migration-count]");
+  const phaseBadge = $(".workflow-phase-badge");
+
+  if (title) title.textContent = connected ? "Connected Shared Workspace mode" : "Local Preview mode";
+  if (description) {
+    description.textContent = connected
+      ? "Potential Customers are loaded from the authenticated Supabase workspace and shared across approved employee devices."
+      : configured
+        ? "Supabase is configured, but an approved employee must sign in before any shared customer data is loaded."
+        : "Supabase is not configured. Potential Customers are saved only in this browser.";
+  }
+  if (badge) {
+    badge.textContent = connected ? "Shared & Connected" : mode === "error" ? "Connection Error" : "Local Preview";
+    badge.classList.toggle("is-local", !connected && mode !== "error");
+    badge.classList.toggle("is-connected", connected);
+    badge.classList.toggle("is-error", mode === "error");
+  }
+  if (phaseBadge) phaseBadge.textContent = connected ? "Phase 1 · Shared workspace" : "Phase 1 · On this device";
+  if (login) login.hidden = mode !== "signed-out";
+  if (actions) actions.hidden = !connected;
+  if (migration) migration.hidden = !connected;
+  if (user) user.textContent = connected ? `Signed in as ${workspaceState.user?.email || sharedCustomerWorkspace?.user?.email || "approved employee"}` : "";
+  if (count) {
+    count.textContent = `${localCustomerRecordsForMigration.length} local ${localCustomerRecordsForMigration.length === 1 ? "record" : "records"}`;
+  }
+  setSharedWorkspaceStatus(workspaceState.message || (
+    connected ? "Loading shared customers…" : "Local backup and recovery remain available."
+  ), mode === "error" ? "error" : connected ? "success" : "");
+}
+
+function setSharedWorkspaceStatus(message, stateName = "") {
+  const status = $("[data-shared-workspace-status]");
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle("is-success", stateName === "success");
+  status.classList.toggle("is-error", stateName === "error");
+}
+
+async function loadSharedPotentialCustomers() {
+  if (!isSharedCustomerWorkspaceConnected()) return;
+  setSharedWorkspaceStatus("Loading authenticated shared customers…");
+  try {
+    const records = await sharedCustomerWorkspace.listCustomers();
+    state.potentialCustomers = mergePotentialCustomerRecords([records]);
+    selectedPotentialCustomerId = "";
+    customerRecoveryComplete = true;
+    renderPotentialCustomers();
+    setSharedWorkspaceStatus(
+      `Connected shared workspace loaded ${records.length} ${records.length === 1 ? "customer" : "customers"}.`,
+      "success"
+    );
+  } catch (error) {
+    setSharedWorkspaceStatus(`Shared customer load failed: ${error.message}`, "error");
+  }
+}
+
+async function signInSharedCustomerWorkspace(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const submit = $("button[type='submit']", form);
+  if (!sharedCustomerWorkspace) return;
+  if (submit) submit.disabled = true;
+  setSharedWorkspaceStatus("Signing in…");
+  try {
+    await sharedCustomerWorkspace.signIn(form.elements.email.value, form.elements.password.value);
+    form.reset();
+  } catch (error) {
+    setSharedWorkspaceStatus(`Employee sign-in failed: ${error.message}`, "error");
+  } finally {
+    if (submit) submit.disabled = false;
+  }
+}
+
+async function signOutSharedCustomerWorkspace() {
+  try {
+    await sharedCustomerWorkspace?.signOut();
+  } catch (error) {
+    setSharedWorkspaceStatus(`Sign-out failed: ${error.message}`, "error");
+  }
+}
+
+async function uploadLocalCustomersToSharedWorkspace() {
+  if (!isSharedCustomerWorkspaceConnected() || !localCustomerRecordsForMigration.length) {
+    setSharedWorkspaceStatus("There are no local customer records ready to upload.");
+    return;
+  }
+  const count = localCustomerRecordsForMigration.length;
+  if (!confirm(`Upload ${count} local customer ${count === 1 ? "record" : "records"} into the authenticated shared workspace? Existing matching records will be updated, and the local backup will not be deleted.`)) return;
+  const button = $("[data-local-migration-upload]");
+  if (button) button.disabled = true;
+  setSharedWorkspaceStatus(`Uploading ${count} local ${count === 1 ? "record" : "records"}…`);
+  try {
+    await sharedCustomerWorkspace.upsertCustomers(localCustomerRecordsForMigration);
+    await loadSharedPotentialCustomers();
+    setSharedWorkspaceStatus(
+      `Uploaded ${count} local ${count === 1 ? "record" : "records"} without deleting the local recovery copy.`,
+      "success"
+    );
+  } catch (error) {
+    setSharedWorkspaceStatus(`Local-record upload failed: ${error.message}`, "error");
+  } finally {
+    if (button) button.disabled = false;
   }
 }
 
@@ -475,10 +723,33 @@ function isStandaloneApp() {
 function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
   if (!/^https?:$/i.test(location.protocol)) return;
+  if (isLocalPreviewHost()) {
+    clearLocalPreviewServiceWorkerCaches();
+    return;
+  }
   if (location.hostname.endsWith(".trycloudflare.com")) return;
   navigator.serviceWorker.register("./service-worker.js").catch(() => {
     // The site still works normally if install/offline support is unavailable.
   });
+}
+
+function isLocalPreviewHost() {
+  return ["localhost", "127.0.0.1", "::1"].includes(location.hostname);
+}
+
+function clearLocalPreviewServiceWorkerCaches() {
+  navigator.serviceWorker.getRegistrations()
+    .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+    .catch(() => {});
+  if ("caches" in window) {
+    caches.keys()
+      .then((keys) => Promise.all(
+        keys
+          .filter((key) => key.startsWith("verns-estate-sale-warehouse-"))
+          .map((key) => caches.delete(key))
+      ))
+      .catch(() => {});
+  }
 }
 
 function handleHashLinkClick(event) {
@@ -877,19 +1148,32 @@ function bindPotentialCustomerTool() {
     selectedPotentialCustomerId = record.id;
     justSavedPotentialCustomerId = record.id;
     try {
-      await persistPotentialCustomersToDatabase();
-      customerDatabaseReady = true;
-      saveState();
+      let savedRecord = record;
+      if (isSharedCustomerWorkspaceConnected()) {
+        savedRecord = await sharedCustomerWorkspace.upsertCustomer(record) || record;
+        const savedIndex = state.potentialCustomers.findIndex((item) => item.id === record.id);
+        if (savedIndex >= 0) state.potentialCustomers[savedIndex] = savedRecord;
+        selectedPotentialCustomerId = savedRecord.id;
+        justSavedPotentialCustomerId = savedRecord.id;
+      } else {
+        await persistPotentialCustomersToDatabase();
+        customerDatabaseReady = true;
+        saveState();
+        localCustomerRecordsForMigration = mergePotentialCustomerRecords([state.potentialCustomers]);
+      }
       resetPotentialCustomerForm({ keepStatus: true });
       potentialCustomerSearch = "";
       const search = $("[data-potential-customer-search]");
       if (search) search.value = "";
       renderPotentialCustomers();
       if (saveStatus) {
-        saveStatus.textContent = `Saved ${potentialCustomerName(record)}. The record is now filed under Saved potential customers.`;
+        saveStatus.textContent = isSharedCustomerWorkspaceConnected()
+          ? `Saved ${potentialCustomerName(savedRecord)} to the connected shared workspace.`
+          : `Saved ${potentialCustomerName(savedRecord)} on this browser. The record is filed under Saved potential customers.`;
       }
+      await syncPotentialCustomerMeetingToGoogle(savedRecord, { automatic: true });
       requestAnimationFrame(() => {
-        $(`[data-potential-customer-id="${record.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        $(`[data-potential-customer-id="${savedRecord.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
       });
     } catch (error) {
       console.error("Could not save potential customer.", error);
@@ -898,7 +1182,9 @@ function bindPotentialCustomerTool() {
       justSavedPotentialCustomerId = "";
       renderPotentialCustomers();
       if (saveStatus) {
-        saveStatus.textContent = "This customer could not be saved on this device. Export a backup, then check that private browsing is off and device storage is available.";
+        saveStatus.textContent = isSharedCustomerWorkspaceConnected()
+          ? `This customer was not saved to the shared workspace: ${error.message}`
+          : "This customer could not be saved on this device. Export a backup, then check that private browsing is off and device storage is available.";
         saveStatus.classList.add("is-error");
       }
     } finally {
@@ -931,11 +1217,18 @@ function bindPotentialCustomerTool() {
     }
     renderPotentialCustomers();
   });
+  $("[data-customer-backup-export]")?.addEventListener("click", exportPotentialCustomerBackup);
+  $("[data-customer-backup-import]")?.addEventListener("change", importPotentialCustomerBackup);
+  $("[data-shared-workspace-login]")?.addEventListener("submit", signInSharedCustomerWorkspace);
+  $("[data-shared-workspace-signout]")?.addEventListener("click", signOutSharedCustomerWorkspace);
+  $("[data-shared-workspace-refresh]")?.addEventListener("click", loadSharedPotentialCustomers);
+  $("[data-local-migration-upload]")?.addEventListener("click", uploadLocalCustomersToSharedWorkspace);
   form?.elements?.checkAddressMode?.addEventListener("change", () => {
     toggleMailingAddressFields(form.elements.checkAddressMode, $("[data-intake-mailing-address-fields]"));
   });
   $("[data-customer-training-video]")?.addEventListener("click", launchCustomerTrainingVideo);
-  $("[data-customer-calendar-download]")?.addEventListener("click", downloadPotentialCustomerCalendarEvent);
+  $("[data-customer-calendar-open]")?.addEventListener("click", openVernsGoogleCalendar);
+  $("[data-customer-calendar-review]")?.addEventListener("click", reviewPotentialCustomerMeeting);
   $("[data-customer-contract-open]")?.addEventListener("click", () => {
     const panel = $("[data-contract-prep]");
     const record = selectedPotentialCustomer();
@@ -955,7 +1248,12 @@ function bindPotentialCustomerTool() {
     record.updatedAt = new Date().toISOString();
     saveState();
   });
-  $("[data-contract-special-notes]")?.addEventListener("change", syncContractPrepFieldsToRecord);
+  [
+    "[data-contract-special-notes]",
+    "[data-contract-sale-start]",
+    "[data-contract-sale-end]"
+  ].forEach((selector) => $(selector)?.addEventListener("change", syncContractPrepFieldsToRecord));
+  $("[data-contract-sale-calendar]")?.addEventListener("click", reviewPotentialCustomerSaleDates);
   $("[data-contract-check-address-mode]")?.addEventListener("change", () => {
     toggleMailingAddressFields(
       $("[data-contract-check-address-mode]"),
@@ -1021,7 +1319,9 @@ function renderPotentialCustomers() {
     })
     .slice()
     .sort(comparePotentialCustomers);
-  count.textContent = records.length === total
+  count.textContent = !customerRecoveryComplete && total === 0
+    ? "Checking…"
+    : records.length === total
     ? `${total} ${total === 1 ? "record" : "records"}`
     : `${records.length} of ${total}`;
   const clearSearch = $("[data-potential-customer-search-clear]");
@@ -1029,7 +1329,13 @@ function renderPotentialCustomers() {
   list.replaceChildren(
     ...(records.length
       ? records.map(potentialCustomerListItem)
-      : [staffEmptyNote(total ? "No saved customers match this search and filing status." : "No potential customers saved on this device yet.")])
+      : [staffEmptyNote(
+          !customerRecoveryComplete
+            ? "Checking browser storage for previously saved customers…"
+            : total
+              ? "No saved customers match this search and filing status."
+              : "No potential customers saved on this device yet."
+        )])
   );
   if (selectedPotentialCustomerId && !state.potentialCustomers.some((item) => item.id === selectedPotentialCustomerId)) {
     selectedPotentialCustomerId = "";
@@ -1102,6 +1408,66 @@ function comparePotentialCustomers(a, b) {
   return `${b.meetingDate || ""}T${b.meetingTime || ""}`.localeCompare(`${a.meetingDate || ""}T${a.meetingTime || ""}`);
 }
 
+function exportPotentialCustomerBackup() {
+  const payload = {
+    type: "verns-potential-customer-backup",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    sourceOrigin: location.origin,
+    potentialCustomers: state.potentialCustomers
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `verns-potential-customers-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+  setCustomerRecoveryStatus(
+    `Exported ${state.potentialCustomers.length} ${state.potentialCustomers.length === 1 ? "customer" : "customers"}. Import this file on the other preview or production origin.`,
+    "success"
+  );
+}
+
+async function importPotentialCustomerBackup(event) {
+  const [file] = event.currentTarget.files || [];
+  if (!file) return;
+  try {
+    const imported = JSON.parse(await file.text());
+    const records = Array.isArray(imported?.potentialCustomers)
+      ? imported.potentialCustomers
+      : Array.isArray(imported?.records)
+        ? imported.records
+        : [];
+    if (!records.length) throw new Error("No potential customers found in this backup.");
+    if (isSharedCustomerWorkspaceConnected()) {
+      localCustomerRecordsForMigration = mergePotentialCustomerRecords([localCustomerRecordsForMigration, records]);
+      renderSharedCustomerWorkspace({
+        mode: "connected",
+        user: sharedCustomerWorkspace.user,
+        message: `Loaded ${records.length} backup ${records.length === 1 ? "record" : "records"} for review. Use Review and upload local records to send them to Supabase.`
+      });
+      return;
+    }
+    const before = state.potentialCustomers.length;
+    state.potentialCustomers = mergePotentialCustomerRecords([state.potentialCustomers, records]);
+    await persistPotentialCustomersToDatabase();
+    customerDatabaseReady = true;
+    customerRecoveryComplete = true;
+    saveState();
+    renderPotentialCustomers();
+    const added = state.potentialCustomers.length - before;
+    setCustomerRecoveryStatus(
+      `Imported ${records.length} backup ${records.length === 1 ? "record" : "records"}; ${added} ${added === 1 ? "customer was" : "customers were"} added and duplicates were kept to one record.`,
+      "success"
+    );
+  } catch (error) {
+    setCustomerRecoveryStatus(error.message || "That customer backup could not be imported.", "error");
+  } finally {
+    event.currentTarget.value = "";
+  }
+}
+
 function renderPotentialCustomerWorkspace() {
   const workspace = $("[data-potential-customer-workspace]");
   if (!workspace) return;
@@ -1139,6 +1505,13 @@ function renderPotentialCustomerWorkspace() {
       ? `Code ${record.customerCode} was assigned after the contract was recorded as signed.`
       : "No external contract, delivery, calendar, or Lightspeed service has been called.";
   }
+  setCalendarStatus(
+    googleCalendarSyncIsConfigured()
+      ? record.googleCalendarMeetingEventId
+        ? "This customer meeting is linked to Vern's Google Calendar. Saving changed meeting details will update the same event."
+        : "Google Calendar is connected. Saving this customer will check conflicts and add the meeting automatically."
+      : "Automatic conflict checking and sync activate after Vern authorizes Google."
+  );
   const prep = $("[data-contract-prep]");
   if (prep) prep.hidden = true;
 }
@@ -1212,50 +1585,236 @@ function launchCustomerTrainingVideo() {
   if (message) message.textContent = "Training video is not configured yet. Add settings.customerTrainingVideoUrl through the documented integration boundary.";
 }
 
-function downloadPotentialCustomerCalendarEvent() {
+function googleCalendarConfig() {
+  const configured = window.VERNS_GOOGLE_CALENDAR_CONFIG || {};
+  return {
+    calendarWebUrl: String(configured.calendarWebUrl || "https://calendar.google.com/calendar/u/0/r"),
+    calendarId: String(configured.calendarId || "").trim(),
+    syncEndpoint: String(configured.syncEndpoint || "").trim(),
+    timeZone: String(configured.timeZone || "America/Detroit")
+  };
+}
+
+function googleCalendarSyncIsConfigured() {
+  const config = googleCalendarConfig();
+  return Boolean(config.calendarId && config.syncEndpoint);
+}
+
+function openVernsGoogleCalendar() {
+  window.open(googleCalendarConfig().calendarWebUrl, "_blank", "noopener");
+}
+
+async function reviewPotentialCustomerMeeting() {
   const record = selectedPotentialCustomer();
   if (!record) return;
-  const start = compactCalendarDateTime(record.meetingDate, record.meetingTime);
-  if (!start) return;
+  if (googleCalendarSyncIsConfigured()) {
+    await syncPotentialCustomerMeetingToGoogle(record, { automatic: false });
+    return;
+  }
+  window.open(googleCalendarTemplateUrl(calendarMeetingDetails(record)), "_blank", "noopener");
+  setCalendarStatus(
+    "The meeting is prefilled in Google Calendar. Check Vern's schedule, choose the correct calendar, then tap Save. Automatic sync is not connected yet."
+  );
+}
+
+function calendarMeetingDetails(record) {
   const endDate = new Date(`${record.meetingDate}T${record.meetingTime || "09:00"}:00`);
   endDate.setHours(endDate.getHours() + 1);
-  const end = compactCalendarDateTime(todayIsoDateForLocalDate(endDate), localTimeForDate(endDate));
   const description = [
     `Potential customer: ${potentialCustomerName(record)}`,
     `Phone: ${record.phone || ""}`,
     `Email: ${record.email || "Not provided"}`,
     record.notes ? `Notes: ${record.notes}` : ""
   ].filter(Boolean).join("\n");
-  const ics = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Vern's Estate Sale Warehouse//Potential Customer//EN",
-    "CALSCALE:GREGORIAN",
-    "BEGIN:VEVENT",
-    `UID:${record.id}@estatesbyvern.com`,
-    `DTSTAMP:${compactCalendarUtcDateTime(new Date())}`,
-    `DTSTART:${start}`,
-    `DTEND:${end}`,
-    `SUMMARY:${escapeIcsText(`Potential customer visit - ${potentialCustomerName(record)}`)}`,
-    `LOCATION:${escapeIcsText(record.address)}`,
-    `DESCRIPTION:${escapeIcsText(description)}`,
-    "END:VEVENT",
-    "END:VCALENDAR"
-  ].join("\r\n");
-  downloadTextFile(
-    `verns-visit-${workflowOutputSlug(record.firstName, record.lastName, record.meetingDate)}.ics`,
-    ics,
-    "text/calendar;charset=utf-8"
-  );
-  const message = $("[data-customer-workflow-message]");
-  if (message) message.textContent = "Calendar file downloaded. Open it to add the visit to Vern's calendar; no Google account was accessed.";
+  return {
+    kind: "potential-customer-meeting",
+    localRecordId: record.id,
+    existingEventId: record.googleCalendarMeetingEventId || null,
+    summary: `Potential customer visit - ${potentialCustomerName(record)}`,
+    location: record.address,
+    description,
+    start: {
+      dateTime: `${record.meetingDate}T${record.meetingTime}:00`,
+      timeZone: googleCalendarConfig().timeZone
+    },
+    end: {
+      dateTime: `${todayIsoDateForLocalDate(endDate)}T${localTimeForDate(endDate)}:00`,
+      timeZone: googleCalendarConfig().timeZone
+    }
+  };
 }
 
-function recordSignedCustomerContract() {
+function calendarSaleDetails(record) {
+  const startDate = String(record.saleStartDate || "");
+  const endDate = String(record.saleEndDate || "");
+  const exclusiveEnd = addDaysToIsoDate(endDate, 1);
+  return {
+    kind: "onsite-sale",
+    localRecordId: record.id,
+    existingEventId: record.googleCalendarSaleEventId || null,
+    summary: `Estate sale - ${potentialCustomerName(record)}`,
+    location: record.address,
+    description: `Scheduled sale for ${potentialCustomerName(record)}\nPhone: ${record.phone || ""}`,
+    start: { date: startDate },
+    end: { date: exclusiveEnd }
+  };
+}
+
+function googleCalendarTemplateUrl(details) {
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: details.summary,
+    location: details.location || "",
+    details: details.description || "",
+    ctz: googleCalendarConfig().timeZone
+  });
+  if (details.start.date) {
+    params.set("dates", `${details.start.date.replaceAll("-", "")}/${details.end.date.replaceAll("-", "")}`);
+  } else {
+    const compact = (value) => value.replace(/[-:]/g, "");
+    params.set("dates", `${compact(details.start.dateTime)}/${compact(details.end.dateTime)}`);
+  }
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+async function syncPotentialCustomerMeetingToGoogle(record, { automatic = false } = {}) {
+  if (!googleCalendarSyncIsConfigured()) {
+    if (!automatic) setCalendarStatus("Automatic Google Calendar sync is not connected yet.");
+    return null;
+  }
+  setCalendarStatus("Checking Vern's calendar for conflicts…");
+  try {
+    const result = await postGoogleCalendarOperation("upsert", calendarMeetingDetails(record), true);
+    if (result.conflict && !result.event) {
+      setCalendarStatus("This time conflicts with Vern's calendar. No meeting was added; open the calendar and choose another time.", true);
+      record.googleCalendarMeetingSyncStatus = "conflict";
+    } else {
+      record.googleCalendarMeetingEventId = result.event?.id || record.googleCalendarMeetingEventId || "";
+      record.googleCalendarMeetingHtmlLink = result.event?.htmlLink || "";
+      record.googleCalendarMeetingSyncedAt = new Date().toISOString();
+      record.googleCalendarMeetingSyncStatus = result.conflict ? "synced-with-warning" : "synced";
+      setCalendarStatus(result.conflict
+        ? "Meeting synced, but Google reported a possible conflict. Review Vern's calendar."
+        : "Meeting saved to Vern's Google Calendar. No conflict was reported.");
+    }
+    await persistCalendarFields(record);
+    return result;
+  } catch (error) {
+    setCalendarStatus(`Customer saved, but Google Calendar did not sync: ${error.message}`, true);
+    return null;
+  }
+}
+
+async function reviewPotentialCustomerSaleDates() {
+  const record = selectedPotentialCustomer();
+  if (!record) return;
+  syncContractPrepFieldsToRecord({ resetConfirmation: false });
+  const saleDateError = validateSaleDates(record.saleStartDate, record.saleEndDate);
+  if (saleDateError) {
+    setSaleCalendarStatus(saleDateError, true);
+    return;
+  }
+  if (!googleCalendarSyncIsConfigured()) {
+    window.open(googleCalendarTemplateUrl(calendarSaleDetails(record)), "_blank", "noopener");
+    setSaleCalendarStatus("The sale dates are prefilled in Google Calendar. Check for conflicts, choose Vern's calendar, then tap Save.");
+    return;
+  }
+  setSaleCalendarStatus("Checking Vern's calendar and preparing the sale hold…");
+  try {
+    const result = await postGoogleCalendarOperation("upsert", calendarSaleDetails(record), true);
+    if (result.conflict && !result.event) {
+      setSaleCalendarStatus("These sale dates conflict with Vern's calendar. No hold was added.", true);
+      return;
+    }
+    record.googleCalendarSaleEventId = result.event?.id || record.googleCalendarSaleEventId || "";
+    record.googleCalendarSaleHtmlLink = result.event?.htmlLink || "";
+    record.googleCalendarSaleSyncedAt = new Date().toISOString();
+    await persistCalendarFields(record);
+    setSaleCalendarStatus(result.conflict
+      ? "Sale hold synced with a possible-conflict warning. Review Vern's calendar."
+      : "Sale dates saved to Vern's Google Calendar. No conflict was reported.");
+  } catch (error) {
+    setSaleCalendarStatus(`Sale dates are saved with the customer, but Google Calendar did not sync: ${error.message}`, true);
+  }
+}
+
+async function postGoogleCalendarOperation(operation, eventDetails, checkFreeBusy) {
+  const config = googleCalendarConfig();
+  const accessToken = isSharedCustomerWorkspaceConnected()
+    ? await sharedCustomerWorkspace.getAccessToken()
+    : "";
+  if (!accessToken) throw new Error("employee shared-workspace sign-in is required");
+  const response = await fetch(config.syncEndpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`
+    },
+    body: JSON.stringify({
+      operation,
+      calendarId: config.calendarId,
+      timeZone: config.timeZone,
+      checkFreeBusy,
+      event: eventDetails
+    })
+  });
+  if (!response.ok) throw new Error(`calendar service returned ${response.status}`);
+  const result = await response.json();
+  if (!result || result.ok !== true) throw new Error(result?.message || "calendar service rejected the request");
+  return result;
+}
+
+async function persistCalendarFields(record) {
+  record.updatedAt = new Date().toISOString();
+  if (isSharedCustomerWorkspaceConnected()) {
+    const saved = await sharedCustomerWorkspace.upsertCustomer(record);
+    const index = state.potentialCustomers.findIndex((item) => item.id === record.id);
+    if (index >= 0 && saved) state.potentialCustomers[index] = saved;
+  } else {
+    await persistPotentialCustomersToDatabase();
+    saveState();
+  }
+}
+
+function setCalendarStatus(text, error = false) {
+  const target = $("[data-customer-calendar-status]");
+  if (target) {
+    target.textContent = text;
+    target.classList.toggle("is-error", error);
+  }
+  const workflow = $("[data-customer-workflow-message]");
+  if (workflow) workflow.textContent = text;
+}
+
+function setSaleCalendarStatus(text, error = false) {
+  const target = $("[data-contract-sale-calendar-status]");
+  if (target) {
+    target.textContent = text;
+    target.classList.toggle("is-error", error);
+  }
+}
+
+async function recordSignedCustomerContract() {
   const record = selectedPotentialCustomer();
   const confirmed = $("[data-contract-signed-confirm]")?.checked;
   if (!record || !confirmed || record.customerCode) return;
   if (!confirm("Record this contract as signed and permanently assign the next four-digit customer code?")) return;
+  if (isSharedCustomerWorkspaceConnected()) {
+    const button = $("[data-contract-mark-signed]");
+    if (button) button.disabled = true;
+    try {
+      const signedRecord = await sharedCustomerWorkspace.recordSignedContract(record.id);
+      const index = state.potentialCustomers.findIndex((item) => item.id === record.id);
+      if (index >= 0) state.potentialCustomers[index] = signedRecord;
+      selectedPotentialCustomerId = signedRecord.id;
+      renderPotentialCustomers();
+      setSharedWorkspaceStatus(`Signed contract recorded with customer code ${signedRecord.customerCode}.`, "success");
+    } catch (error) {
+      setSharedWorkspaceStatus(`Signed-contract recording failed: ${error.message}`, "error");
+      if (button) button.disabled = false;
+    }
+    return;
+  }
   const code = nextCustomerCode();
   if (!code) {
     alert("The four-digit customer code range is full.");
@@ -1294,6 +1853,12 @@ function prepareOnsiteContractIntegration(record) {
       time: record.meetingTime,
       notes: record.notes
     },
+    scheduledSale: {
+      startDate: record.saleStartDate || null,
+      endDate: record.saleEndDate || null,
+      formatted: contractFields.scheduledSaleDates,
+      timeZone: "America/Detroit"
+    },
     deliveryChoice: record.contractDelivery || null,
     signatureDates: {
       displayFormat: "MM/DD/YYYY",
@@ -1331,8 +1896,12 @@ function renderOnsiteContractPrefill(record) {
     if (target) target.textContent = fields[key] || "Missing - edit customer";
   });
   const specialNotes = $("[data-contract-special-notes]");
+  const saleStart = $("[data-contract-sale-start]");
+  const saleEnd = $("[data-contract-sale-end]");
   const addressMode = $("[data-contract-check-address-mode]");
   if (specialNotes) specialNotes.value = record.specialNotesAgreements || "";
+  if (saleStart) saleStart.value = record.saleStartDate || "";
+  if (saleEnd) saleEnd.value = record.saleEndDate || "";
   if (addressMode) addressMode.value = record.checkAddressMode === "different" ? "different" : "same";
   const prepFields = {
     mailingStreet: $("[data-contract-mailing-street]"),
@@ -1345,6 +1914,7 @@ function renderOnsiteContractPrefill(record) {
     if (input) input.value = record[key] || "";
   });
   toggleMailingAddressFields(addressMode, $("[data-contract-mailing-address-fields]"));
+  renderScheduledSaleDatePreview(record);
   const confirmation = $("[data-contract-details-confirm]");
   if (confirmation) confirmation.checked = false;
   updateOnsiteContractReviewState(record);
@@ -1387,6 +1957,7 @@ function onsiteContractFields(record) {
     clientName: [record.firstName, record.lastName].map((value) => String(value || "").trim()).filter(Boolean).join(" "),
     primaryPhone: String(record.phone || "").trim(),
     saleSiteAddress: saleSiteAddress.formatted,
+    scheduledSaleDates: formatScheduledSaleDates(record.saleStartDate, record.saleEndDate),
     specialNotesOrAgreements: String(record.specialNotesAgreements || "").trim(),
     checkAndReportAddress: mailingAddress.formatted
   };
@@ -1403,6 +1974,9 @@ function missingOnsiteContractFields(record) {
     !saleSiteAddress.city ? "Sale Site city" : "",
     !saleSiteAddress.state ? "Sale Site state" : "",
     !saleSiteAddress.zip ? "Sale Site ZIP" : "",
+    !record.saleStartDate ? "Sale start date" : "",
+    !record.saleEndDate ? "Sale end date" : "",
+    validateSaleDates(record.saleStartDate, record.saleEndDate),
     mailingAddress.mode === "different" && !mailingAddress.street ? "Mailing street" : "",
     mailingAddress.mode === "different" && !mailingAddress.city ? "Mailing city" : "",
     mailingAddress.mode === "different" && !mailingAddress.state ? "Mailing state" : "",
@@ -1507,6 +2081,8 @@ function normalizePotentialCustomerRecord(record) {
 function syncContractPrepFieldsToRecord({ resetConfirmation = true } = {}) {
   const record = selectedPotentialCustomer();
   if (!record) return;
+  record.saleStartDate = String($("[data-contract-sale-start]")?.value || "");
+  record.saleEndDate = String($("[data-contract-sale-end]")?.value || "");
   record.specialNotesAgreements = String($("[data-contract-special-notes]")?.value || "").trim();
   record.checkAddressMode = $("[data-contract-check-address-mode]")?.value === "different" ? "different" : "same";
   record.mailingStreet = String($("[data-contract-mailing-street]")?.value || "").trim();
@@ -1520,7 +2096,39 @@ function syncContractPrepFieldsToRecord({ resetConfirmation = true } = {}) {
     if (confirmation) confirmation.checked = false;
   }
   saveState();
+  renderScheduledSaleDatePreview(record);
   updateOnsiteContractReviewState(record);
+}
+
+function renderScheduledSaleDatePreview(record) {
+  const target = $("[data-contract-sale-dates-preview]");
+  if (!target) return;
+  const error = validateSaleDates(record.saleStartDate, record.saleEndDate);
+  target.textContent = error || formatScheduledSaleDates(record.saleStartDate, record.saleEndDate) || "No sale dates selected";
+  target.classList.toggle("is-error", Boolean(error));
+}
+
+function formatScheduledSaleDates(startDate, endDate) {
+  if (!startDate || !endDate || validateSaleDates(startDate, endDate)) return "";
+  const format = (value) => new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC"
+  }).format(new Date(`${value}T12:00:00Z`));
+  return startDate === endDate ? format(startDate) : `${format(startDate)} - ${format(endDate)}`;
+}
+
+function validateSaleDates(startDate, endDate) {
+  if (!startDate || !endDate) return "";
+  return endDate < startDate ? "Sale end date must be on or after the start date" : "";
+}
+
+function addDaysToIsoDate(value, days) {
+  if (!value) return "";
+  const date = new Date(`${value}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 }
 
 function toggleMailingAddressFields(select, container) {

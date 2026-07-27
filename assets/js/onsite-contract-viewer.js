@@ -26,6 +26,19 @@
     }).format(parsed);
   }
 
+  function formatScheduledSaleDates(startDate, endDate) {
+    const start = clean(startDate);
+    const end = clean(endDate);
+    if (!start || !end || end < start) return "";
+    const format = (value) => new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC"
+    }).format(new Date(`${value}T12:00:00Z`));
+    return start === end ? format(start) : `${format(start)} - ${format(end)}`;
+  }
+
   function findCustomer(records) {
     return Array.isArray(records)
       ? records.find((item) => item?.id === customerId || item?.supabaseId === customerId) || null
@@ -127,6 +140,7 @@
         clientName: [record?.firstName, record?.lastName].map(clean).filter(Boolean).join(" "),
         primaryPhone: clean(record?.phone),
         saleSiteAddress: [saleSiteStreet, saleSiteLine2, saleSiteLocality].filter(Boolean).join(", "),
+        scheduledSaleDates: formatScheduledSaleDates(record?.saleStartDate, record?.saleEndDate),
         specialNotesOrAgreements: clean(record?.specialNotesAgreements),
         checkAndReportAddress: [mailingStreet, mailingLine2, mailingLocality].filter(Boolean).join(", "),
         customerSignatureDate: formatVerifiedSignatureDate(record?.customerSignedAt),
@@ -137,6 +151,11 @@
         !saleSiteCity ? "Sale Site city" : "",
         !saleSiteState ? "Sale Site state" : "",
         !saleSiteZip ? "Sale Site ZIP" : "",
+        !clean(record?.saleStartDate) ? "Sale start date" : "",
+        !clean(record?.saleEndDate) ? "Sale end date" : "",
+        clean(record?.saleStartDate) && clean(record?.saleEndDate) && clean(record.saleEndDate) < clean(record.saleStartDate)
+          ? "valid scheduled sale dates"
+          : "",
         mailingMode === "different" && !mailingStreet ? "Mailing street" : "",
         mailingMode === "different" && !mailingCity ? "Mailing city" : "",
         mailingMode === "different" && !mailingState ? "Mailing state" : "",
@@ -164,6 +183,7 @@
     document.querySelector("[data-contract-client]").textContent = fields.clientName || fallback;
     document.querySelector("[data-contract-phone]").textContent = fields.primaryPhone || fallback;
     document.querySelector("[data-contract-address]").textContent = fields.saleSiteAddress || fallback;
+    document.querySelector("[data-contract-sale-dates]").textContent = fields.scheduledSaleDates || fallback;
     const specialNotes = document.querySelector("[data-contract-special-notes]");
     specialNotes.textContent = fields.specialNotesOrAgreements;
     specialNotes.hidden = !fields.specialNotesOrAgreements;
@@ -186,7 +206,7 @@
     title.textContent = `Onsite Contract - ${fields.clientName}`;
     status.textContent = fields.customerSignatureDate || fields.representativeSignatureDate
       ? "Read-only customer-specific review. Customer details and provider-verified signature dates were filled automatically. Signature images and the final signed PDF remain controlled by the secure signature service."
-      : "Read-only customer-specific review. Client, Phone, Sale Site Address, Special Notes or Agreements, and check/report address were filled automatically. Signature areas and dates activate after the secure signature-service connection.";
+      : "Read-only customer-specific review. Client, Phone, Sale Site Address, scheduled sale dates, Special Notes or Agreements, and check/report address were filled automatically. Signature areas and dates activate after the secure signature-service connection.";
   }
 
   resolveCustomer().then(renderRecord).catch((error) => {
@@ -198,6 +218,7 @@
     resolveCustomer,
     renderRecord,
     contractValues,
-    formatVerifiedSignatureDate
+    formatVerifiedSignatureDate,
+    formatScheduledSaleDates
   };
 })(window);

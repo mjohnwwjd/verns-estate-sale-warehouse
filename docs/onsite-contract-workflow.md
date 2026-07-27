@@ -14,19 +14,24 @@ The employee-only `Potential Customers` tab saves these pre-visit fields in a de
 
 After saving, the intake form shows a prominent confirmation and highlights the newly filed record. The saved-customer area supports search by name, phone, email, address, meeting date, notes, or customer code; it also filters potential versus signed customers and sorts by meeting date, recently saved, name, or customer code. Existing potential customers from the older local-storage format are migrated automatically.
 
-This remains on-device storage. Employees should use `Export data` for backup. Shared access across multiple iPads and server-managed recovery require the later authenticated backend.
+Migration checks the historical `vernsWebsiteStateV1` local-storage record, the dedicated recovery backup, and the IndexedDB customer store. Copies are merged by record ID and customer fingerprint so a recovered legacy record is preserved without duplicate list entries. The saved-customer area displays a recovery status instead of reporting zero while that asynchronous check is still running.
+
+With the default blank Supabase configuration, this remains on-device storage and the UI labels it **Local Preview mode**. `localhost`, `127.0.0.1`, and `estatesbyvern.com` are separate browser origins and cannot read each other's records. Use `Export customer backup` on the source screen and `Import customer backup` on the destination screen to merge records without deleting either copy.
+
+After the user-owned Supabase project, schema, employee authentication, and public browser configuration are ready, the same screen switches to **Connected Shared Workspace mode**. It then loads and saves Potential Customers through authenticated, row-level-security-protected database requests. Historical browser records remain local until an authorized employee explicitly confirms **Review and upload local records**; no background migration occurs. See `docs/supabase-employee-workspace.md` for setup and verification.
 
 Opening a saved record provides three actions:
 
 1. Training video setup. If `settings.customerTrainingVideoUrl` is present in imported site data, the action opens that approved URL. Otherwise it reports that configuration is still needed.
-2. Calendar handoff. The site downloads an `.ics` file containing the meeting details. An employee can open the file in Google Calendar or another calendar. The site does not access a Google account or use OAuth.
-3. On-site contract preparation. Client name, phone, sale-site address, check/report address, and optional Special Notes or Agreements are filled from the selected customer record. Employees can update the shared notes and mailing-address choice, then confirm the values to enable the large `View Onsite Contract` action.
+2. Google Calendar review. **Open Vern's calendar** opens the calendar grid so an employee can check availability. **Review & add meeting** opens a prefilled Google Calendar event when secure sync is not configured. After Vern authorizes the documented server-side connection, saving a customer checks free/busy and creates or updates that customer's same calendar event automatically.
+3. On-site contract preparation. Client name, phone, sale-site address, required sale start/end dates, check/report address, and optional Special Notes or Agreements are filled from the selected customer record. Employees can update the shared dates, notes, and mailing-address choice, then confirm the values to enable the large `View Onsite Contract` action.
 
 The existing on-site contract PDF remains the source of truth. A byte-for-byte copy is stored at `assets/docs/onsite-contract.pdf`. The browser review screen at `onsite-contract-viewer.html` displays high-resolution renders of both unchanged pages and fills only the existing blanks:
 
 - `Client`
 - `Phone`
 - `Sale Site Address`
+- scheduled sale dates in the existing Section 10 blank
 - `Other special notes or agreements`
 - `Address to send check & report`
 
@@ -46,7 +51,7 @@ A potential customer has no customer code. After staff checks the signed-contrac
 0003
 ```
 
-The assignment is local to the browser's saved data. Do not use it as a multi-device production sequence until records and the sequence are moved to one authenticated backend database.
+In Local Preview mode, the assignment is local to the browser's saved data and must not be treated as a multi-device production sequence. In Connected Shared Workspace mode, only a manager can mark a contract signed, and the database function assigns the next code atomically.
 
 ## Provider integration boundary
 
@@ -60,6 +65,7 @@ The assignment is local to the browser's saved data. Do not use it as a multi-de
 - the selected check/report address mode, structured mailing fields, and formatted address
 - the shared Special Notes or Agreements value
 - meeting details and notes
+- scheduled sale start/end dates and their Section 10 display value
 - signed-PDF delivery choice
 - requested signature, PDF, delivery, and Lightspeed actions
 - signature-date mappings for the customer's and authorized representative's provider-verified timestamps
@@ -92,10 +98,10 @@ GOOGLE_OAUTH_CLIENT_ID
 GOOGLE_OAUTH_CLIENT_SECRET
 ```
 
-These are configuration boundaries only. No external account, credential, or provider call is included in phase 1.
+These are configuration boundaries only. No secret or token belongs in the public site. See `docs/google-calendar-integration.md` for the Google authorization and endpoint contract.
 
 ## Privacy and backup limits
 
-The current employee passcode is a convenience gate, not secure authentication. Potential-customer records contain private contact information and currently live only in that browser's local storage and JSON exports.
+The existing employee passcode is a convenience gate, not the database credential. Local Preview records contain private contact information and live only in that browser's IndexedDB/local recovery storage and JSON exports. Connected Shared Workspace mode separately requires Supabase employee authentication and enforces database access with row-level security.
 
-Before production use across devices, add authenticated server storage, access logs, retention rules, encrypted backups, and a documented process for correcting or deleting customer data.
+Before production use across devices, complete and verify the Supabase setup, then define retention, backup, audit-review, employee offboarding, and customer correction/deletion procedures.

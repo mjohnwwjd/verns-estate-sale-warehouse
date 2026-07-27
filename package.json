@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check assets/js/app.js",
+    "check": "node --check server.js && node --check assets/js/app.js && node --check assets/js/customer-migration.js && node --check assets/js/supabase-config.js && node --check assets/js/supabase-workspace.js && node --check assets/js/google-calendar-config.js && node --check assets/js/onsite-contract-viewer.js",
     "smoke": "node scripts/smoke-check.mjs",
     "lightspeed:pull": "node scripts/lightspeed-pull-items.mjs",
     "lightspeed:refresh": "node scripts/lightspeed-refresh-token.mjs",

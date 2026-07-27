@@ -3636,6 +3636,76 @@ th {
   align-items: start;
 }
 
+.shared-workspace-card {
+  display: grid;
+  gap: 0.85rem;
+  border: 3px solid var(--ink);
+  background: #fffdf2;
+}
+
+.shared-workspace-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.shared-workspace-heading h3,
+.shared-workspace-heading p,
+.shared-workspace-migration p {
+  margin: 0;
+}
+
+.shared-workspace-badge {
+  flex: 0 0 auto;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 0.45rem 0.7rem;
+  background: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.shared-workspace-badge.is-connected {
+  background: var(--green);
+  color: white;
+}
+
+.shared-workspace-badge.is-error {
+  background: var(--red);
+  color: white;
+}
+
+.shared-workspace-login {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.shared-workspace-actions,
+.shared-workspace-migration {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.shared-workspace-actions > span {
+  margin-right: auto;
+  font-weight: 900;
+}
+
+.shared-workspace-migration {
+  border: 2px solid rgba(24, 25, 24, 0.25);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #f7f2df;
+}
+
+.shared-workspace-migration p {
+  flex: 1 1 280px;
+}
+
 .customer-intake-card,
 .customer-list-card,
 .customer-detail-card {
@@ -3692,6 +3762,38 @@ th {
 
 .customer-search-clear {
   justify-self: start;
+}
+
+.customer-backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.customer-backup-import {
+  cursor: pointer;
+}
+
+.customer-recovery-status {
+  margin: 0;
+  color: #425142;
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.customer-recovery-status.is-success {
+  color: #174d26;
+}
+
+.customer-recovery-status.is-error {
+  color: var(--red);
+}
+
+.customer-origin-note {
+  margin: 0;
+  color: #5d5749;
+  font-size: 0.8rem;
+  font-weight: 750;
 }
 
 .customer-record-list {
@@ -3804,6 +3906,23 @@ th {
 .customer-action-card .btn {
   align-self: end;
   margin-top: auto;
+}
+
+.calendar-action-row {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.customer-action-card small,
+.contract-sale-dates small {
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.customer-action-card small.is-error,
+.contract-sale-dates small.is-error,
+.contract-sale-dates strong.is-error {
+  color: var(--red);
 }
 
 .customer-action-step {
@@ -3924,6 +4043,42 @@ th {
   border-width: 3px;
   border-color: var(--ink);
   background: white;
+}
+
+.contract-sale-dates {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  padding: 0.8rem;
+  background: #fff8dc;
+}
+
+.contract-sale-dates legend {
+  padding: 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.contract-sale-dates legend span {
+  color: var(--red);
+  font-size: 0.8rem;
+}
+
+.contract-sale-dates p {
+  margin: 0;
+  font-weight: 750;
+}
+
+.contract-sale-date-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.contract-sale-dates .btn {
+  justify-self: start;
 }
 
 .contract-details-confirm {
@@ -4485,6 +4640,10 @@ th {
   }
 
   .mailing-city-state-zip {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-sale-date-grid {
     grid-template-columns: 1fr;
   }
 

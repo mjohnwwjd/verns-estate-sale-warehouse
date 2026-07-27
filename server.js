@@ -457,13 +457,25 @@ async function serveStatic(req, res, url) {
   const inlineHeaders = extension === ".pdf"
     ? { "Content-Disposition": 'inline; filename="onsite-contract.pdf"' }
     : {};
+  const previewHeaders = isLocalPreviewRequest(req)
+    ? {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      }
+    : {};
   sendText(
     res,
     200,
     mimeTypes[extension] || "application/octet-stream",
     req.method === "HEAD" ? "" : content,
-    inlineHeaders
+    { ...inlineHeaders, ...previewHeaders }
   );
+}
+
+function isLocalPreviewRequest(req) {
+  const hostname = String(req.headers.host || "").replace(/^\[|\](?::\d+)?$|:\d+$/g, "");
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
 }
 
 function isPublicStaticPath(publicPath) {
