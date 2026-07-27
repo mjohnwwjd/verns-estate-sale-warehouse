@@ -172,6 +172,31 @@
         text-align: center;
       }
 
+      .signature-date-placeholder {
+        position: absolute;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        min-height: 3.2%;
+        border: 2px dashed #8f251c;
+        border-radius: 5px;
+        padding: 0.2em;
+        background: #fff2ee;
+        color: #8f251c;
+        font-size: clamp(4.5px, 0.82cqw, 13px);
+        font-weight: 800;
+        line-height: 1.1;
+        text-align: center;
+      }
+
+      .signature-date-placeholder.has-verified-date {
+        border-color: #1b5e20;
+        background: white;
+        color: #000;
+        font-size: clamp(6px, 1.15cqw, 18px);
+      }
+
       .signature-service-client {
         top: 48.65%;
         left: 18.5%;
@@ -182,6 +207,18 @@
         top: 56.55%;
         left: 18.5%;
         width: 48.2%;
+      }
+
+      .signature-date-client {
+        top: 48.65%;
+        left: 66.2%;
+        width: 20.8%;
+      }
+
+      .signature-date-vern {
+        top: 56.55%;
+        left: 70.4%;
+        width: 16.6%;
       }
 
       .contract-page figcaption {
@@ -246,7 +283,9 @@
           <span class="contract-field contract-field-notes" data-contract-special-notes></span>
           <span class="contract-field contract-field-mailing" data-contract-mailing></span>
           <span class="signature-service-placeholder signature-service-client">Customer signature activates after secure signature integration</span>
+          <span class="signature-date-placeholder signature-date-client" data-customer-signature-date>Date added after verified signature</span>
           <span class="signature-service-placeholder signature-service-vern">Vern / authorized representative signature activates after secure signature integration</span>
+          <span class="signature-date-placeholder signature-date-vern" data-representative-signature-date>Date added after verified signature</span>
         </div>
         <figcaption>Page 2 of 2</figcaption>
       </figure>

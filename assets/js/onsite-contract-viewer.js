@@ -11,6 +11,21 @@
     return String(value || "").trim();
   }
 
+  function formatVerifiedSignatureDate(value) {
+    const raw = clean(value);
+    if (!raw) return "";
+    const dateOnly = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnly) return `${dateOnly[2]}/${dateOnly[3]}/${dateOnly[1]}`;
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return "";
+    return new Intl.DateTimeFormat("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+      timeZone: "America/Detroit"
+    }).format(parsed);
+  }
+
   function findCustomer(records) {
     return Array.isArray(records)
       ? records.find((item) => item?.id === customerId || item?.supabaseId === customerId) || null
@@ -113,7 +128,9 @@
         primaryPhone: clean(record?.phone),
         saleSiteAddress: [saleSiteStreet, saleSiteLine2, saleSiteLocality].filter(Boolean).join(", "),
         specialNotesOrAgreements: clean(record?.specialNotesAgreements),
-        checkAndReportAddress: [mailingStreet, mailingLine2, mailingLocality].filter(Boolean).join(", ")
+        checkAndReportAddress: [mailingStreet, mailingLine2, mailingLocality].filter(Boolean).join(", "),
+        customerSignatureDate: formatVerifiedSignatureDate(record?.customerSignedAt),
+        representativeSignatureDate: formatVerifiedSignatureDate(record?.representativeSignedAt)
       },
       missing: [
         !saleSiteStreet ? "Sale Site street" : "",
@@ -151,6 +168,15 @@
     specialNotes.textContent = fields.specialNotesOrAgreements;
     specialNotes.hidden = !fields.specialNotesOrAgreements;
     document.querySelector("[data-contract-mailing]").textContent = fields.checkAndReportAddress || fallback;
+    const signatureDates = [
+      [document.querySelector("[data-customer-signature-date]"), fields.customerSignatureDate],
+      [document.querySelector("[data-representative-signature-date]"), fields.representativeSignatureDate]
+    ];
+    signatureDates.forEach(([target, dateValue]) => {
+      if (!target) return;
+      target.textContent = dateValue || "Date added after verified signature";
+      target.classList.toggle("has-verified-date", Boolean(dateValue));
+    });
 
     if (missing.length) {
       status.textContent = `Missing ${missing.join(", ")}. Return to Employee Tools and edit the Potential Customer before review.`;
@@ -158,7 +184,9 @@
       return;
     }
     title.textContent = `Onsite Contract - ${fields.clientName}`;
-    status.textContent = "Read-only customer-specific review. Client, Phone, Sale Site Address, Special Notes or Agreements, and check/report address were filled automatically. Signature areas activate after the secure signature-service connection.";
+    status.textContent = fields.customerSignatureDate || fields.representativeSignatureDate
+      ? "Read-only customer-specific review. Customer details and provider-verified signature dates were filled automatically. Signature images and the final signed PDF remain controlled by the secure signature service."
+      : "Read-only customer-specific review. Client, Phone, Sale Site Address, Special Notes or Agreements, and check/report address were filled automatically. Signature areas and dates activate after the secure signature-service connection.";
   }
 
   resolveCustomer().then(renderRecord).catch((error) => {
@@ -169,6 +197,7 @@
   root.VERNS_CONTRACT_VIEWER = {
     resolveCustomer,
     renderRecord,
-    contractValues
+    contractValues,
+    formatVerifiedSignatureDate
   };
 })(window);
