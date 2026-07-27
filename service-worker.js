@@ -1,4 +1,4 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260726-customer-search-save";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260727-contract-viewer-storage-fix";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -13,6 +13,7 @@ const APP_SHELL = [
   "./assets/js/app.js",
   "./assets/js/early-entry-config.js",
   "./assets/js/early-entry.js",
+  "./assets/js/onsite-contract-viewer.js",
   "./assets/docs/onsite-contract.pdf",
   "./assets/docs/onsite-contract-page-1.png",
   "./assets/docs/onsite-contract-page-2.png",

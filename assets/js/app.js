@@ -1519,6 +1519,15 @@ function toggleMailingAddressFields(select, container) {
 }
 
 function onsiteContractViewerUrl(record) {
+  try {
+    localStorage.setItem("vernsOnsiteContractReviewHandoffV1", JSON.stringify({
+      createdAt: Date.now(),
+      customerId: record.id,
+      record: { ...record }
+    }));
+  } catch (error) {
+    console.warn("Could not prepare the browser handoff for contract review.", error);
+  }
   return `onsite-contract-viewer.html?customer=${encodeURIComponent(record.id)}`;
 }
 

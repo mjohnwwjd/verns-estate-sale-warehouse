@@ -225,14 +225,18 @@ async function checkLocalAssets() {
   expect(viewerHtml.includes("data-contract-mailing"), "Onsite Contract viewer missing check/report address prefill");
   expect(viewerHtml.includes("Customer signature activates after secure signature integration"), "Onsite Contract viewer missing in-place customer signature placeholder");
   expect(viewerHtml.includes("representative signature activates after secure signature integration"), "Onsite Contract viewer missing in-place representative signature placeholder");
-  const viewerScript = viewerHtml.match(/<script>([\s\S]*?)<\/script>/)?.[1] || "";
+  expect(viewerHtml.includes("assets/js/onsite-contract-viewer.js"), "Onsite Contract viewer missing current customer-storage resolver");
+  const viewerScript = await readFile(path.join(root, "assets/js/onsite-contract-viewer.js"), "utf8");
   expect(Boolean(viewerScript), "Onsite Contract viewer missing customer-prefill script");
+  expect(viewerScript.includes("vernsEmployeeCustomersV1"), "Onsite Contract viewer must read the current IndexedDB customer store");
+  expect(viewerScript.includes("vernsOnsiteContractReviewHandoffV1"), "Onsite Contract viewer missing shared-workspace handoff fallback");
   try {
     new Function(viewerScript);
   } catch (error) {
     failures.push(`Onsite Contract viewer script has invalid syntax: ${error.message}`);
   }
-  const renderedContract = renderContractViewerScript(viewerScript, {
+  const contractValues = loadContractViewerValues(viewerScript);
+  const renderedContract = contractValues({
     id: "potential-customer-smoke",
     firstName: "Jamie",
     lastName: "Customer",
@@ -250,12 +254,12 @@ async function checkLocalAssets() {
     mailingState: "mi",
     mailingZip: "49440"
   });
-  expect(renderedContract["[data-contract-client]"]?.textContent === "Jamie Customer", "Onsite Contract viewer did not map Client");
-  expect(renderedContract["[data-contract-phone]"]?.textContent === "(231) 555-0100", "Onsite Contract viewer did not map Phone");
-  expect(renderedContract["[data-contract-address]"]?.textContent === "100 Sale Site Rd, Unit B, Norton Shores MI 49441", "Onsite Contract viewer did not map structured Sale Site Address");
-  expect(renderedContract["[data-contract-special-notes]"]?.textContent.includes("family piano"), "Onsite Contract viewer did not map Special Notes or Agreements");
-  expect(renderedContract["[data-contract-mailing]"]?.textContent === "200 Mailing Ave, Suite 3, Muskegon MI 49440", "Onsite Contract viewer did not map different check/report address");
-  const sameAddressContract = renderContractViewerScript(viewerScript, {
+  expect(renderedContract.clientName === "Jamie Customer", "Onsite Contract viewer did not map Client");
+  expect(renderedContract.primaryPhone === "(231) 555-0100", "Onsite Contract viewer did not map Phone");
+  expect(renderedContract.saleSiteAddress === "100 Sale Site Rd, Unit B, Norton Shores MI 49441", "Onsite Contract viewer did not map structured Sale Site Address");
+  expect(renderedContract.specialNotesOrAgreements.includes("family piano"), "Onsite Contract viewer did not map Special Notes or Agreements");
+  expect(renderedContract.checkAndReportAddress === "200 Mailing Ave, Suite 3, Muskegon MI 49440", "Onsite Contract viewer did not map different check/report address");
+  const sameAddressContract = contractValues({
     id: "potential-customer-same-address",
     firstName: "Taylor",
     lastName: "Seller",
@@ -263,7 +267,7 @@ async function checkLocalAssets() {
     address: "300 Same Address St, Muskegon, MI 49442",
     checkAddressMode: "same"
   });
-  expect(sameAddressContract["[data-contract-mailing]"]?.textContent === "300 Same Address St, Muskegon MI 49442", "Onsite Contract viewer did not prefill sale-site address for check/report");
+  expect(sameAddressContract.checkAndReportAddress === "300 Same Address St, Muskegon MI 49442", "Onsite Contract viewer did not prefill sale-site address for check/report");
   const appScript = await readFile(path.join(root, "assets/js/app.js"), "utf8");
   expect(appScript.includes("specialNotesOrAgreements:"), "contract payload missing Special Notes or Agreements");
   expect(appScript.includes("checkAndReportAddress:"), "contract payload missing check/report address");
@@ -272,7 +276,7 @@ async function checkLocalAssets() {
   expect(appScript.includes(".map(normalizePotentialCustomerRecord)"), "potential-customer state missing legacy address migration");
 }
 
-function renderContractViewerScript(script, record) {
+function loadContractViewerValues(script) {
   const selectors = [
     "[data-contract-client]",
     "[data-contract-phone]",
@@ -295,22 +299,21 @@ function renderContractViewerScript(script, record) {
       return elements[selector] || null;
     }
   };
-  const localStorageStub = {
-    getItem() {
-      return JSON.stringify({ potentialCustomers: [record] });
-    }
+  const windowStub = {
+    location: { search: "" },
+    localStorage: { length: 0, key() { return null; }, getItem() { return null; } }
   };
   try {
-    new Function("window", "localStorage", "document", "URLSearchParams", script)(
-      { location: { search: `?customer=${encodeURIComponent(record.id)}` } },
-      localStorageStub,
+    new Function("window", "document", "URLSearchParams", "console", script)(
+      windowStub,
       documentStub,
-      URLSearchParams
+      URLSearchParams,
+      console
     );
   } catch (error) {
     failures.push(`Onsite Contract viewer mapping failed: ${error.message}`);
   }
-  return elements;
+  return (record) => windowStub.VERNS_CONTRACT_VIEWER?.contractValues(record)?.fields || {};
 }
 
 async function checkPwaAssets() {
