@@ -134,6 +134,10 @@ async function checkStaticLinksAndDropdowns() {
   expect(!/<a\b[^>]*data-timeoff-sms/i.test(html), "Text Vern should be a button, not a placeholder link");
   expect(html.includes('data-tab="customers"'), "employee tools missing Potential Customers tab");
   expect(html.includes("data-potential-customer-form"), "employee tools missing potential-customer intake form");
+  expect(html.includes("data-potential-customer-save-status"), "potential-customer intake missing visible save confirmation");
+  expect(html.includes("data-potential-customer-search"), "saved customers missing search field");
+  expect(html.includes("data-potential-customer-status-filter"), "saved customers missing filing-status filter");
+  expect(html.includes("data-potential-customer-sort"), "saved customers missing sort control");
   expect(html.includes("data-customer-calendar-download"), "potential-customer workspace missing calendar handoff");
   expect(html.includes("data-customer-contract-open"), "potential-customer workspace missing contract preparation action");
   expect(html.includes("data-view-onsite-contract"), "contract preparation missing Onsite Contract review action");
@@ -151,6 +155,10 @@ async function checkStaticLinksAndDropdowns() {
   expect(html.includes("data-contract-details-confirm"), "Contract Prep missing read-only review confirmation");
   expect(html.includes("data-contract-signed-confirm"), "contract preparation missing signed-contract confirmation");
   expect(html.includes("No customer code is assigned here"), "potential-customer intake must explain code timing");
+  const appScript = await readFile(path.join(root, "assets/js/app.js"), "utf8");
+  expect(appScript.includes("vernsEmployeeCustomersV1"), "potential customers missing dedicated durable browser database");
+  expect(appScript.includes("persistPotentialCustomersToDatabase"), "potential-customer save missing durable storage path");
+  expect(appScript.includes("customerSearchText"), "potential-customer search mapping is missing");
 
   const requiredSelects = [
     "data-category-select",

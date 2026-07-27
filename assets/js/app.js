@@ -1,4 +1,7 @@
 const STORAGE_KEY = "vernsWebsiteStateV1";
+const CUSTOMER_DATABASE_NAME = "vernsEmployeeCustomersV1";
+const CUSTOMER_DATABASE_STORE = "workflow";
+const CUSTOMER_DATABASE_RECORD_KEY = "potentialCustomers";
 const EMPLOYEE_SESSION_KEY = "vernsEmployeeUnlocked";
 const EMPLOYEE_PROFILE_KEY = "vernsEmployeeProfile";
 const STAFF_NAME_KEY = "vernsStaffName";
@@ -75,10 +78,16 @@ let pricingAiSuggestion = null;
 let pricingScanTimer = null;
 let selectedManagerEmployee = "";
 let selectedPotentialCustomerId = "";
+let potentialCustomerSearch = "";
+let potentialCustomerStatusFilter = "all";
+let potentialCustomerSort = "meeting";
+let justSavedPotentialCustomerId = "";
+let customerDatabaseReady = false;
 let lastSalesSyncStatus = "";
 let earlyEntryRosterLastSync = "";
 let earlyEntryRosterTimer = null;
 let deferredInstallPrompt = null;
+let customerDatabasePromise = null;
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -102,6 +111,7 @@ function init() {
   bindContentTool();
   bindImportExport();
   renderAll();
+  hydratePotentialCustomersFromDatabase();
   registerServiceWorker();
   settleHashScroll();
   window.addEventListener("load", settleHashScroll, { once: true });
@@ -319,7 +329,70 @@ function normalizeEstateSalesWorkflow(rawWorkflow = {}, starterWorkflow = {}) {
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const snapshot = customerDatabaseReady ? { ...state, potentialCustomers: [] } : state;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    if (customerDatabaseReady) persistPotentialCustomersToDatabase().catch(() => {});
+    return true;
+  } catch (error) {
+    console.error("Could not save Vern's employee data.", error);
+    return false;
+  }
+}
+
+function openCustomerDatabase() {
+  if (!("indexedDB" in window)) return Promise.reject(new Error("This browser does not support IndexedDB."));
+  if (customerDatabasePromise) return customerDatabasePromise;
+  customerDatabasePromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open(CUSTOMER_DATABASE_NAME, 1);
+    request.addEventListener("upgradeneeded", () => {
+      if (!request.result.objectStoreNames.contains(CUSTOMER_DATABASE_STORE)) {
+        request.result.createObjectStore(CUSTOMER_DATABASE_STORE);
+      }
+    });
+    request.addEventListener("success", () => resolve(request.result));
+    request.addEventListener("error", () => reject(request.error || new Error("Customer database could not be opened.")));
+  });
+  return customerDatabasePromise;
+}
+
+async function persistPotentialCustomersToDatabase() {
+  const records = state.potentialCustomers.map((record) => ({ ...record }));
+  const database = await openCustomerDatabase();
+  await new Promise((resolve, reject) => {
+    const transaction = database.transaction(CUSTOMER_DATABASE_STORE, "readwrite");
+    transaction.objectStore(CUSTOMER_DATABASE_STORE).put(records, CUSTOMER_DATABASE_RECORD_KEY);
+    transaction.addEventListener("complete", resolve);
+    transaction.addEventListener("abort", () => reject(transaction.error || new Error("Customer save was interrupted.")));
+    transaction.addEventListener("error", () => reject(transaction.error || new Error("Customer save failed.")));
+  });
+}
+
+async function hydratePotentialCustomersFromDatabase() {
+  try {
+    const database = await openCustomerDatabase();
+    const storedRecords = await new Promise((resolve, reject) => {
+      const transaction = database.transaction(CUSTOMER_DATABASE_STORE, "readonly");
+      const request = transaction.objectStore(CUSTOMER_DATABASE_STORE).get(CUSTOMER_DATABASE_RECORD_KEY);
+      request.addEventListener("success", () => resolve(Array.isArray(request.result) ? request.result : []));
+      request.addEventListener("error", () => reject(request.error || new Error("Saved customers could not be loaded.")));
+    });
+    const recordsById = new Map();
+    [...storedRecords, ...state.potentialCustomers].forEach((rawRecord) => {
+      const record = normalizePotentialCustomerRecord(rawRecord);
+      const previous = recordsById.get(record.id);
+      if (!previous || String(record.updatedAt || "").localeCompare(String(previous.updatedAt || "")) >= 0) {
+        recordsById.set(record.id, record);
+      }
+    });
+    state.potentialCustomers = Array.from(recordsById.values());
+    customerDatabaseReady = true;
+    await persistPotentialCustomersToDatabase();
+    saveState();
+    renderPotentialCustomers();
+  } catch (error) {
+    console.error("Customer database is unavailable; using browser storage fallback.", error);
+  }
 }
 
 function renderAll() {
@@ -746,8 +819,18 @@ function setEmployeeTab(tab) {
 
 function bindPotentialCustomerTool() {
   const form = $("[data-potential-customer-form]");
-  form?.addEventListener("submit", (event) => {
+  form?.addEventListener("submit", async (event) => {
     event.preventDefault();
+    const saveButton = $("[data-potential-customer-save]");
+    const saveStatus = $("[data-potential-customer-save-status]");
+    if (saveButton) {
+      saveButton.disabled = true;
+      saveButton.textContent = "Saving…";
+    }
+    if (saveStatus) {
+      saveStatus.textContent = "";
+      saveStatus.classList.remove("is-error");
+    }
     const data = Object.fromEntries(new FormData(form));
     const existing = state.potentialCustomers.find((item) => item.id === data.id);
     const saleSiteAddress = saleSiteAddressFromValues({
@@ -760,10 +843,10 @@ function bindPotentialCustomerTool() {
     const record = {
       ...existing,
       id: existing?.id || createId("potential-customer"),
-      firstName: data.firstName.trim(),
-      lastName: data.lastName.trim(),
-      phone: data.phone.trim(),
-      email: data.email.trim(),
+      firstName: cleanFormValue(data.firstName),
+      lastName: cleanFormValue(data.lastName),
+      phone: cleanFormValue(data.phone),
+      email: cleanFormValue(data.email),
       saleSiteStreet: saleSiteAddress.street,
       saleSiteLine2: saleSiteAddress.line2,
       saleSiteCity: saleSiteAddress.city,
@@ -772,30 +855,82 @@ function bindPotentialCustomerTool() {
       address: saleSiteAddress.formatted,
       meetingDate: data.meetingDate,
       meetingTime: data.meetingTime,
-      notes: data.notes.trim(),
-      specialNotesAgreements: data.specialNotesAgreements.trim(),
+      notes: cleanFormValue(data.notes),
+      specialNotesAgreements: cleanFormValue(data.specialNotesAgreements),
       checkAddressMode: data.checkAddressMode === "different" ? "different" : "same",
-      mailingStreet: data.mailingStreet.trim(),
-      mailingLine2: data.mailingLine2.trim(),
-      mailingCity: data.mailingCity.trim(),
-      mailingState: data.mailingState.trim().toUpperCase(),
-      mailingZip: data.mailingZip.trim(),
+      mailingStreet: cleanFormValue(data.mailingStreet),
+      mailingLine2: cleanFormValue(data.mailingLine2),
+      mailingCity: cleanFormValue(data.mailingCity),
+      mailingState: cleanFormValue(data.mailingState).toUpperCase(),
+      mailingZip: cleanFormValue(data.mailingZip),
       status: existing?.status || "potential",
       customerCode: existing?.customerCode || "",
       employee: existing?.employee || currentEmployeeName() || "Employee",
       createdAt: existing?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
+    const previousRecords = state.potentialCustomers.slice();
+    const previousSelectedId = selectedPotentialCustomerId;
     const existingIndex = state.potentialCustomers.findIndex((item) => item.id === record.id);
     if (existingIndex >= 0) state.potentialCustomers[existingIndex] = record;
     else state.potentialCustomers.unshift(record);
     selectedPotentialCustomerId = record.id;
-    saveState();
-    resetPotentialCustomerForm();
-    renderPotentialCustomers();
+    justSavedPotentialCustomerId = record.id;
+    try {
+      await persistPotentialCustomersToDatabase();
+      customerDatabaseReady = true;
+      saveState();
+      resetPotentialCustomerForm({ keepStatus: true });
+      potentialCustomerSearch = "";
+      const search = $("[data-potential-customer-search]");
+      if (search) search.value = "";
+      renderPotentialCustomers();
+      if (saveStatus) {
+        saveStatus.textContent = `Saved ${potentialCustomerName(record)}. The record is now filed under Saved potential customers.`;
+      }
+      requestAnimationFrame(() => {
+        $(`[data-potential-customer-id="${record.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
+    } catch (error) {
+      console.error("Could not save potential customer.", error);
+      state.potentialCustomers = previousRecords;
+      selectedPotentialCustomerId = previousSelectedId;
+      justSavedPotentialCustomerId = "";
+      renderPotentialCustomers();
+      if (saveStatus) {
+        saveStatus.textContent = "This customer could not be saved on this device. Export a backup, then check that private browsing is off and device storage is available.";
+        saveStatus.classList.add("is-error");
+      }
+    } finally {
+      if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.textContent = existing ? "Save customer changes" : "Save potential customer";
+      }
+    }
   });
 
   $("[data-potential-customer-clear]")?.addEventListener("click", resetPotentialCustomerForm);
+  $("[data-potential-customer-search]")?.addEventListener("input", (event) => {
+    potentialCustomerSearch = event.currentTarget.value;
+    renderPotentialCustomers();
+  });
+  $("[data-potential-customer-status-filter]")?.addEventListener("change", (event) => {
+    potentialCustomerStatusFilter = event.currentTarget.value;
+    renderPotentialCustomers();
+  });
+  $("[data-potential-customer-sort]")?.addEventListener("change", (event) => {
+    potentialCustomerSort = event.currentTarget.value;
+    renderPotentialCustomers();
+  });
+  $("[data-potential-customer-search-clear]")?.addEventListener("click", () => {
+    potentialCustomerSearch = "";
+    const search = $("[data-potential-customer-search]");
+    if (search) {
+      search.value = "";
+      search.focus();
+    }
+    renderPotentialCustomers();
+  });
   form?.elements?.checkAddressMode?.addEventListener("change", () => {
     toggleMailingAddressFields(form.elements.checkAddressMode, $("[data-intake-mailing-address-fields]"));
   });
@@ -876,14 +1011,25 @@ function renderPotentialCustomers() {
   const list = $("[data-potential-customer-list]");
   const count = $("[data-potential-customer-count]");
   if (!list || !count) return;
+  const total = state.potentialCustomers.length;
+  const query = normalizedCustomerSearch(potentialCustomerSearch);
   const records = state.potentialCustomers
+    .filter((record) => {
+      if (potentialCustomerStatusFilter === "signed" && !record.customerCode) return false;
+      if (potentialCustomerStatusFilter === "potential" && record.customerCode) return false;
+      return !query || customerSearchText(record).includes(query);
+    })
     .slice()
-    .sort((a, b) => `${b.meetingDate || ""}T${b.meetingTime || ""}`.localeCompare(`${a.meetingDate || ""}T${a.meetingTime || ""}`));
-  count.textContent = `${records.length} ${records.length === 1 ? "record" : "records"}`;
+    .sort(comparePotentialCustomers);
+  count.textContent = records.length === total
+    ? `${total} ${total === 1 ? "record" : "records"}`
+    : `${records.length} of ${total}`;
+  const clearSearch = $("[data-potential-customer-search-clear]");
+  if (clearSearch) clearSearch.hidden = !potentialCustomerSearch;
   list.replaceChildren(
     ...(records.length
       ? records.map(potentialCustomerListItem)
-      : [staffEmptyNote("No potential customers saved on this device yet.")])
+      : [staffEmptyNote(total ? "No saved customers match this search and filing status." : "No potential customers saved on this device yet.")])
   );
   if (selectedPotentialCustomerId && !state.potentialCustomers.some((item) => item.id === selectedPotentialCustomerId)) {
     selectedPotentialCustomerId = "";
@@ -894,7 +1040,12 @@ function renderPotentialCustomers() {
 function potentialCustomerListItem(record) {
   const button = document.createElement("button");
   button.type = "button";
-  button.className = `customer-record-button${record.id === selectedPotentialCustomerId ? " is-active" : ""}`;
+  button.dataset.potentialCustomerId = record.id;
+  button.className = [
+    "customer-record-button",
+    record.id === selectedPotentialCustomerId ? "is-active" : "",
+    record.id === justSavedPotentialCustomerId ? "is-just-saved" : ""
+  ].filter(Boolean).join(" ");
   button.append(
     divEl("customer-record-title", [
       strongEl(potentialCustomerName(record)),
@@ -905,9 +1056,50 @@ function potentialCustomerListItem(record) {
   );
   button.addEventListener("click", () => {
     selectedPotentialCustomerId = record.id;
+    justSavedPotentialCustomerId = "";
     renderPotentialCustomers();
   });
   return button;
+}
+
+function cleanFormValue(value) {
+  return String(value || "").trim();
+}
+
+function normalizedCustomerSearch(value) {
+  return String(value || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+}
+
+function customerSearchText(record) {
+  return normalizedCustomerSearch([
+    potentialCustomerName(record),
+    record.phone,
+    record.email,
+    record.address,
+    record.saleSiteStreet,
+    record.saleSiteLine2,
+    record.saleSiteCity,
+    record.saleSiteState,
+    record.saleSiteZip,
+    record.meetingDate,
+    record.customerCode,
+    record.notes,
+    record.specialNotesAgreements
+  ].filter(Boolean).join(" "));
+}
+
+function comparePotentialCustomers(a, b) {
+  if (potentialCustomerSort === "name") {
+    return potentialCustomerName(a).localeCompare(potentialCustomerName(b), undefined, { sensitivity: "base" });
+  }
+  if (potentialCustomerSort === "newest") {
+    return String(b.updatedAt || b.createdAt || "").localeCompare(String(a.updatedAt || a.createdAt || ""));
+  }
+  if (potentialCustomerSort === "code") {
+    return String(a.customerCode || "9999").localeCompare(String(b.customerCode || "9999"))
+      || potentialCustomerName(a).localeCompare(potentialCustomerName(b));
+  }
+  return `${b.meetingDate || ""}T${b.meetingTime || ""}`.localeCompare(`${a.meetingDate || ""}T${a.meetingTime || ""}`);
 }
 
 function renderPotentialCustomerWorkspace() {
@@ -955,13 +1147,22 @@ function selectedPotentialCustomer() {
   return state.potentialCustomers.find((item) => item.id === selectedPotentialCustomerId) || null;
 }
 
-function resetPotentialCustomerForm() {
+function resetPotentialCustomerForm(options = {}) {
   const form = $("[data-potential-customer-form]");
   form?.reset();
   if (form?.elements?.meetingDate) form.elements.meetingDate.value = todayIsoDate();
   toggleMailingAddressFields(form?.elements?.checkAddressMode, $("[data-intake-mailing-address-fields]"));
   const title = $("[data-potential-customer-form-title]");
   if (title) title.textContent = "New potential customer";
+  const saveButton = $("[data-potential-customer-save]");
+  if (saveButton) saveButton.textContent = "Save potential customer";
+  if (!options.keepStatus) {
+    const saveStatus = $("[data-potential-customer-save-status]");
+    if (saveStatus) {
+      saveStatus.textContent = "";
+      saveStatus.classList.remove("is-error");
+    }
+  }
 }
 
 function editSelectedPotentialCustomer() {

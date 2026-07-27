@@ -2,7 +2,7 @@
 
 ## What works now
 
-The employee-only `Potential Customers` tab saves these pre-visit fields in the site's existing browser storage:
+The employee-only `Potential Customers` tab saves these pre-visit fields in a dedicated IndexedDB browser database:
 
 - first and last name
 - phone and optional email
@@ -11,6 +11,10 @@ The employee-only `Potential Customers` tab saves these pre-visit fields in the 
 - employee notes
 - optional `Special Notes or Agreements`, shared with contract section 12
 - check/report address choice: use the sale-site address or enter a different mailing address
+
+After saving, the intake form shows a prominent confirmation and highlights the newly filed record. The saved-customer area supports search by name, phone, email, address, meeting date, notes, or customer code; it also filters potential versus signed customers and sorts by meeting date, recently saved, name, or customer code. Existing potential customers from the older local-storage format are migrated automatically.
+
+This remains on-device storage. Employees should use `Export data` for backup. Shared access across multiple iPads and server-managed recovery require the later authenticated backend.
 
 Opening a saved record provides three actions:
 

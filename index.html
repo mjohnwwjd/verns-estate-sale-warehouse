@@ -750,7 +750,8 @@
                   </label>
                 </div>
               </div>
-              <button class="btn btn-gold" type="submit">Save potential customer</button>
+              <button class="btn btn-gold" type="submit" data-potential-customer-save>Save potential customer</button>
+              <p class="customer-save-status" data-potential-customer-save-status role="status" aria-live="polite"></p>
               <p class="compliance-note">No customer code is assigned here. Codes begin at 0001 only after staff records a signed contract.</p>
             </form>
 
@@ -758,6 +759,37 @@
               <div class="staff-section-head">
                 <h3>Saved potential customers</h3>
                 <span data-potential-customer-count>0 records</span>
+              </div>
+              <div class="customer-file-controls" aria-label="Find and file saved customers">
+                <label class="customer-search-field">
+                  Search customers
+                  <input
+                    type="search"
+                    inputmode="search"
+                    placeholder="Name, phone, address, date, or code"
+                    data-potential-customer-search
+                  />
+                </label>
+                <div class="two-col">
+                  <label>
+                    Filing status
+                    <select data-potential-customer-status-filter>
+                      <option value="all">All customers</option>
+                      <option value="potential">Potential customers</option>
+                      <option value="signed">Signed customers</option>
+                    </select>
+                  </label>
+                  <label>
+                    Sort by
+                    <select data-potential-customer-sort>
+                      <option value="meeting">Meeting date</option>
+                      <option value="newest">Recently saved</option>
+                      <option value="name">Name A-Z</option>
+                      <option value="code">Customer code</option>
+                    </select>
+                  </label>
+                </div>
+                <button class="tiny-btn customer-search-clear" type="button" data-potential-customer-search-clear hidden>Clear search</button>
               </div>
               <div class="customer-record-list" data-potential-customer-list></div>
             </section>

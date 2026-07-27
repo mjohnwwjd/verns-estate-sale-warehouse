@@ -3650,9 +3650,48 @@ th {
   gap: 0.75rem;
 }
 
+.customer-save-status {
+  display: none;
+  margin: 0;
+  border: 2px solid var(--green);
+  border-radius: 8px;
+  padding: 0.8rem;
+  background: #e8f6e8;
+  color: #174d26;
+  font-weight: 950;
+}
+
+.customer-save-status:not(:empty) {
+  display: block;
+}
+
+.customer-save-status.is-error {
+  border-color: var(--red);
+  background: #fff0ed;
+  color: var(--red);
+}
+
 .customer-list-card {
   display: grid;
   gap: 0.8rem;
+}
+
+.customer-file-controls {
+  display: grid;
+  gap: 0.65rem;
+  border: 2px solid rgba(24, 25, 24, 0.24);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #f7f2df;
+}
+
+.customer-search-field input {
+  min-height: 54px;
+  font-size: 1rem;
+}
+
+.customer-search-clear {
+  justify-self: start;
 }
 
 .customer-record-list {
@@ -3682,6 +3721,16 @@ th {
   border-color: var(--ink);
   background: var(--gold);
   box-shadow: 4px 4px 0 rgba(24, 25, 24, 0.22);
+}
+
+.customer-record-button.is-just-saved {
+  animation: customer-saved-pulse 1.4s ease-out 2;
+}
+
+@keyframes customer-saved-pulse {
+  50% {
+    box-shadow: 0 0 0 6px rgba(38, 122, 64, 0.28);
+  }
 }
 
 .customer-record-button p {
