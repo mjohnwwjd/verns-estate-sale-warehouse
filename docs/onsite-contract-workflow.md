@@ -32,6 +32,8 @@ The existing on-site contract PDF remains the source of truth. A byte-for-byte c
 
 The review is read-only. Signature-service placeholders appear directly on the existing customer and representative signature lines at the end of page 2. They honestly state that signing activates after secure signature integration. No separate working signature capture is claimed.
 
+Each printed signature date blank has a matching provider-ready field. After secure integration, the backend must save the signature provider's verified `customerSignedAt` and `representativeSignedAt` timestamps. The viewer formats those values as `MM/DD/YYYY` in the America/Detroit business timezone and never invents a signing date from the iPad clock. Until verified timestamps exist, the date blanks clearly state that the date is added after verified signature.
+
 Sale-site street, city, state, and ZIP are required; Address Line 2 is optional. The workflow stores these as structured fields and also maintains one formatted address for the calendar and the contract blank. Existing local records with a legacy single-line address are parsed into the structured fields when possible. If a required component cannot be recovered, Contract Prep clearly requires an employee to edit the record before review.
 
 ## Customer-code rule
@@ -60,6 +62,7 @@ The assignment is local to the browser's saved data. Do not use it as a multi-de
 - meeting details and notes
 - signed-PDF delivery choice
 - requested signature, PDF, delivery, and Lightspeed actions
+- signature-date mappings for the customer's and authorized representative's provider-verified timestamps
 
 When providers are approved, send this payload to an authenticated backend. Do not put API keys or OAuth tokens in `app.js`, imported JSON, local storage, or the public GitHub repository.
 

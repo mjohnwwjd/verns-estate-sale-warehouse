@@ -225,6 +225,9 @@ async function checkLocalAssets() {
   expect(viewerHtml.includes("data-contract-mailing"), "Onsite Contract viewer missing check/report address prefill");
   expect(viewerHtml.includes("Customer signature activates after secure signature integration"), "Onsite Contract viewer missing in-place customer signature placeholder");
   expect(viewerHtml.includes("representative signature activates after secure signature integration"), "Onsite Contract viewer missing in-place representative signature placeholder");
+  expect(viewerHtml.includes("data-customer-signature-date"), "Onsite Contract viewer missing customer signature date field");
+  expect(viewerHtml.includes("data-representative-signature-date"), "Onsite Contract viewer missing representative signature date field");
+  expect((viewerHtml.match(/Date added after verified signature/g) || []).length === 2, "unsigned contract must honestly label both pending signature dates");
   expect(/\.contract-field-notes\s*\{[^}]*top:\s*27\.8%/s.test(viewerHtml), "section 12 notes overlay must stay below sections 10 and 11");
   expect(/\.contract-field-mailing\s*\{[^}]*top:\s*41\.65%/s.test(viewerHtml), "check/report address must align with its page-2 blank");
   expect(/\.signature-service-client\s*\{[^}]*top:\s*48\.65%/s.test(viewerHtml), "customer signature placeholder must align with the printed signature line");
@@ -256,13 +259,17 @@ async function checkLocalAssets() {
     mailingLine2: "Suite 3",
     mailingCity: "Muskegon",
     mailingState: "mi",
-    mailingZip: "49440"
+    mailingZip: "49440",
+    customerSignedAt: "2026-07-27T19:15:00Z",
+    representativeSignedAt: "2026-07-28T01:15:00Z"
   });
   expect(renderedContract.clientName === "Jamie Customer", "Onsite Contract viewer did not map Client");
   expect(renderedContract.primaryPhone === "(231) 555-0100", "Onsite Contract viewer did not map Phone");
   expect(renderedContract.saleSiteAddress === "100 Sale Site Rd, Unit B, Norton Shores MI 49441", "Onsite Contract viewer did not map structured Sale Site Address");
   expect(renderedContract.specialNotesOrAgreements.includes("family piano"), "Onsite Contract viewer did not map Special Notes or Agreements");
   expect(renderedContract.checkAndReportAddress === "200 Mailing Ave, Suite 3, Muskegon MI 49440", "Onsite Contract viewer did not map different check/report address");
+  expect(renderedContract.customerSignatureDate === "07/27/2026", "customer signature date must use the verified timestamp");
+  expect(renderedContract.representativeSignatureDate === "07/27/2026", "representative signature date must use the verified timestamp in Vern's business timezone");
   const sameAddressContract = contractValues({
     id: "potential-customer-same-address",
     firstName: "Taylor",
@@ -277,6 +284,8 @@ async function checkLocalAssets() {
   expect(appScript.includes("checkAndReportAddress:"), "contract payload missing check/report address");
   expect(appScript.includes("mailingAddress,"), "contract payload missing structured mailing address");
   expect(appScript.includes("saleSiteAddress,"), "contract payload missing structured sale-site address");
+  expect(appScript.includes('timestampAuthority: "verified-signature-provider"'), "contract payload must require provider-verified signature dates");
+  expect(appScript.includes("applyVerifiedSignatureDates: true"), "contract payload must request automatic verified signature dates");
   expect(appScript.includes(".map(normalizePotentialCustomerRecord)"), "potential-customer state missing legacy address migration");
 }
 

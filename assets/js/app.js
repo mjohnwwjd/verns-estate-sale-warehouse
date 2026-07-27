@@ -1295,8 +1295,23 @@ function prepareOnsiteContractIntegration(record) {
       notes: record.notes
     },
     deliveryChoice: record.contractDelivery || null,
+    signatureDates: {
+      displayFormat: "MM/DD/YYYY",
+      displayTimeZone: "America/Detroit",
+      timestampAuthority: "verified-signature-provider",
+      customer: {
+        timestampField: "customerSignedAt",
+        contractDateField: "customerSignatureDate"
+      },
+      authorizedRepresentative: {
+        timestampField: "representativeSignedAt",
+        contractDateField: "representativeSignatureDate"
+      },
+      completeContractTimestampField: "contractSignedAt"
+    },
     requestedActions: {
       captureSignature: true,
+      applyVerifiedSignatureDates: true,
       generateSignedPdf: true,
       deliverSignedPdf: true,
       createLightspeedCustomer: true
