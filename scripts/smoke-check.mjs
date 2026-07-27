@@ -132,6 +132,25 @@ async function checkStaticLinksAndDropdowns() {
   const html = await readFile(path.join(root, "index.html"), "utf8");
   expect(!/<a\b[^>]*data-timeoff-email/i.test(html), "Email Vern should be a button, not a placeholder link");
   expect(!/<a\b[^>]*data-timeoff-sms/i.test(html), "Text Vern should be a button, not a placeholder link");
+  expect(html.includes('data-tab="customers"'), "employee tools missing Potential Customers tab");
+  expect(html.includes("data-potential-customer-form"), "employee tools missing potential-customer intake form");
+  expect(html.includes("data-customer-calendar-download"), "potential-customer workspace missing calendar handoff");
+  expect(html.includes("data-customer-contract-open"), "potential-customer workspace missing contract preparation action");
+  expect(html.includes("data-view-onsite-contract"), "contract preparation missing Onsite Contract review action");
+  expect(html.includes('href="onsite-contract-viewer.html"'), "Onsite Contract review action missing inline viewer");
+  expect(html.includes('name="specialNotesAgreements"'), "potential-customer intake missing shared Special Notes or Agreements");
+  expect(/name="saleSiteStreet"[^>]*required/.test(html), "potential-customer intake missing required sale-site street");
+  expect(html.includes('name="saleSiteLine2"'), "potential-customer intake missing optional sale-site Address Line 2");
+  expect(/name="saleSiteCity"[^>]*required/.test(html), "potential-customer intake missing required sale-site city");
+  expect(/name="saleSiteState"[^>]*required/.test(html), "potential-customer intake missing required sale-site state");
+  expect(/name="saleSiteZip"[^>]*required/.test(html), "potential-customer intake missing required sale-site ZIP");
+  expect(html.includes("data-contract-special-notes"), "Contract Prep missing editable Special Notes or Agreements");
+  expect(html.includes('name="checkAddressMode"'), "potential-customer intake missing check/report address choice");
+  expect(html.includes("data-contract-check-address-mode"), "Contract Prep missing check/report address choice");
+  expect(html.includes("data-contract-mailing-address-fields"), "Contract Prep missing different mailing-address fields");
+  expect(html.includes("data-contract-details-confirm"), "Contract Prep missing read-only review confirmation");
+  expect(html.includes("data-contract-signed-confirm"), "contract preparation missing signed-contract confirmation");
+  expect(html.includes("No customer code is assigned here"), "potential-customer intake must explain code timing");
 
   const requiredSelects = [
     "data-category-select",
@@ -176,6 +195,114 @@ async function checkLocalAssets() {
       expect(bytes.byteLength > 0, `${ref} is empty`);
     }
   }
+
+  const contractResponse = await fetch(`${origin}/assets/docs/onsite-contract.pdf`);
+  const contractBytes = Buffer.from(await contractResponse.arrayBuffer());
+  expect(contractResponse.ok, `Onsite Contract PDF returned ${contractResponse.status}`);
+  expect((contractResponse.headers.get("content-type") || "").includes("application/pdf"), "Onsite Contract has wrong content type");
+  expect((contractResponse.headers.get("content-disposition") || "").startsWith("inline"), "Onsite Contract PDF is not explicitly served inline");
+  expect(contractBytes.subarray(0, 5).toString("ascii") === "%PDF-", "Onsite Contract asset is not a PDF");
+  expect(contractBytes.byteLength > 50_000, "Onsite Contract PDF appears incomplete");
+
+  const viewerResponse = await fetch(`${origin}/onsite-contract-viewer.html`);
+  const viewerHtml = await viewerResponse.text();
+  expect(viewerResponse.ok, `Onsite Contract viewer returned ${viewerResponse.status}`);
+  expect(viewerHtml.includes("Onsite Contract - Review Copy"), "Onsite Contract viewer missing review heading");
+  expect(viewerHtml.includes("onsite-contract-page-1.png"), "Onsite Contract viewer missing page 1");
+  expect(viewerHtml.includes("onsite-contract-page-2.png"), "Onsite Contract viewer missing page 2");
+  expect(viewerHtml.includes("data-contract-client"), "Onsite Contract viewer missing Client prefill");
+  expect(viewerHtml.includes("data-contract-phone"), "Onsite Contract viewer missing Phone prefill");
+  expect(viewerHtml.includes("data-contract-address"), "Onsite Contract viewer missing Sale Site Address prefill");
+  expect(viewerHtml.includes("data-contract-special-notes"), "Onsite Contract viewer missing Special Notes or Agreements prefill");
+  expect(viewerHtml.includes("data-contract-mailing"), "Onsite Contract viewer missing check/report address prefill");
+  expect(viewerHtml.includes("Customer signature activates after secure signature integration"), "Onsite Contract viewer missing in-place customer signature placeholder");
+  expect(viewerHtml.includes("representative signature activates after secure signature integration"), "Onsite Contract viewer missing in-place representative signature placeholder");
+  const viewerScript = viewerHtml.match(/<script>([\s\S]*?)<\/script>/)?.[1] || "";
+  expect(Boolean(viewerScript), "Onsite Contract viewer missing customer-prefill script");
+  try {
+    new Function(viewerScript);
+  } catch (error) {
+    failures.push(`Onsite Contract viewer script has invalid syntax: ${error.message}`);
+  }
+  const renderedContract = renderContractViewerScript(viewerScript, {
+    id: "potential-customer-smoke",
+    firstName: "Jamie",
+    lastName: "Customer",
+    phone: "(231) 555-0100",
+    saleSiteStreet: "100 Sale Site Rd",
+    saleSiteLine2: "Unit B",
+    saleSiteCity: "Norton Shores",
+    saleSiteState: "MI",
+    saleSiteZip: "49441",
+    specialNotesAgreements: "Keep the family piano out of the sale.",
+    checkAddressMode: "different",
+    mailingStreet: "200 Mailing Ave",
+    mailingLine2: "Suite 3",
+    mailingCity: "Muskegon",
+    mailingState: "mi",
+    mailingZip: "49440"
+  });
+  expect(renderedContract["[data-contract-client]"]?.textContent === "Jamie Customer", "Onsite Contract viewer did not map Client");
+  expect(renderedContract["[data-contract-phone]"]?.textContent === "(231) 555-0100", "Onsite Contract viewer did not map Phone");
+  expect(renderedContract["[data-contract-address]"]?.textContent === "100 Sale Site Rd, Unit B, Norton Shores MI 49441", "Onsite Contract viewer did not map structured Sale Site Address");
+  expect(renderedContract["[data-contract-special-notes]"]?.textContent.includes("family piano"), "Onsite Contract viewer did not map Special Notes or Agreements");
+  expect(renderedContract["[data-contract-mailing]"]?.textContent === "200 Mailing Ave, Suite 3, Muskegon MI 49440", "Onsite Contract viewer did not map different check/report address");
+  const sameAddressContract = renderContractViewerScript(viewerScript, {
+    id: "potential-customer-same-address",
+    firstName: "Taylor",
+    lastName: "Seller",
+    phone: "(231) 555-0199",
+    address: "300 Same Address St, Muskegon, MI 49442",
+    checkAddressMode: "same"
+  });
+  expect(sameAddressContract["[data-contract-mailing]"]?.textContent === "300 Same Address St, Muskegon MI 49442", "Onsite Contract viewer did not prefill sale-site address for check/report");
+  const appScript = await readFile(path.join(root, "assets/js/app.js"), "utf8");
+  expect(appScript.includes("specialNotesOrAgreements:"), "contract payload missing Special Notes or Agreements");
+  expect(appScript.includes("checkAndReportAddress:"), "contract payload missing check/report address");
+  expect(appScript.includes("mailingAddress,"), "contract payload missing structured mailing address");
+  expect(appScript.includes("saleSiteAddress,"), "contract payload missing structured sale-site address");
+  expect(appScript.includes(".map(normalizePotentialCustomerRecord)"), "potential-customer state missing legacy address migration");
+}
+
+function renderContractViewerScript(script, record) {
+  const selectors = [
+    "[data-contract-client]",
+    "[data-contract-phone]",
+    "[data-contract-address]",
+    "[data-contract-special-notes]",
+    "[data-contract-mailing]",
+    "[data-viewer-status]",
+    "[data-viewer-title]"
+  ];
+  const elements = Object.fromEntries(selectors.map((selector) => [
+    selector,
+    {
+      textContent: "",
+      hidden: false,
+      classList: { add() {} }
+    }
+  ]));
+  const documentStub = {
+    querySelector(selector) {
+      return elements[selector] || null;
+    }
+  };
+  const localStorageStub = {
+    getItem() {
+      return JSON.stringify({ potentialCustomers: [record] });
+    }
+  };
+  try {
+    new Function("window", "localStorage", "document", "URLSearchParams", script)(
+      { location: { search: `?customer=${encodeURIComponent(record.id)}` } },
+      localStorageStub,
+      documentStub,
+      URLSearchParams
+    );
+  } catch (error) {
+    failures.push(`Onsite Contract viewer mapping failed: ${error.message}`);
+  }
+  return elements;
 }
 
 async function checkPwaAssets() {
@@ -200,7 +327,12 @@ async function checkPwaAssets() {
 
   const serviceWorker = await fetch(`${origin}/service-worker.js`);
   expect(serviceWorker.ok, `service-worker.js returned ${serviceWorker.status}`);
-  expect((await serviceWorker.text()).includes("CACHE_NAME"), "service-worker.js missing cache setup");
+  const serviceWorkerText = await serviceWorker.text();
+  expect(serviceWorkerText.includes("CACHE_NAME"), "service-worker.js missing cache setup");
+  expect(serviceWorkerText.includes("assets/docs/onsite-contract.pdf"), "service worker missing Onsite Contract PDF");
+  expect(serviceWorkerText.includes("onsite-contract-viewer.html"), "service worker missing Onsite Contract viewer");
+  expect(serviceWorkerText.includes("assets/docs/onsite-contract-page-1.png"), "service worker missing Onsite Contract page 1");
+  expect(serviceWorkerText.includes("assets/docs/onsite-contract-page-2.png"), "service worker missing Onsite Contract page 2");
 }
 
 async function checkPrivateStaticFiles() {

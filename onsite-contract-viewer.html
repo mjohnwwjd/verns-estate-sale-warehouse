@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#181918" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Onsite Contract Review | Vern's Estate Sale Warehouse</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #181918;
+        --gold: #f0c044;
+        --paper: #ece7d4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      body {
+        margin: 0;
+        background: var(--ink);
+        color: white;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .viewer-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        padding: max(0.85rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) 0.85rem max(1rem, env(safe-area-inset-left));
+        border-bottom: 5px solid var(--gold);
+        background: var(--ink);
+      }
+
+      .viewer-header h1,
+      .viewer-header p {
+        margin: 0;
+      }
+
+      .viewer-header h1 {
+        color: var(--gold);
+        font-size: clamp(1.25rem, 3vw, 2rem);
+      }
+
+      .viewer-header p {
+        margin-top: 0.25rem;
+        font-weight: 700;
+      }
+
+      .viewer-header a {
+        display: inline-flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--gold);
+        border-radius: 8px;
+        padding: 0.65rem 0.9rem;
+        color: var(--gold);
+        font-weight: 900;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+
+      .contract-pages {
+        display: grid;
+        gap: 1.25rem;
+        width: min(100%, 1100px);
+        margin: 0 auto;
+        padding: 1rem max(0.75rem, env(safe-area-inset-right)) max(2rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+        background: var(--paper);
+      }
+
+      .contract-page {
+        margin: 0;
+      }
+
+      .contract-page-sheet {
+        position: relative;
+        container-type: inline-size;
+      }
+
+      .contract-page img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border: 1px solid #9a978b;
+        background: white;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
+      }
+
+      .contract-field {
+        position: absolute;
+        z-index: 1;
+        display: block;
+        overflow: hidden;
+        padding: 0 0.2em;
+        background: white;
+        color: #000;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: clamp(6px, 1.5cqw, 23px);
+        font-weight: 700;
+        line-height: 1.15;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .contract-field-client {
+        top: 32.75%;
+        left: 16.2%;
+        width: 34.5%;
+      }
+
+      .contract-field-phone {
+        top: 32.75%;
+        left: 56.4%;
+        width: 25.5%;
+      }
+
+      .contract-field-address {
+        top: 36.1%;
+        left: 24.5%;
+        width: 57.2%;
+        font-size: clamp(5px, 1.15cqw, 18px);
+      }
+
+      .contract-field-notes {
+        top: 12.9%;
+        left: 11.5%;
+        width: 76.8%;
+        min-height: 8.8%;
+        font-size: clamp(6px, 1.35cqw, 21px);
+        font-weight: 500;
+        line-height: 1.35;
+        white-space: pre-wrap;
+        text-overflow: clip;
+      }
+
+      .contract-field-mailing {
+        top: 28.5%;
+        left: 11.5%;
+        width: 62.8%;
+        font-size: clamp(5px, 1.15cqw, 18px);
+      }
+
+      .signature-service-placeholder {
+        position: absolute;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        min-height: 3.2%;
+        border: 2px dashed #8f251c;
+        border-radius: 5px;
+        padding: 0.2em 0.45em;
+        background: #fff2ee;
+        color: #8f251c;
+        font-size: clamp(5px, 1.02cqw, 16px);
+        font-weight: 800;
+        line-height: 1.1;
+        text-align: center;
+      }
+
+      .signature-service-client {
+        top: 36.5%;
+        left: 18.5%;
+        width: 43.8%;
+      }
+
+      .signature-service-vern {
+        top: 43.5%;
+        left: 18.5%;
+        width: 48.2%;
+      }
+
+      .contract-page figcaption {
+        padding-top: 0.45rem;
+        color: var(--ink);
+        font-size: 0.9rem;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .review-note {
+        margin: 0;
+        border: 3px solid var(--ink);
+        border-radius: 8px;
+        padding: 0.75rem;
+        background: var(--gold);
+        color: var(--ink);
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .review-note.is-error {
+        border-color: #8f251c;
+        background: #fff2ee;
+        color: #8f251c;
+      }
+
+      @media (max-width: 640px) {
+        .viewer-header {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .viewer-header a {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="viewer-header">
+      <div>
+        <h1 data-viewer-title>Onsite Contract - Review Copy</h1>
+        <p>Customer-specific review · two pages · scroll to review the full agreement</p>
+      </div>
+      <a href="index.html#employee">Return to Employee Tools</a>
+    </header>
+    <main class="contract-pages">
+      <p class="review-note" data-viewer-status>Loading saved customer details...</p>
+      <figure class="contract-page">
+        <div class="contract-page-sheet">
+          <img src="assets/docs/onsite-contract-page-1.png" alt="Onsite Contract page 1 of 2" />
+          <span class="contract-field contract-field-client" data-contract-client></span>
+          <span class="contract-field contract-field-phone" data-contract-phone></span>
+          <span class="contract-field contract-field-address" data-contract-address></span>
+        </div>
+        <figcaption>Page 1 of 2</figcaption>
+      </figure>
+      <figure class="contract-page">
+        <div class="contract-page-sheet">
+          <img src="assets/docs/onsite-contract-page-2.png" alt="Onsite Contract page 2 of 2" />
+          <span class="contract-field contract-field-notes" data-contract-special-notes></span>
+          <span class="contract-field contract-field-mailing" data-contract-mailing></span>
+          <span class="signature-service-placeholder signature-service-client">Customer signature activates after secure signature integration</span>
+          <span class="signature-service-placeholder signature-service-vern">Vern / authorized representative signature activates after secure signature integration</span>
+        </div>
+        <figcaption>Page 2 of 2</figcaption>
+      </figure>
+    </main>
+    <script>
+      (() => {
+        const storageKey = "vernsWebsiteStateV1";
+        const customerId = new URLSearchParams(window.location.search).get("customer") || "";
+        let record = null;
+        try {
+          const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
+          record = Array.isArray(saved?.potentialCustomers)
+            ? saved.potentialCustomers.find((item) => item.id === customerId) || null
+            : null;
+        } catch {
+          record = null;
+        }
+
+        const legacyParts = String(record?.address || "").split(",").map((part) => part.trim()).filter(Boolean);
+        const legacyStreet = legacyParts.shift() || "";
+        const legacyCity = legacyParts.shift() || "";
+        const legacyStateZip = legacyParts.join(" ").match(/\b([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)\b/) || [];
+        const saleSiteStreet = String(record?.saleSiteStreet || legacyStreet).trim();
+        const saleSiteLine2 = String(record?.saleSiteLine2 || "").trim();
+        const saleSiteCity = String(record?.saleSiteCity || legacyCity).trim();
+        const saleSiteState = String(record?.saleSiteState || legacyStateZip[1] || "").trim().toUpperCase();
+        const saleSiteZip = String(record?.saleSiteZip || legacyStateZip[2] || "").trim();
+        const saleSiteLocality = [saleSiteCity, saleSiteState, saleSiteZip].filter(Boolean).join(" ");
+        const saleSiteFormatted = [saleSiteStreet, saleSiteLine2, saleSiteLocality].filter(Boolean).join(", ");
+        const mailingMode = record?.checkAddressMode === "different" ? "different" : "same";
+        const mailingStreet = mailingMode === "different" ? String(record?.mailingStreet || "").trim() : saleSiteStreet;
+        const mailingLine2 = mailingMode === "different" ? String(record?.mailingLine2 || "").trim() : saleSiteLine2;
+        const mailingCity = mailingMode === "different" ? String(record?.mailingCity || "").trim() : saleSiteCity;
+        const mailingState = mailingMode === "different" ? String(record?.mailingState || "").trim().toUpperCase() : saleSiteState;
+        const mailingZip = mailingMode === "different" ? String(record?.mailingZip || "").trim() : saleSiteZip;
+        const mailingLocality = [mailingCity, mailingState, mailingZip].filter(Boolean).join(" ");
+        const fields = {
+          clientName: [record?.firstName, record?.lastName].map((value) => String(value || "").trim()).filter(Boolean).join(" "),
+          primaryPhone: String(record?.phone || "").trim(),
+          saleSiteAddress: saleSiteFormatted,
+          specialNotesOrAgreements: String(record?.specialNotesAgreements || "").trim(),
+          checkAndReportAddress: [mailingStreet, mailingLine2, mailingLocality].filter(Boolean).join(", ")
+        };
+        const missing = [
+          !fields.clientName ? "Client name" : "",
+          !fields.primaryPhone ? "Phone" : "",
+          !saleSiteStreet ? "Sale Site street" : "",
+          !saleSiteCity ? "Sale Site city" : "",
+          !saleSiteState ? "Sale Site state" : "",
+          !saleSiteZip ? "Sale Site ZIP" : "",
+          mailingMode === "different" && !mailingStreet ? "Mailing street" : "",
+          mailingMode === "different" && !mailingCity ? "Mailing city" : "",
+          mailingMode === "different" && !mailingState ? "Mailing state" : "",
+          mailingMode === "different" && !mailingZip ? "Mailing ZIP" : ""
+        ].filter(Boolean);
+        const fallback = "MISSING - RETURN TO EMPLOYEE TOOLS";
+
+        document.querySelector("[data-contract-client]").textContent = fields.clientName || fallback;
+        document.querySelector("[data-contract-phone]").textContent = fields.primaryPhone || fallback;
+        document.querySelector("[data-contract-address]").textContent = fields.saleSiteAddress || fallback;
+        const specialNotes = document.querySelector("[data-contract-special-notes]");
+        specialNotes.textContent = fields.specialNotesOrAgreements;
+        specialNotes.hidden = !fields.specialNotesOrAgreements;
+        document.querySelector("[data-contract-mailing]").textContent = fields.checkAndReportAddress || fallback;
+
+        const status = document.querySelector("[data-viewer-status]");
+        const title = document.querySelector("[data-viewer-title]");
+        if (!record) {
+          status.textContent = "Customer record not found on this device. Return to Employee Tools and open Contract Prep again.";
+          status.classList.add("is-error");
+          return;
+        }
+        if (missing.length) {
+          status.textContent = `Missing ${missing.join(", ")}. Return to Employee Tools and edit the Potential Customer before review.`;
+          status.classList.add("is-error");
+          return;
+        }
+        title.textContent = `Onsite Contract - ${fields.clientName}`;
+        status.textContent = "Read-only customer-specific review. Client, Phone, Sale Site Address, Special Notes or Agreements, and check/report address were filled automatically. Signature areas activate after the secure signature-service connection.";
+      })();
+    </script>
+  </body>
+</html>

@@ -48,6 +48,7 @@ const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".pdf": "application/pdf",
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
@@ -60,6 +61,7 @@ const publicRootFiles = new Set([
   "/meet-vern.html",
   "/early-entry.html",
   "/payment-preview.html",
+  "/onsite-contract-viewer.html",
   "/manifest.webmanifest",
   "/service-worker.js"
 ]);
@@ -451,7 +453,17 @@ async function serveStatic(req, res, url) {
 
   const finalPath = resolved;
   const content = await fsp.readFile(finalPath);
-  sendText(res, 200, mimeTypes[path.extname(finalPath).toLowerCase()] || "application/octet-stream", req.method === "HEAD" ? "" : content);
+  const extension = path.extname(finalPath).toLowerCase();
+  const inlineHeaders = extension === ".pdf"
+    ? { "Content-Disposition": 'inline; filename="onsite-contract.pdf"' }
+    : {};
+  sendText(
+    res,
+    200,
+    mimeTypes[extension] || "application/octet-stream",
+    req.method === "HEAD" ? "" : content,
+    inlineHeaders
+  );
 }
 
 function isPublicStaticPath(publicPath) {
@@ -522,8 +534,8 @@ function sendJson(res, statusCode, payload) {
   sendText(res, statusCode, "application/json; charset=utf-8", JSON.stringify(payload));
 }
 
-function sendText(res, statusCode, contentType, content) {
-  res.writeHead(statusCode, { "Content-Type": contentType, ...securityHeaders });
+function sendText(res, statusCode, contentType, content, extraHeaders = {}) {
+  res.writeHead(statusCode, { "Content-Type": contentType, ...securityHeaders, ...extraHeaders });
   res.end(content);
 }
 

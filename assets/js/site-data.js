@@ -199,6 +199,7 @@ window.VERNS_STARTER_DATA = {
   ],
   pricedItems: [],
   marketplace: [],
+  potentialCustomers: [],
   timeoff: []
 };
 

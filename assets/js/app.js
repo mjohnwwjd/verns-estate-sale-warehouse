@@ -74,6 +74,7 @@ let pricingPhotoDataUrl = "";
 let pricingAiSuggestion = null;
 let pricingScanTimer = null;
 let selectedManagerEmployee = "";
+let selectedPotentialCustomerId = "";
 let lastSalesSyncStatus = "";
 let earlyEntryRosterLastSync = "";
 let earlyEntryRosterTimer = null;
@@ -96,6 +97,7 @@ function init() {
   bindMarketplaceTool();
   bindEarlyEntryTool();
   bindDashboardTool();
+  bindPotentialCustomerTool();
   bindCalendarTool();
   bindContentTool();
   bindImportExport();
@@ -205,6 +207,9 @@ function normalizeState(nextState) {
     photoItems,
     pricedItems: Array.isArray(nextState.pricedItems) ? nextState.pricedItems : [],
     marketplace: Array.isArray(nextState.marketplace) ? nextState.marketplace : [],
+    potentialCustomers: Array.isArray(nextState.potentialCustomers)
+      ? nextState.potentialCustomers.map(normalizePotentialCustomerRecord)
+      : [],
     earlyEntryRoster: Array.isArray(nextState.earlyEntryRoster) ? nextState.earlyEntryRoster : [],
     timeoff: Array.isArray(nextState.timeoff) ? nextState.timeoff : [],
     calendarEvents: Array.isArray(nextState.calendarEvents) ? nextState.calendarEvents : starter.calendarEvents
@@ -326,6 +331,7 @@ function renderAll() {
   renderPricingTable();
   renderPricedItemSelect();
   renderMarketplaceList();
+  renderPotentialCustomers();
   renderEarlyEntryRoster();
   renderDashboard();
   renderCalendarEvents();
@@ -736,6 +742,639 @@ function setEmployeeTab(tab) {
   } else {
     stopEarlyEntryRosterAutoRefresh();
   }
+}
+
+function bindPotentialCustomerTool() {
+  const form = $("[data-potential-customer-form]");
+  form?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(form));
+    const existing = state.potentialCustomers.find((item) => item.id === data.id);
+    const saleSiteAddress = saleSiteAddressFromValues({
+      street: data.saleSiteStreet,
+      line2: data.saleSiteLine2,
+      city: data.saleSiteCity,
+      state: data.saleSiteState,
+      zip: data.saleSiteZip
+    });
+    const record = {
+      ...existing,
+      id: existing?.id || createId("potential-customer"),
+      firstName: data.firstName.trim(),
+      lastName: data.lastName.trim(),
+      phone: data.phone.trim(),
+      email: data.email.trim(),
+      saleSiteStreet: saleSiteAddress.street,
+      saleSiteLine2: saleSiteAddress.line2,
+      saleSiteCity: saleSiteAddress.city,
+      saleSiteState: saleSiteAddress.state,
+      saleSiteZip: saleSiteAddress.zip,
+      address: saleSiteAddress.formatted,
+      meetingDate: data.meetingDate,
+      meetingTime: data.meetingTime,
+      notes: data.notes.trim(),
+      specialNotesAgreements: data.specialNotesAgreements.trim(),
+      checkAddressMode: data.checkAddressMode === "different" ? "different" : "same",
+      mailingStreet: data.mailingStreet.trim(),
+      mailingLine2: data.mailingLine2.trim(),
+      mailingCity: data.mailingCity.trim(),
+      mailingState: data.mailingState.trim().toUpperCase(),
+      mailingZip: data.mailingZip.trim(),
+      status: existing?.status || "potential",
+      customerCode: existing?.customerCode || "",
+      employee: existing?.employee || currentEmployeeName() || "Employee",
+      createdAt: existing?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    const existingIndex = state.potentialCustomers.findIndex((item) => item.id === record.id);
+    if (existingIndex >= 0) state.potentialCustomers[existingIndex] = record;
+    else state.potentialCustomers.unshift(record);
+    selectedPotentialCustomerId = record.id;
+    saveState();
+    resetPotentialCustomerForm();
+    renderPotentialCustomers();
+  });
+
+  $("[data-potential-customer-clear]")?.addEventListener("click", resetPotentialCustomerForm);
+  form?.elements?.checkAddressMode?.addEventListener("change", () => {
+    toggleMailingAddressFields(form.elements.checkAddressMode, $("[data-intake-mailing-address-fields]"));
+  });
+  $("[data-customer-training-video]")?.addEventListener("click", launchCustomerTrainingVideo);
+  $("[data-customer-calendar-download]")?.addEventListener("click", downloadPotentialCustomerCalendarEvent);
+  $("[data-customer-contract-open]")?.addEventListener("click", () => {
+    const panel = $("[data-contract-prep]");
+    const record = selectedPotentialCustomer();
+    if (!panel || !record) return;
+    prepareOnsiteContractIntegration(record);
+    panel.hidden = false;
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+  $("[data-contract-prep-close]")?.addEventListener("click", () => {
+    const panel = $("[data-contract-prep]");
+    if (panel) panel.hidden = true;
+  });
+  $("[data-contract-delivery]")?.addEventListener("change", (event) => {
+    const record = selectedPotentialCustomer();
+    if (!record) return;
+    record.contractDelivery = event.currentTarget.value;
+    record.updatedAt = new Date().toISOString();
+    saveState();
+  });
+  $("[data-contract-special-notes]")?.addEventListener("change", syncContractPrepFieldsToRecord);
+  $("[data-contract-check-address-mode]")?.addEventListener("change", () => {
+    toggleMailingAddressFields(
+      $("[data-contract-check-address-mode]"),
+      $("[data-contract-mailing-address-fields]")
+    );
+    syncContractPrepFieldsToRecord();
+  });
+  [
+    "[data-contract-mailing-street]",
+    "[data-contract-mailing-line2]",
+    "[data-contract-mailing-city]",
+    "[data-contract-mailing-state]",
+    "[data-contract-mailing-zip]"
+  ].forEach((selector) => $(selector)?.addEventListener("change", syncContractPrepFieldsToRecord));
+  $("[data-contract-details-confirm]")?.addEventListener("change", () => {
+    const record = selectedPotentialCustomer();
+    if (record) updateOnsiteContractReviewState(record);
+  });
+  $("[data-view-onsite-contract]")?.addEventListener("click", (event) => {
+    const record = selectedPotentialCustomer();
+    if (!record) {
+      event.preventDefault();
+      return;
+    }
+    syncContractPrepFieldsToRecord({ resetConfirmation: false });
+    const missing = missingOnsiteContractFields(record);
+    if (missing.length) {
+      event.preventDefault();
+      const message = $("[data-customer-workflow-message]");
+      if (message) message.textContent = `Add ${missing.join(", ")} to the Potential Customer record before reviewing the contract.`;
+      editSelectedPotentialCustomer();
+      return;
+    }
+    if (!$("[data-contract-details-confirm]")?.checked) {
+      event.preventDefault();
+      const message = $("[data-customer-workflow-message]");
+      if (message) message.textContent = "Confirm the customer details, check/report address, and Special Notes or Agreements before opening read-only review.";
+      return;
+    }
+    event.currentTarget.href = onsiteContractViewerUrl(record);
+  });
+  $("[data-contract-signed-confirm]")?.addEventListener("change", (event) => {
+    const button = $("[data-contract-mark-signed]");
+    const record = selectedPotentialCustomer();
+    if (button) button.disabled = !event.currentTarget.checked || Boolean(record?.customerCode);
+  });
+  $("[data-contract-mark-signed]")?.addEventListener("click", recordSignedCustomerContract);
+  $("[data-customer-edit]")?.addEventListener("click", editSelectedPotentialCustomer);
+  resetPotentialCustomerForm();
+}
+
+function renderPotentialCustomers() {
+  const list = $("[data-potential-customer-list]");
+  const count = $("[data-potential-customer-count]");
+  if (!list || !count) return;
+  const records = state.potentialCustomers
+    .slice()
+    .sort((a, b) => `${b.meetingDate || ""}T${b.meetingTime || ""}`.localeCompare(`${a.meetingDate || ""}T${a.meetingTime || ""}`));
+  count.textContent = `${records.length} ${records.length === 1 ? "record" : "records"}`;
+  list.replaceChildren(
+    ...(records.length
+      ? records.map(potentialCustomerListItem)
+      : [staffEmptyNote("No potential customers saved on this device yet.")])
+  );
+  if (selectedPotentialCustomerId && !state.potentialCustomers.some((item) => item.id === selectedPotentialCustomerId)) {
+    selectedPotentialCustomerId = "";
+  }
+  renderPotentialCustomerWorkspace();
+}
+
+function potentialCustomerListItem(record) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `customer-record-button${record.id === selectedPotentialCustomerId ? " is-active" : ""}`;
+  button.append(
+    divEl("customer-record-title", [
+      strongEl(potentialCustomerName(record)),
+      spanEl("customer-record-code", record.customerCode ? `Customer ${record.customerCode}` : "No customer code")
+    ]),
+    pEl("", `${formatPotentialCustomerMeeting(record)} · ${record.phone || "No phone"}`),
+    pEl("", record.address || "No sale-site address")
+  );
+  button.addEventListener("click", () => {
+    selectedPotentialCustomerId = record.id;
+    renderPotentialCustomers();
+  });
+  return button;
+}
+
+function renderPotentialCustomerWorkspace() {
+  const workspace = $("[data-potential-customer-workspace]");
+  if (!workspace) return;
+  const record = selectedPotentialCustomer();
+  workspace.hidden = !record;
+  if (!record) return;
+  $("[data-customer-workspace-name]").textContent = potentialCustomerName(record);
+  $("[data-customer-workspace-meta]").textContent = [
+    formatPotentialCustomerMeeting(record),
+    record.address,
+    record.phone,
+    record.email
+  ].filter(Boolean).join(" · ");
+  const status = $("[data-customer-workspace-status]");
+  status.textContent = record.customerCode ? `Signed · Customer ${record.customerCode}` : "Potential customer · No code";
+  status.classList.toggle("is-signed", Boolean(record.customerCode));
+  const delivery = $("[data-contract-delivery]");
+  if (delivery) delivery.value = record.contractDelivery || "";
+  renderOnsiteContractPrefill(record);
+  const signedConfirm = $("[data-contract-signed-confirm]");
+  const signedButton = $("[data-contract-mark-signed]");
+  if (signedConfirm) {
+    signedConfirm.checked = false;
+    signedConfirm.disabled = Boolean(record.customerCode);
+  }
+  if (signedButton) {
+    signedButton.disabled = true;
+    signedButton.textContent = record.customerCode
+      ? `Signed contract recorded · Customer ${record.customerCode}`
+      : "Record signed contract and assign next code";
+  }
+  const message = $("[data-customer-workflow-message]");
+  if (message) {
+    message.textContent = record.customerCode
+      ? `Code ${record.customerCode} was assigned after the contract was recorded as signed.`
+      : "No external contract, delivery, calendar, or Lightspeed service has been called.";
+  }
+  const prep = $("[data-contract-prep]");
+  if (prep) prep.hidden = true;
+}
+
+function selectedPotentialCustomer() {
+  return state.potentialCustomers.find((item) => item.id === selectedPotentialCustomerId) || null;
+}
+
+function resetPotentialCustomerForm() {
+  const form = $("[data-potential-customer-form]");
+  form?.reset();
+  if (form?.elements?.meetingDate) form.elements.meetingDate.value = todayIsoDate();
+  toggleMailingAddressFields(form?.elements?.checkAddressMode, $("[data-intake-mailing-address-fields]"));
+  const title = $("[data-potential-customer-form-title]");
+  if (title) title.textContent = "New potential customer";
+}
+
+function editSelectedPotentialCustomer() {
+  const record = selectedPotentialCustomer();
+  const form = $("[data-potential-customer-form]");
+  if (!record || !form) return;
+  [
+    "id",
+    "firstName",
+    "lastName",
+    "phone",
+    "email",
+    "saleSiteStreet",
+    "saleSiteLine2",
+    "saleSiteCity",
+    "saleSiteState",
+    "saleSiteZip",
+    "meetingDate",
+    "meetingTime",
+    "notes",
+    "specialNotesAgreements",
+    "checkAddressMode",
+    "mailingStreet",
+    "mailingLine2",
+    "mailingCity",
+    "mailingState",
+    "mailingZip"
+  ].forEach((name) => {
+    if (form.elements[name]) form.elements[name].value = record[name] || "";
+  });
+  if (form.elements.checkAddressMode) form.elements.checkAddressMode.value = record.checkAddressMode === "different" ? "different" : "same";
+  toggleMailingAddressFields(form.elements.checkAddressMode, $("[data-intake-mailing-address-fields]"));
+  const title = $("[data-potential-customer-form-title]");
+  if (title) title.textContent = `Edit ${potentialCustomerName(record)}`;
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function launchCustomerTrainingVideo() {
+  const record = selectedPotentialCustomer();
+  if (!record) return;
+  const configuredUrl = String(state.settings.customerTrainingVideoUrl || "").trim();
+  if (configuredUrl) {
+    window.open(configuredUrl, "_blank", "noopener");
+    return;
+  }
+  const message = $("[data-customer-workflow-message]");
+  if (message) message.textContent = "Training video is not configured yet. Add settings.customerTrainingVideoUrl through the documented integration boundary.";
+}
+
+function downloadPotentialCustomerCalendarEvent() {
+  const record = selectedPotentialCustomer();
+  if (!record) return;
+  const start = compactCalendarDateTime(record.meetingDate, record.meetingTime);
+  if (!start) return;
+  const endDate = new Date(`${record.meetingDate}T${record.meetingTime || "09:00"}:00`);
+  endDate.setHours(endDate.getHours() + 1);
+  const end = compactCalendarDateTime(todayIsoDateForLocalDate(endDate), localTimeForDate(endDate));
+  const description = [
+    `Potential customer: ${potentialCustomerName(record)}`,
+    `Phone: ${record.phone || ""}`,
+    `Email: ${record.email || "Not provided"}`,
+    record.notes ? `Notes: ${record.notes}` : ""
+  ].filter(Boolean).join("\n");
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Vern's Estate Sale Warehouse//Potential Customer//EN",
+    "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `UID:${record.id}@estatesbyvern.com`,
+    `DTSTAMP:${compactCalendarUtcDateTime(new Date())}`,
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    `SUMMARY:${escapeIcsText(`Potential customer visit - ${potentialCustomerName(record)}`)}`,
+    `LOCATION:${escapeIcsText(record.address)}`,
+    `DESCRIPTION:${escapeIcsText(description)}`,
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ].join("\r\n");
+  downloadTextFile(
+    `verns-visit-${workflowOutputSlug(record.firstName, record.lastName, record.meetingDate)}.ics`,
+    ics,
+    "text/calendar;charset=utf-8"
+  );
+  const message = $("[data-customer-workflow-message]");
+  if (message) message.textContent = "Calendar file downloaded. Open it to add the visit to Vern's calendar; no Google account was accessed.";
+}
+
+function recordSignedCustomerContract() {
+  const record = selectedPotentialCustomer();
+  const confirmed = $("[data-contract-signed-confirm]")?.checked;
+  if (!record || !confirmed || record.customerCode) return;
+  if (!confirm("Record this contract as signed and permanently assign the next four-digit customer code?")) return;
+  const code = nextCustomerCode();
+  if (!code) {
+    alert("The four-digit customer code range is full.");
+    return;
+  }
+  record.status = "contract-signed";
+  record.customerCode = code;
+  record.contractSignedAt = new Date().toISOString();
+  record.updatedAt = record.contractSignedAt;
+  saveState();
+  renderPotentialCustomers();
+}
+
+// Integration boundary: replace this local payload handoff only after an
+// approved contract provider and authenticated backend are configured.
+function prepareOnsiteContractIntegration(record) {
+  const contractFields = onsiteContractFields(record);
+  const mailingAddress = onsiteContractMailingAddress(record);
+  const saleSiteAddress = onsiteContractSaleSiteAddress(record);
+  return {
+    workflow: "onsite-estate-sale",
+    potentialCustomerId: record.id,
+    customerCode: record.customerCode || null,
+    customer: {
+      firstName: record.firstName,
+      lastName: record.lastName,
+      phone: contractFields.primaryPhone,
+      email: record.email,
+      saleSiteAddress: contractFields.saleSiteAddress
+    },
+    contractFields,
+    saleSiteAddress,
+    mailingAddress,
+    meeting: {
+      date: record.meetingDate,
+      time: record.meetingTime,
+      notes: record.notes
+    },
+    deliveryChoice: record.contractDelivery || null,
+    requestedActions: {
+      captureSignature: true,
+      generateSignedPdf: true,
+      deliverSignedPdf: true,
+      createLightspeedCustomer: true
+    }
+  };
+}
+
+function renderOnsiteContractPrefill(record) {
+  const fields = onsiteContractFields(record);
+  const targets = {
+    clientName: $("[data-contract-prefill-client]"),
+    primaryPhone: $("[data-contract-prefill-phone]"),
+    saleSiteAddress: $("[data-contract-prefill-address]"),
+    checkAndReportAddress: $("[data-contract-prefill-mailing-address]")
+  };
+  Object.entries(targets).forEach(([key, target]) => {
+    if (target) target.textContent = fields[key] || "Missing - edit customer";
+  });
+  const specialNotes = $("[data-contract-special-notes]");
+  const addressMode = $("[data-contract-check-address-mode]");
+  if (specialNotes) specialNotes.value = record.specialNotesAgreements || "";
+  if (addressMode) addressMode.value = record.checkAddressMode === "different" ? "different" : "same";
+  const prepFields = {
+    mailingStreet: $("[data-contract-mailing-street]"),
+    mailingLine2: $("[data-contract-mailing-line2]"),
+    mailingCity: $("[data-contract-mailing-city]"),
+    mailingState: $("[data-contract-mailing-state]"),
+    mailingZip: $("[data-contract-mailing-zip]")
+  };
+  Object.entries(prepFields).forEach(([key, input]) => {
+    if (input) input.value = record[key] || "";
+  });
+  toggleMailingAddressFields(addressMode, $("[data-contract-mailing-address-fields]"));
+  const confirmation = $("[data-contract-details-confirm]");
+  if (confirmation) confirmation.checked = false;
+  updateOnsiteContractReviewState(record);
+}
+
+function updateOnsiteContractReviewState(record) {
+  const fields = onsiteContractFields(record);
+  const targets = {
+    clientName: $("[data-contract-prefill-client]"),
+    primaryPhone: $("[data-contract-prefill-phone]"),
+    saleSiteAddress: $("[data-contract-prefill-address]"),
+    checkAndReportAddress: $("[data-contract-prefill-mailing-address]")
+  };
+  Object.entries(targets).forEach(([key, target]) => {
+    if (target) target.textContent = fields[key] || "Missing - edit customer";
+  });
+  const missing = missingOnsiteContractFields(record);
+  const confirmed = Boolean($("[data-contract-details-confirm]")?.checked);
+  const status = $("[data-contract-field-status]");
+  if (status) {
+    status.textContent = missing.length
+      ? `Cannot open a customer-specific contract yet. Add: ${missing.join(", ")}.`
+      : confirmed
+        ? "Confirmed. The next screen is a read-only customer-specific contract review."
+        : "Review these values and the shared contract fields below, then confirm them to enable read-only review.";
+    status.classList.toggle("has-missing-fields", Boolean(missing.length));
+  }
+  const reviewLink = $("[data-view-onsite-contract]");
+  if (reviewLink) {
+    reviewLink.href = missing.length ? "onsite-contract-viewer.html" : onsiteContractViewerUrl(record);
+    reviewLink.classList.toggle("is-disabled", Boolean(missing.length) || !confirmed);
+    reviewLink.setAttribute("aria-disabled", String(Boolean(missing.length) || !confirmed));
+  }
+}
+
+function onsiteContractFields(record) {
+  const saleSiteAddress = onsiteContractSaleSiteAddress(record);
+  const mailingAddress = onsiteContractMailingAddress(record);
+  return {
+    clientName: [record.firstName, record.lastName].map((value) => String(value || "").trim()).filter(Boolean).join(" "),
+    primaryPhone: String(record.phone || "").trim(),
+    saleSiteAddress: saleSiteAddress.formatted,
+    specialNotesOrAgreements: String(record.specialNotesAgreements || "").trim(),
+    checkAndReportAddress: mailingAddress.formatted
+  };
+}
+
+function missingOnsiteContractFields(record) {
+  const fields = onsiteContractFields(record);
+  const saleSiteAddress = onsiteContractSaleSiteAddress(record);
+  const mailingAddress = onsiteContractMailingAddress(record);
+  return [
+    !fields.clientName ? "Client name" : "",
+    !fields.primaryPhone ? "Phone" : "",
+    !saleSiteAddress.street ? "Sale Site street" : "",
+    !saleSiteAddress.city ? "Sale Site city" : "",
+    !saleSiteAddress.state ? "Sale Site state" : "",
+    !saleSiteAddress.zip ? "Sale Site ZIP" : "",
+    mailingAddress.mode === "different" && !mailingAddress.street ? "Mailing street" : "",
+    mailingAddress.mode === "different" && !mailingAddress.city ? "Mailing city" : "",
+    mailingAddress.mode === "different" && !mailingAddress.state ? "Mailing state" : "",
+    mailingAddress.mode === "different" && !mailingAddress.zip ? "Mailing ZIP" : ""
+  ].filter(Boolean);
+}
+
+function onsiteContractMailingAddress(record) {
+  const mode = record.checkAddressMode === "different" ? "different" : "same";
+  const saleSiteAddress = onsiteContractSaleSiteAddress(record);
+  const street = mode === "different" ? String(record.mailingStreet || "").trim() : saleSiteAddress.street;
+  const line2 = mode === "different" ? String(record.mailingLine2 || "").trim() : saleSiteAddress.line2;
+  const city = mode === "different" ? String(record.mailingCity || "").trim() : saleSiteAddress.city;
+  const stateCode = mode === "different" ? String(record.mailingState || "").trim().toUpperCase() : saleSiteAddress.state;
+  const zip = mode === "different" ? String(record.mailingZip || "").trim() : saleSiteAddress.zip;
+  const locality = [city, stateCode, zip].filter(Boolean).join(" ");
+  return {
+    mode,
+    street,
+    line2,
+    city,
+    state: stateCode,
+    zip,
+    formatted: [street, line2, locality].filter(Boolean).join(", ")
+  };
+}
+
+function onsiteContractSaleSiteAddress(record) {
+  return saleSiteAddressFromValues({
+    street: record.saleSiteStreet,
+    line2: record.saleSiteLine2,
+    city: record.saleSiteCity,
+    state: record.saleSiteState,
+    zip: record.saleSiteZip,
+    legacyAddress: record.address
+  });
+}
+
+function saleSiteAddressFromValues({ street = "", line2 = "", city = "", state: stateCode = "", zip = "", legacyAddress = "" } = {}) {
+  const structured = {
+    street: String(street || "").trim(),
+    line2: String(line2 || "").trim(),
+    city: String(city || "").trim(),
+    state: String(stateCode || "").trim().toUpperCase(),
+    zip: String(zip || "").trim()
+  };
+  if (legacyAddress) {
+    const legacy = parseLegacySaleSiteAddress(legacyAddress);
+    structured.street ||= legacy.street;
+    structured.line2 ||= legacy.line2;
+    structured.city ||= legacy.city;
+    structured.state ||= legacy.state;
+    structured.zip ||= legacy.zip;
+  }
+  const locality = [structured.city, structured.state, structured.zip].filter(Boolean).join(" ");
+  return {
+    ...structured,
+    formatted: [structured.street, structured.line2, locality].filter(Boolean).join(", ")
+  };
+}
+
+function parseLegacySaleSiteAddress(value) {
+  const parts = String(value || "").split(",").map((part) => part.trim()).filter(Boolean);
+  const street = parts.shift() || "";
+  let city = "";
+  let stateCode = "";
+  let zip = "";
+  if (parts.length >= 2) {
+    city = parts.shift() || "";
+    const tail = parts.join(" ");
+    const stateZip = tail.match(/\b([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)\b/);
+    if (stateZip) {
+      stateCode = stateZip[1].toUpperCase();
+      zip = stateZip[2];
+    }
+  } else if (parts.length === 1) {
+    const cityStateZip = parts[0].match(/^(.+?)\s+([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)$/);
+    if (cityStateZip) {
+      city = cityStateZip[1].trim();
+      stateCode = cityStateZip[2].toUpperCase();
+      zip = cityStateZip[3];
+    } else {
+      city = parts[0];
+    }
+  }
+  return { street, line2: "", city, state: stateCode, zip };
+}
+
+function normalizePotentialCustomerRecord(record) {
+  const saleSiteAddress = onsiteContractSaleSiteAddress(record || {});
+  return {
+    ...(record || {}),
+    saleSiteStreet: saleSiteAddress.street,
+    saleSiteLine2: saleSiteAddress.line2,
+    saleSiteCity: saleSiteAddress.city,
+    saleSiteState: saleSiteAddress.state,
+    saleSiteZip: saleSiteAddress.zip,
+    address: saleSiteAddress.formatted || String(record?.address || "").trim()
+  };
+}
+
+function syncContractPrepFieldsToRecord({ resetConfirmation = true } = {}) {
+  const record = selectedPotentialCustomer();
+  if (!record) return;
+  record.specialNotesAgreements = String($("[data-contract-special-notes]")?.value || "").trim();
+  record.checkAddressMode = $("[data-contract-check-address-mode]")?.value === "different" ? "different" : "same";
+  record.mailingStreet = String($("[data-contract-mailing-street]")?.value || "").trim();
+  record.mailingLine2 = String($("[data-contract-mailing-line2]")?.value || "").trim();
+  record.mailingCity = String($("[data-contract-mailing-city]")?.value || "").trim();
+  record.mailingState = String($("[data-contract-mailing-state]")?.value || "").trim().toUpperCase();
+  record.mailingZip = String($("[data-contract-mailing-zip]")?.value || "").trim();
+  record.updatedAt = new Date().toISOString();
+  if (resetConfirmation) {
+    const confirmation = $("[data-contract-details-confirm]");
+    if (confirmation) confirmation.checked = false;
+  }
+  saveState();
+  updateOnsiteContractReviewState(record);
+}
+
+function toggleMailingAddressFields(select, container) {
+  if (!select || !container) return;
+  const different = select.value === "different";
+  container.hidden = !different;
+  container.querySelectorAll("input").forEach((input) => {
+    const optional = input.name === "mailingLine2" || input.matches("[data-contract-mailing-line2]");
+    input.required = different && !optional;
+  });
+}
+
+function onsiteContractViewerUrl(record) {
+  return `onsite-contract-viewer.html?customer=${encodeURIComponent(record.id)}`;
+}
+
+function nextCustomerCode() {
+  const usedCodes = state.potentialCustomers
+    .map((record) => String(record.customerCode || ""))
+    .filter((code) => /^\d{4}$/.test(code))
+    .map(Number);
+  const next = Math.max(0, ...usedCodes) + 1;
+  return next <= 9999 ? String(next).padStart(4, "0") : "";
+}
+
+function potentialCustomerName(record) {
+  return [record.firstName, record.lastName].filter(Boolean).join(" ") || "Unnamed customer";
+}
+
+function formatPotentialCustomerMeeting(record) {
+  const date = record.meetingDate ? displayDate(record.meetingDate) : "Date not set";
+  const time = record.meetingTime ? formatTimeValue(record.meetingTime) : "Time not set";
+  return `${date} at ${time}`;
+}
+
+function compactCalendarDateTime(date, time) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "") || !/^\d{2}:\d{2}$/.test(time || "")) return "";
+  return `${date.replaceAll("-", "")}T${time.replace(":", "")}00`;
+}
+
+function compactCalendarUtcDateTime(date) {
+  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+
+function todayIsoDateForLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function localTimeForDate(date) {
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
+function escapeIcsText(value) {
+  return String(value || "")
+    .replace(/\\/g, "\\\\")
+    .replace(/\r?\n/g, "\\n")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;");
+}
+
+function downloadTextFile(filename, contents, type) {
+  const url = URL.createObjectURL(new Blob([contents], { type }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function populateCategorySelects() {

@@ -1,10 +1,11 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260725-twin-lake-title-image";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260726-structured-sale-site-address";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./meet-vern.html",
   "./early-entry.html",
   "./payment-preview.html",
+  "./onsite-contract-viewer.html",
   "./manifest.webmanifest",
   "./assets/css/styles.css",
   "./assets/js/today-photo-items.js",
@@ -12,6 +13,9 @@ const APP_SHELL = [
   "./assets/js/app.js",
   "./assets/js/early-entry-config.js",
   "./assets/js/early-entry.js",
+  "./assets/docs/onsite-contract.pdf",
+  "./assets/docs/onsite-contract-page-1.png",
+  "./assets/docs/onsite-contract-page-2.png",
   "./assets/img/logo-vern-option-2.png",
   "./assets/img/maps-app-style-icon.svg",
   "./assets/img/app/verns-app-icon-192.png",

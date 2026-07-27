@@ -101,6 +101,16 @@ http://localhost:8080/Vern%E2%80%99s%20website/
 
 Photos are resized in-browser before storage. This keeps the workflow quick, but browser storage is still not a permanent database. Use `Export data` regularly if staff are using a shared device.
 
+## Prepare an on-site estate-sale customer
+
+1. Open the employee area and choose `Potential Customers`.
+2. Save the prospective customer's contact details; required sale-site street, city, state, and ZIP; optional Address Line 2; meeting date/time; optional Special Notes or Agreements; and the address for the check/report.
+3. Open Contract Prep, review or update the shared notes and mailing address, confirm the mapped values, then use `View Onsite Contract`.
+4. The read-only review fills the existing Client, Phone, Sale Site Address, special-notes, and check/report-address blanks. Future signature controls are shown in place at the existing signature lines but remain inactive until a secure signature service is connected.
+5. Assign a customer code only after the existing contract has been signed and staff records that signed status.
+
+Phase 1 does not call Google, a signature provider, email/text delivery, or Lightspeed. See `docs/onsite-contract-workflow.md` for the provider-neutral handoff and required future configuration.
+
 ## Use AI thrift pricing
 
 1. Open the employee area.

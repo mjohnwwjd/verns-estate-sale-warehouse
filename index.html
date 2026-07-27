@@ -325,6 +325,7 @@
         <button class="tab-button" type="button" role="tab" data-tab="marketplace">Marketplace</button>
         <button class="tab-button" type="button" role="tab" data-tab="early-entry">Early Entry</button>
         <button class="tab-button" type="button" role="tab" data-tab="dashboard">Dashboard</button>
+        <button class="tab-button" type="button" role="tab" data-tab="customers">Potential Customers</button>
         <button class="tab-button" type="button" role="tab" data-tab="calendar">Calendar</button>
         <button class="tab-button" type="button" role="tab" data-tab="settings" data-manager-only>Settings</button>
         <button class="tab-button" type="button" role="tab" data-tab="content" data-manager-only>Public Content</button>
@@ -629,6 +630,289 @@
                   <h3>Pick an employee</h3>
                   <p>Click a name to see pricing, Marketplace, and photo activity.</p>
                 </section>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="employee-tab-panel" data-tab-panel="customers">
+        <div class="customer-workflow">
+          <section class="staff-hub-card customer-workflow-header">
+            <div class="staff-hub-copy">
+              <p class="eyebrow">On-site sale leads</p>
+              <h3>Potential Customer Workspace</h3>
+              <p>Save the pre-visit details, prepare Vern's calendar event, and continue into the on-site contract workflow.</p>
+            </div>
+            <span class="workflow-phase-badge">Phase 1 · On this device</span>
+          </section>
+
+          <div class="customer-workflow-grid">
+            <form class="tool-card customer-intake-card" data-potential-customer-form>
+              <input name="id" type="hidden" />
+              <div class="staff-section-head">
+                <h3 data-potential-customer-form-title>New potential customer</h3>
+                <button class="tiny-btn" type="button" data-potential-customer-clear>Clear</button>
+              </div>
+              <div class="two-col">
+                <label>
+                  First name
+                  <input name="firstName" autocomplete="given-name" required />
+                </label>
+                <label>
+                  Last name
+                  <input name="lastName" autocomplete="family-name" required />
+                </label>
+              </div>
+              <div class="two-col">
+                <label>
+                  Phone
+                  <input name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="(231) 555-0123" />
+                </label>
+                <label>
+                  Email, if known
+                  <input name="email" type="email" inputmode="email" autocomplete="email" placeholder="customer@example.com" />
+                </label>
+              </div>
+              <fieldset class="sale-site-address-fields">
+                <legend>Sale Site Address</legend>
+                <div class="two-col">
+                  <label>
+                    Street address
+                    <input name="saleSiteStreet" autocomplete="address-line1" required />
+                  </label>
+                  <label>
+                    Address Line 2 <span class="optional-label">(optional)</span>
+                    <input name="saleSiteLine2" autocomplete="address-line2" />
+                  </label>
+                </div>
+                <div class="mailing-city-state-zip">
+                  <label>
+                    City
+                    <input name="saleSiteCity" autocomplete="address-level2" required />
+                  </label>
+                  <label>
+                    State
+                    <input name="saleSiteState" autocomplete="address-level1" maxlength="2" autocapitalize="characters" required />
+                  </label>
+                  <label>
+                    ZIP
+                    <input name="saleSiteZip" inputmode="numeric" autocomplete="postal-code" required />
+                  </label>
+                </div>
+              </fieldset>
+              <div class="two-col">
+                <label>
+                  Meeting date
+                  <input name="meetingDate" type="date" required />
+                </label>
+                <label>
+                  Meeting time
+                  <input name="meetingTime" type="time" required />
+                </label>
+              </div>
+              <label>
+                Notes
+                <textarea name="notes" rows="4" placeholder="Home access, sale goals, timing, parking, family contacts, or follow-up notes"></textarea>
+              </label>
+              <label>
+                Special Notes or Agreements <span class="optional-label">(optional)</span>
+                <textarea name="specialNotesAgreements" rows="4" maxlength="320" placeholder="Any special notes or agreements to place in section 12 of the contract"></textarea>
+              </label>
+              <label>
+                Address for check and report
+                <select name="checkAddressMode" data-intake-check-address-mode>
+                  <option value="same" selected>Same as sale-site address</option>
+                  <option value="different">Different mailing address</option>
+                </select>
+              </label>
+              <div class="mailing-address-fields" data-intake-mailing-address-fields hidden>
+                <label>
+                  Mailing street
+                  <input name="mailingStreet" autocomplete="address-line1" />
+                </label>
+                <label>
+                  Address line 2 <span class="optional-label">(optional)</span>
+                  <input name="mailingLine2" autocomplete="address-line2" />
+                </label>
+                <div class="mailing-city-state-zip">
+                  <label>
+                    City
+                    <input name="mailingCity" autocomplete="address-level2" />
+                  </label>
+                  <label>
+                    State
+                    <input name="mailingState" autocomplete="address-level1" maxlength="2" autocapitalize="characters" />
+                  </label>
+                  <label>
+                    ZIP
+                    <input name="mailingZip" inputmode="numeric" autocomplete="postal-code" />
+                  </label>
+                </div>
+              </div>
+              <button class="btn btn-gold" type="submit">Save potential customer</button>
+              <p class="compliance-note">No customer code is assigned here. Codes begin at 0001 only after staff records a signed contract.</p>
+            </form>
+
+            <section class="tool-card customer-list-card">
+              <div class="staff-section-head">
+                <h3>Saved potential customers</h3>
+                <span data-potential-customer-count>0 records</span>
+              </div>
+              <div class="customer-record-list" data-potential-customer-list></div>
+            </section>
+          </div>
+
+          <section class="tool-card customer-detail-card" data-potential-customer-workspace hidden>
+            <div class="customer-detail-heading">
+              <div>
+                <p class="eyebrow">On-site workspace</p>
+                <h3 data-customer-workspace-name>Select a customer</h3>
+                <p data-customer-workspace-meta></p>
+              </div>
+              <span class="customer-status-badge" data-customer-workspace-status>Potential customer</span>
+            </div>
+
+            <div class="customer-action-grid">
+              <section class="customer-action-card">
+                <span class="customer-action-step">1</span>
+                <h4>Explain the on-site sale</h4>
+                <p>Training video will open here once Vern's approved video URL is configured.</p>
+                <button class="btn btn-dark" type="button" data-customer-training-video>Training video setup</button>
+              </section>
+              <section class="customer-action-card">
+                <span class="customer-action-step">2</span>
+                <h4>Prepare Vern's visit</h4>
+                <p>Download a standard calendar file with the customer, meeting time, address, and notes.</p>
+                <button class="btn btn-dark" type="button" data-customer-calendar-download>Download calendar event (.ics)</button>
+              </section>
+              <section class="customer-action-card">
+                <span class="customer-action-step">3</span>
+                <h4>On-site contract</h4>
+                <p>Open the prepared contract handoff without changing the current contract language.</p>
+                <button class="btn btn-gold" type="button" data-customer-contract-open>Open contract preparation</button>
+              </section>
+            </div>
+            <p class="form-message customer-workflow-message" data-customer-workflow-message role="status"></p>
+
+            <div class="contract-prep-panel" data-contract-prep hidden>
+              <div class="staff-section-head">
+                <div>
+                  <p class="eyebrow">Provider-ready handoff</p>
+                  <h3>On-site contract preparation</h3>
+                </div>
+                <button class="tiny-btn" type="button" data-contract-prep-close>Close</button>
+              </div>
+              <section class="contract-prefill-card" aria-label="Contract fields filled from customer record">
+                <div class="staff-section-head">
+                  <div>
+                    <p class="eyebrow">Filled automatically</p>
+                    <h4>Customer details for this contract</h4>
+                  </div>
+                  <span>From Potential Customer</span>
+                </div>
+                <div class="contract-prefill-grid">
+                  <div>
+                    <span>Client</span>
+                    <strong data-contract-prefill-client></strong>
+                  </div>
+                  <div>
+                    <span>Phone</span>
+                    <strong data-contract-prefill-phone></strong>
+                  </div>
+                  <div>
+                    <span>Sale Site Address</span>
+                    <strong data-contract-prefill-address></strong>
+                  </div>
+                  <div>
+                    <span>Address for check and report</span>
+                    <strong data-contract-prefill-mailing-address></strong>
+                  </div>
+                </div>
+                <p class="contract-field-status" data-contract-field-status role="status"></p>
+              </section>
+              <section class="contract-edit-card">
+                <label>
+                  Special Notes or Agreements <span class="optional-label">(optional)</span>
+                  <textarea data-contract-special-notes rows="4" maxlength="320" placeholder="Appears in section 12: Other special notes or agreements"></textarea>
+                </label>
+                <label>
+                  Address for check and report
+                  <select data-contract-check-address-mode>
+                    <option value="same">Same as sale-site address</option>
+                    <option value="different">Different mailing address</option>
+                  </select>
+                </label>
+                <div class="mailing-address-fields" data-contract-mailing-address-fields hidden>
+                  <label>
+                    Mailing street
+                    <input data-contract-mailing-street autocomplete="address-line1" />
+                  </label>
+                  <label>
+                    Address line 2 <span class="optional-label">(optional)</span>
+                    <input data-contract-mailing-line2 autocomplete="address-line2" />
+                  </label>
+                  <div class="mailing-city-state-zip">
+                    <label>
+                      City
+                      <input data-contract-mailing-city autocomplete="address-level2" />
+                    </label>
+                    <label>
+                      State
+                      <input data-contract-mailing-state autocomplete="address-level1" maxlength="2" autocapitalize="characters" />
+                    </label>
+                    <label>
+                      ZIP
+                      <input data-contract-mailing-zip inputmode="numeric" autocomplete="postal-code" />
+                    </label>
+                  </div>
+                </div>
+              </section>
+              <label class="contract-details-confirm">
+                <input type="checkbox" data-contract-details-confirm />
+                I confirm the Client, Phone, Sale Site Address, check/report address, and Special Notes or Agreements are ready for read-only contract review.
+              </label>
+              <div class="contract-review-callout">
+                <div>
+                  <strong>Review the full agreement with the customer</strong>
+                  <span>Opens both unchanged pages with the saved Client, Phone, and Sale Site Address filled in.</span>
+                </div>
+                <a
+                  class="btn btn-gold contract-review-button"
+                  href="onsite-contract-viewer.html"
+                  target="_blank"
+                  rel="noopener"
+                  data-view-onsite-contract
+                >View Onsite Contract</a>
+              </div>
+              <p class="compliance-note">
+                Review only: the existing two-page on-site contract remains the source of truth. Signatures, signed-PDF generation and sending, and Lightspeed customer creation still require the later secure service connection.
+              </p>
+              <div class="contract-future-grid">
+                <label>
+                  Customer delivery choice
+                  <select data-contract-delivery>
+                    <option value="">Choose when contract service is connected</option>
+                    <option value="email">Email signed PDF</option>
+                    <option value="text">Text signed PDF link</option>
+                  </select>
+                </label>
+                <div class="future-hook-card">
+                  <strong>Signed PDF delivery</strong>
+                  <span>Awaiting email/text provider</span>
+                </div>
+                <div class="future-hook-card">
+                  <strong>Lightspeed customer</strong>
+                  <span>Awaiting approved API connection</span>
+                </div>
+              </div>
+              <label class="signed-contract-confirm">
+                <input type="checkbox" data-contract-signed-confirm />
+                After signing is completed outside this website, I confirm the current on-site contract has been signed.
+              </label>
+              <div class="button-row">
+                <button class="btn btn-gold" type="button" data-contract-mark-signed disabled>Record signed contract and assign next code</button>
+                <button class="btn btn-quiet" type="button" data-customer-edit>Edit customer details</button>
               </div>
             </div>
           </section>

@@ -3597,6 +3597,371 @@ th {
   font-weight: 900;
 }
 
+.customer-workflow {
+  display: grid;
+  gap: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.customer-workflow-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.workflow-phase-badge,
+.customer-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 0.5rem 0.8rem;
+  background: var(--gold);
+  color: var(--ink);
+  font-weight: 950;
+  text-align: center;
+}
+
+.customer-status-badge.is-signed {
+  background: var(--green);
+  color: white;
+}
+
+.customer-workflow-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.9fr) minmax(360px, 1.1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.customer-intake-card,
+.customer-list-card,
+.customer-detail-card {
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  background: #fffdf2;
+  box-shadow: 6px 6px 0 rgba(24, 25, 24, 0.16);
+}
+
+.customer-intake-card {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.customer-list-card {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.customer-record-list {
+  display: grid;
+  gap: 0.6rem;
+  max-height: 590px;
+  overflow-y: auto;
+  padding: 0.1rem;
+}
+
+.customer-record-button {
+  display: grid;
+  gap: 0.3rem;
+  width: 100%;
+  min-height: 92px;
+  border: 2px solid rgba(24, 25, 24, 0.3);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #fff8dc;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.customer-record-button.is-active {
+  border-color: var(--ink);
+  background: var(--gold);
+  box-shadow: 4px 4px 0 rgba(24, 25, 24, 0.22);
+}
+
+.customer-record-button p {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.customer-record-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.customer-record-code {
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.customer-detail-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.customer-detail-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.customer-detail-heading h3,
+.customer-detail-heading p {
+  margin: 0;
+}
+
+.customer-detail-heading > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.customer-detail-heading > div > p:last-child {
+  font-weight: 850;
+}
+
+.customer-action-grid,
+.contract-future-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.customer-action-card,
+.future-hook-card {
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  padding: 0.85rem;
+  background: #fff8dc;
+}
+
+.customer-action-card h4,
+.customer-action-card p {
+  margin: 0;
+}
+
+.customer-action-card .btn {
+  align-self: end;
+  margin-top: auto;
+}
+
+.customer-action-step {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--gold);
+  font-weight: 950;
+}
+
+.contract-prep-panel {
+  display: grid;
+  gap: 0.9rem;
+  border-top: 4px solid var(--gold);
+  padding-top: 1rem;
+}
+
+.contract-review-callout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, auto);
+  gap: 1rem;
+  align-items: center;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  padding: 1rem;
+  background: var(--gold);
+  box-shadow: 5px 5px 0 rgba(24, 25, 24, 0.2);
+}
+
+.contract-prefill-card {
+  display: grid;
+  gap: 0.8rem;
+  border: 3px solid var(--ink);
+  border-radius: 10px;
+  padding: 0.9rem;
+  background: white;
+}
+
+.contract-prefill-card h4,
+.contract-prefill-card p {
+  margin: 0;
+}
+
+.contract-prefill-grid {
+  display: grid;
+  grid-template-columns: 1fr 0.8fr 1.25fr 1.25fr;
+  gap: 0.65rem;
+}
+
+.contract-prefill-grid > div {
+  display: grid;
+  gap: 0.25rem;
+  min-height: 76px;
+  border: 2px solid rgba(24, 25, 24, 0.28);
+  border-radius: 8px;
+  padding: 0.65rem;
+  background: #fff8dc;
+}
+
+.contract-prefill-grid span {
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.contract-prefill-grid strong {
+  overflow-wrap: anywhere;
+}
+
+.contract-field-status {
+  min-height: 1.35rem;
+  color: var(--green);
+  font-weight: 900;
+}
+
+.contract-field-status.has-missing-fields {
+  border-left: 6px solid var(--red);
+  padding: 0.45rem 0 0.45rem 0.65rem;
+  color: var(--red);
+}
+
+.optional-label {
+  font-size: 0.78em;
+  font-weight: 800;
+  text-transform: none;
+}
+
+.mailing-address-fields,
+.contract-edit-card,
+.sale-site-address-fields {
+  display: grid;
+  gap: 0.7rem;
+  border: 2px solid rgba(24, 25, 24, 0.28);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: #fff8dc;
+}
+
+.sale-site-address-fields {
+  margin: 0;
+}
+
+.sale-site-address-fields legend {
+  padding: 0 0.35rem;
+  font-weight: 950;
+}
+
+.mailing-city-state-zip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(84px, 0.35fr) minmax(110px, 0.48fr);
+  gap: 0.6rem;
+}
+
+.contract-edit-card {
+  border-width: 3px;
+  border-color: var(--ink);
+  background: white;
+}
+
+.contract-details-confirm {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: center;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  padding: 0.85rem;
+  background: #fff8dc;
+}
+
+.contract-details-confirm input {
+  width: 28px;
+  height: 28px;
+  margin: 0;
+}
+
+.contract-review-callout > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.contract-review-callout strong {
+  font-size: clamp(1.08rem, 2vw, 1.35rem);
+}
+
+.contract-review-callout span {
+  font-weight: 850;
+}
+
+.contract-review-button {
+  min-height: 56px;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--gold);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.contract-future-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.future-hook-card {
+  min-height: 92px;
+  background: #ece7d4;
+}
+
+.future-hook-card span {
+  color: var(--red);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.signed-contract-confirm {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  padding: 0.8rem;
+  background: white;
+}
+
+.signed-contract-confirm input {
+  width: 26px;
+  height: 26px;
+  margin: 0;
+}
+
+.customer-detail-card button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.contract-review-button.is-disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.customer-workflow-message {
+  color: var(--ink);
+}
+
 .calendar-tool-grid {
   grid-template-columns: minmax(320px, 0.85fr) minmax(320px, 1.15fr);
 }
@@ -3955,8 +4320,17 @@ th {
   .tool-grid,
   .calendar-tool-grid,
   .staff-hub-card,
-  .manager-layout {
+  .manager-layout,
+  .customer-workflow-grid {
     grid-template-columns: 1fr;
+  }
+
+  .customer-action-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .contract-future-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .special-grid,
@@ -4051,6 +4425,24 @@ th {
 
   .manager-gate {
     grid-template-columns: 1fr;
+  }
+
+  .customer-workflow-header,
+  .customer-action-grid,
+  .contract-future-grid,
+  .contract-review-callout,
+  .contract-prefill-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mailing-city-state-zip {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-detail-heading,
+  .customer-record-title {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .nav-icon {
