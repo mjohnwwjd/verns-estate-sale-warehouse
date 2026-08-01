@@ -278,9 +278,10 @@ async function checkSupabaseScaffold() {
   expect(databaseRecord?.sale_start_date === null, "Supabase mapping should leave unknown sale start date blank");
 
   const config = await readFile(path.join(root, "assets/js/supabase-config.js"), "utf8");
-  expect(/url:\s*""/.test(config), "checked-in Supabase URL must remain blank");
-  expect(/anonKey:\s*""/.test(config), "checked-in Supabase anon key must remain blank");
+  expect(/url:\s*"https:\/\/[a-z0-9-]+\.supabase\.co"/i.test(config), "Supabase browser config must contain the approved project URL");
+  expect(/anonKey:\s*"sb_publishable_[A-Za-z0-9_-]+"/.test(config), "Supabase browser config must contain a public publishable key");
   expect(!/service[_-]?role\s*[:=]\s*["'][^"']+/i.test(config), "Supabase browser config must not contain a service-role value");
+  expect(!/sb_secret_[A-Za-z0-9_-]+/.test(config), "Supabase browser config must not contain a secret key");
 
   const migration = await readFile(
     path.join(root, "supabase/migrations/202607270001_employee_potential_customers.sql"),

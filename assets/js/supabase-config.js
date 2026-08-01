@@ -6,7 +6,7 @@
  * never place a service_role key, database password, or other secret here.
  */
 window.VERNS_SUPABASE_CONFIG = Object.freeze({
-  url: "",
-  anonKey: "",
+  url: "https://flxizhglhrvdqfjubomj.supabase.co",
+  anonKey: "sb_publishable_vMRkVgecpTbKin-MapttjQ_n5Z28QAu",
   customerTable: "potential_customers"
 });
