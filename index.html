@@ -50,9 +50,9 @@
     <script src="assets/js/early-entry-config.js?v=20260725-twin-lake-title-image" defer></script>
     <script src="assets/js/customer-migration.js?v=20260727-customer-recovery" defer></script>
     <script src="assets/js/supabase-config.js?v=20260801-supabase-connected" defer></script>
-    <script src="assets/js/supabase-workspace.js?v=20260727-shared-workspace" defer></script>
+    <script src="assets/js/supabase-workspace.js?v=20260801-password-recovery" defer></script>
     <script src="assets/js/google-calendar-config.js?v=20260727-calendar-sale-dates" defer></script>
-    <script src="assets/js/app.js?v=20260801-supabase-connected" defer></script>
+    <script src="assets/js/app.js?v=20260801-password-recovery" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -335,6 +335,38 @@
           <button class="btn btn-quiet" type="button" data-back-to-site>Back to Website</button>
           <p class="form-message" data-login-message role="status"></p>
         </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" data-password-recovery-modal hidden>
+      <section class="login-modal" role="dialog" aria-modal="true" aria-labelledby="password-recovery-title">
+        <h2 id="password-recovery-title">Set a New Supabase Password</h2>
+        <p>Create the password Mike will use to connect the shared Potential Customer workspace.</p>
+        <form data-password-recovery-form>
+          <label for="recovery-new-password">New password</label>
+          <input
+            id="recovery-new-password"
+            name="password"
+            type="password"
+            minlength="8"
+            autocomplete="new-password"
+            required
+          />
+          <label for="recovery-confirm-password">Confirm new password</label>
+          <input
+            id="recovery-confirm-password"
+            name="confirmPassword"
+            type="password"
+            minlength="8"
+            autocomplete="new-password"
+            required
+          />
+          <button class="btn btn-gold" type="submit">Save New Password</button>
+          <p class="form-message" data-password-recovery-message role="status" aria-live="polite"></p>
+        </form>
+        <button class="btn btn-dark" type="button" data-password-recovery-continue hidden>
+          Continue to employee sign-in
+        </button>
       </section>
     </div>
 

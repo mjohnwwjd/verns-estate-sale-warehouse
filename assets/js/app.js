@@ -90,6 +90,7 @@ let sharedCustomerWorkspaceMode = "local";
 let sharedCustomerSyncTimer = null;
 let localCustomerRecordsForMigration = [];
 let sharedWorkspaceWasConnected = false;
+let passwordRecoveryReturnPending = false;
 let lastSalesSyncStatus = "";
 let earlyEntryRosterLastSync = "";
 let earlyEntryRosterTimer = null;
@@ -108,6 +109,7 @@ function init() {
   bindPublicControls();
   bindAppInstall();
   bindEmployeeAccess();
+  bindPasswordRecovery();
   bindEmployeeTabs();
   bindPricingTool();
   bindMarketplaceTool();
@@ -137,6 +139,10 @@ function prepareStartupScroll() {
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 
   const hash = decodeURIComponent(location.hash || "");
+  if (hasPasswordRecoveryAuthParams()) {
+    window.scrollTo({ top: 0 });
+    return;
+  }
   if (hash && hash !== "#home" && hash !== "#top" && hash !== "#employee") {
     history.replaceState(null, "", location.pathname + location.search);
     window.scrollTo({ top: 0 });
@@ -146,6 +152,14 @@ function prepareStartupScroll() {
   if (!hash || hash === "#home" || hash === "#top") {
     window.scrollTo({ top: 0 });
   }
+}
+
+function hasPasswordRecoveryAuthParams() {
+  const hashParams = new URLSearchParams(String(location.hash || "").replace(/^#/, ""));
+  const queryParams = new URLSearchParams(location.search);
+  return hashParams.get("type") === "recovery"
+    || queryParams.get("type") === "recovery"
+    || (hashParams.has("access_token") && hashParams.has("refresh_token"));
 }
 
 function applyVisualVariants() {
@@ -509,6 +523,8 @@ function handleSharedCustomerWorkspaceState(workspaceState) {
   const wasConnected = sharedCustomerWorkspaceMode === "connected";
   sharedCustomerWorkspaceMode = workspaceState.mode === "connected"
     ? "connected"
+    : workspaceState.mode === "password-recovery"
+      ? "password-recovery"
     : workspaceState.mode === "signed-out"
       ? "signed-out"
       : workspaceState.mode === "connecting"
@@ -517,6 +533,7 @@ function handleSharedCustomerWorkspaceState(workspaceState) {
           ? "error"
           : "local";
   renderSharedCustomerWorkspace(workspaceState);
+  if (sharedCustomerWorkspaceMode === "password-recovery") openPasswordRecoveryModal();
   if (sharedCustomerWorkspaceMode === "connected") {
     sharedWorkspaceWasConnected = true;
     loadSharedPotentialCustomers();
@@ -530,6 +547,7 @@ function handleSharedCustomerWorkspaceState(workspaceState) {
 function renderSharedCustomerWorkspace(workspaceState = {}) {
   const mode = sharedCustomerWorkspaceMode;
   const connected = mode === "connected";
+  const recovering = mode === "password-recovery";
   const configured = mode !== "local";
   const title = $("[data-shared-workspace-title]");
   const description = $("[data-shared-workspace-description]");
@@ -544,6 +562,8 @@ function renderSharedCustomerWorkspace(workspaceState = {}) {
   if (title) {
     title.textContent = connected
       ? "Connected Shared Workspace mode"
+      : recovering
+        ? "Password recovery in progress"
       : configured
         ? "Supabase configured"
         : "Local Preview mode";
@@ -551,6 +571,8 @@ function renderSharedCustomerWorkspace(workspaceState = {}) {
   if (description) {
     description.textContent = connected
       ? "Potential Customers are loaded from the authenticated Supabase workspace and shared across approved employee devices."
+      : recovering
+        ? "Create a new password before returning to the employee shared-workspace sign-in."
       : configured
         ? "Supabase is configured, but an approved employee must sign in before any shared customer data is loaded."
         : "Supabase is not configured. Potential Customers are saved only in this browser.";
@@ -558,6 +580,8 @@ function renderSharedCustomerWorkspace(workspaceState = {}) {
   if (badge) {
     badge.textContent = connected
       ? "Shared & Connected"
+      : recovering
+        ? "Password Reset"
       : mode === "error"
         ? "Connection Error"
         : configured
@@ -570,6 +594,8 @@ function renderSharedCustomerWorkspace(workspaceState = {}) {
   if (phaseBadge) {
     phaseBadge.textContent = connected
       ? "Phase 1 · Shared workspace"
+      : recovering
+        ? "Phase 1 · Password recovery"
       : configured
         ? "Phase 1 · Shared sign-in required"
         : "Phase 1 · On this device";
@@ -584,6 +610,79 @@ function renderSharedCustomerWorkspace(workspaceState = {}) {
   setSharedWorkspaceStatus(workspaceState.message || (
     connected ? "Loading shared customers…" : "Local backup and recovery remain available."
   ), mode === "error" ? "error" : connected ? "success" : "");
+}
+
+function bindPasswordRecovery() {
+  const form = $("[data-password-recovery-form]");
+  const continueButton = $("[data-password-recovery-continue]");
+  form?.addEventListener("submit", submitPasswordRecovery);
+  continueButton?.addEventListener("click", continueFromPasswordRecovery);
+}
+
+function openPasswordRecoveryModal() {
+  const modal = $("[data-password-recovery-modal]");
+  if (!modal) return;
+  $("[data-login-modal]").hidden = true;
+  $("[data-employee-panel]").hidden = true;
+  document.body.classList.remove("employee-open");
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+  setTimeout(() => $("#recovery-new-password")?.focus(), 0);
+}
+
+async function submitPasswordRecovery(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const message = $("[data-password-recovery-message]");
+  const submit = $("button[type='submit']", form);
+  const password = String(form.elements.password.value || "");
+  const confirmation = String(form.elements.confirmPassword.value || "");
+  if (password.length < 8) {
+    message.textContent = "Use at least 8 characters for the new password.";
+    return;
+  }
+  if (password !== confirmation) {
+    message.textContent = "The two password entries do not match.";
+    return;
+  }
+  if (submit) submit.disabled = true;
+  message.textContent = "Saving the new password…";
+  try {
+    await sharedCustomerWorkspace.updatePassword(password);
+    form.reset();
+    Array.from(form.elements).forEach((control) => {
+      control.disabled = true;
+    });
+    cleanPasswordRecoveryUrl();
+    message.textContent = "Password updated successfully. Continue and sign in with the new password.";
+    $("[data-password-recovery-continue]").hidden = false;
+  } catch (error) {
+    message.textContent = `Password update failed: ${error.message}`;
+    if (submit) submit.disabled = false;
+  }
+}
+
+function cleanPasswordRecoveryUrl() {
+  const cleanUrl = new URL(window.location.href);
+  ["code", "token", "token_hash", "type", "access_token", "refresh_token", "expires_at", "expires_in"].forEach((key) => {
+    cleanUrl.searchParams.delete(key);
+  });
+  cleanUrl.hash = "";
+  history.replaceState(null, "", `${cleanUrl.pathname}${cleanUrl.search}`);
+}
+
+function continueFromPasswordRecovery() {
+  const modal = $("[data-password-recovery-modal]");
+  modal.hidden = true;
+  document.body.classList.remove("modal-open");
+  passwordRecoveryReturnPending = true;
+  if (sessionStorage.getItem(EMPLOYEE_SESSION_KEY) === "yes") {
+    passwordRecoveryReturnPending = false;
+    openEmployeePanel({ tab: "customers" });
+    return;
+  }
+  history.replaceState(null, "", `${location.pathname}${location.search}#employee`);
+  openLogin();
 }
 
 function setSharedWorkspaceStatus(message, stateName = "") {
@@ -842,7 +941,8 @@ function bindEmployeeAccess() {
       localStorage.setItem(STAFF_NAME_KEY, profile.name);
       form.reset();
       closeLogin();
-      openEmployeePanel({ tab: "dashboard" });
+      openEmployeePanel({ tab: passwordRecoveryReturnPending ? "customers" : "dashboard" });
+      passwordRecoveryReturnPending = false;
     } else {
       $("[data-login-message]").textContent = "Wrong username or passcode.";
     }

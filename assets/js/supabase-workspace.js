@@ -124,6 +124,7 @@
       this.onStateChange = onStateChange;
       this.client = null;
       this.user = null;
+      this.recoveryActive = false;
       this.mode = configured(config) ? "connecting" : "unconfigured";
     }
 
@@ -156,16 +157,26 @@
             storageKey: "vernsSupabaseEmployeeSession"
           }
         });
-        this.client.auth.onAuthStateChange((_event, session) => {
+        this.client.auth.onAuthStateChange((event, session) => {
+          if (event === "PASSWORD_RECOVERY") {
+            this.recoveryActive = true;
+            this.user = session?.user || null;
+            this.mode = "password-recovery";
+            this.emit("Create and confirm a new Supabase password to finish account recovery.");
+            return;
+          }
+          if (this.recoveryActive) return;
           this.user = session?.user || null;
           this.mode = this.user ? "connected" : "signed-out";
           this.emit(this.user ? "Authenticated shared workspace is connected." : "Sign in with an approved Supabase employee account.");
         });
         const { data, error } = await this.client.auth.getUser();
         if (error && !/session/i.test(error.message || "")) throw error;
-        this.user = data?.user || null;
-        this.mode = this.user ? "connected" : "signed-out";
-        this.emit(this.user ? "Authenticated shared workspace is connected." : "Supabase is configured. Employee sign-in is required.");
+        if (!this.recoveryActive) {
+          this.user = data?.user || null;
+          this.mode = this.user ? "connected" : "signed-out";
+          this.emit(this.user ? "Authenticated shared workspace is connected." : "Supabase is configured. Employee sign-in is required.");
+        }
       } catch (error) {
         this.mode = "error";
         this.emit(error.message || "Shared workspace connection failed.", error);
@@ -183,11 +194,30 @@
       return data.user;
     }
 
+    async updatePassword(password) {
+      if (!this.client || !this.recoveryActive || this.mode !== "password-recovery") {
+        throw new Error("Open a current Supabase recovery link before setting a new password.");
+      }
+      const nextPassword = String(password || "");
+      if (nextPassword.length < 8) throw new Error("Use at least 8 characters for the new password.");
+      const { data, error } = await this.client.auth.updateUser({ password: nextPassword });
+      if (error) throw error;
+      this.recoveryActive = false;
+      const { error: signOutError } = await this.client.auth.signOut();
+      this.user = null;
+      this.mode = "signed-out";
+      this.emit(signOutError
+        ? "Password updated. Close and reopen the employee tools before signing in with the new password."
+        : "Password updated. Sign in to the shared workspace with the new password.");
+      return data?.user || null;
+    }
+
     async signOut() {
       if (!this.client) return;
       const { error } = await this.client.auth.signOut();
       if (error) throw error;
       this.user = null;
+      this.recoveryActive = false;
       this.mode = "signed-out";
       this.emit("Signed out. Customer records are back in Local Preview mode.");
     }

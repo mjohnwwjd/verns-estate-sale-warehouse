@@ -147,6 +147,9 @@ async function checkStaticLinksAndDropdowns() {
   expect(html.includes("data-customer-backup-import"), "saved customers missing customer-backup import");
   expect(html.includes("data-shared-workspace-card"), "Potential Customers missing shared-workspace mode panel");
   expect(html.includes("data-shared-workspace-login"), "shared workspace missing authenticated employee sign-in");
+  expect(html.includes("data-password-recovery-form"), "home page missing dedicated Supabase password-recovery form");
+  expect(html.includes('name="confirmPassword"'), "password-recovery form must require password confirmation");
+  expect(html.includes("data-password-recovery-continue"), "password-recovery flow missing return to employee sign-in");
   expect(html.includes("data-local-migration-upload"), "shared workspace missing explicit local-record upload");
   expect(html.includes("assets/js/supabase-config.js"), "home page missing public Supabase configuration");
   expect(html.includes("assets/js/supabase-workspace.js"), "home page missing Supabase workspace boundary");
@@ -255,6 +258,52 @@ async function checkSupabaseScaffold() {
     "valid public Supabase configuration should enable connection scaffolding"
   );
 
+  let authStateCallback = null;
+  let updatePasswordCalls = 0;
+  let signOutCalls = 0;
+  const recoveryStates = [];
+  const recoveryUser = { id: "manager-user" };
+  const recoveryClient = {
+    auth: {
+      onAuthStateChange(callback) {
+        authStateCallback = callback;
+        return { data: { subscription: { unsubscribe() {} } } };
+      },
+      async getUser() {
+        return { data: { user: null }, error: null };
+      },
+      async updateUser(values) {
+        updatePasswordCalls += 1;
+        expect(values?.password === "new-password-value", "password recovery must pass the new password to Supabase once");
+        return { data: { user: recoveryUser }, error: null };
+      },
+      async signOut() {
+        signOutCalls += 1;
+        authStateCallback?.("SIGNED_OUT", null);
+        return { error: null };
+      }
+    }
+  };
+  const recoveryContext = {
+    supabase: {
+      createClient() {
+        return recoveryClient;
+      }
+    }
+  };
+  vm.runInNewContext(source, recoveryContext);
+  const recoveryWorkspace = recoveryContext.VERNS_SUPABASE.createWorkspace({
+    url: "https://project-ref.supabase.co",
+    anonKey: "public-anon-key-value-that-is-long-enough-for-validation"
+  }, (nextState) => recoveryStates.push(nextState));
+  await recoveryWorkspace.initialize();
+  authStateCallback?.("PASSWORD_RECOVERY", { user: recoveryUser });
+  expect(recoveryStates.at(-1)?.mode === "password-recovery", "PASSWORD_RECOVERY must open the dedicated recovery state");
+  await recoveryWorkspace.updatePassword("new-password-value");
+  expect(updatePasswordCalls === 1, "password recovery must call Supabase updateUser exactly once");
+  expect(signOutCalls === 1, "password recovery must sign out before returning to employee sign-in");
+  expect(recoveryStates.at(-1)?.mode === "signed-out", "password recovery must return to the signed-out employee state");
+
   const databaseRecord = workspace?.toDatabaseRecord({
     id: "potential-customer-fixture",
     firstName: "Shared",
@@ -286,6 +335,9 @@ async function checkSupabaseScaffold() {
   expect(configuredAppScript.includes('title.textContent = connected'), "shared workspace must render state-specific headings");
   expect(configuredAppScript.includes('"Supabase configured"'), "configured signed-out workspace must not be labeled Local Preview");
   expect(configuredAppScript.includes('"Sign-in Required"'), "configured signed-out workspace must show its required next action");
+  expect(configuredAppScript.includes("submitPasswordRecovery"), "app must bind the password-recovery form");
+  expect(configuredAppScript.includes("cleanPasswordRecoveryUrl"), "password recovery must clean auth parameters after success");
+  expect(configuredAppScript.includes("hasPasswordRecoveryAuthParams"), "startup must preserve Supabase recovery parameters until password update succeeds");
 
   const migration = await readFile(
     path.join(root, "supabase/migrations/202607270001_employee_potential_customers.sql"),
