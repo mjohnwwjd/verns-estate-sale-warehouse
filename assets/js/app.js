@@ -541,7 +541,13 @@ function renderSharedCustomerWorkspace(workspaceState = {}) {
   const count = $("[data-local-migration-count]");
   const phaseBadge = $(".workflow-phase-badge");
 
-  if (title) title.textContent = connected ? "Connected Shared Workspace mode" : "Local Preview mode";
+  if (title) {
+    title.textContent = connected
+      ? "Connected Shared Workspace mode"
+      : configured
+        ? "Supabase configured"
+        : "Local Preview mode";
+  }
   if (description) {
     description.textContent = connected
       ? "Potential Customers are loaded from the authenticated Supabase workspace and shared across approved employee devices."
@@ -550,12 +556,24 @@ function renderSharedCustomerWorkspace(workspaceState = {}) {
         : "Supabase is not configured. Potential Customers are saved only in this browser.";
   }
   if (badge) {
-    badge.textContent = connected ? "Shared & Connected" : mode === "error" ? "Connection Error" : "Local Preview";
-    badge.classList.toggle("is-local", !connected && mode !== "error");
+    badge.textContent = connected
+      ? "Shared & Connected"
+      : mode === "error"
+        ? "Connection Error"
+        : configured
+          ? "Sign-in Required"
+          : "Local Preview";
+    badge.classList.toggle("is-local", !connected && !configured && mode !== "error");
     badge.classList.toggle("is-connected", connected);
     badge.classList.toggle("is-error", mode === "error");
   }
-  if (phaseBadge) phaseBadge.textContent = connected ? "Phase 1 · Shared workspace" : "Phase 1 · On this device";
+  if (phaseBadge) {
+    phaseBadge.textContent = connected
+      ? "Phase 1 · Shared workspace"
+      : configured
+        ? "Phase 1 · Shared sign-in required"
+        : "Phase 1 · On this device";
+  }
   if (login) login.hidden = mode !== "signed-out";
   if (actions) actions.hidden = !connected;
   if (migration) migration.hidden = !connected;

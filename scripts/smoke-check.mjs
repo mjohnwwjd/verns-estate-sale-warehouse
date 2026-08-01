@@ -282,6 +282,10 @@ async function checkSupabaseScaffold() {
   expect(/anonKey:\s*"sb_publishable_[A-Za-z0-9_-]+"/.test(config), "Supabase browser config must contain a public publishable key");
   expect(!/service[_-]?role\s*[:=]\s*["'][^"']+/i.test(config), "Supabase browser config must not contain a service-role value");
   expect(!/sb_secret_[A-Za-z0-9_-]+/.test(config), "Supabase browser config must not contain a secret key");
+  const configuredAppScript = await readFile(path.join(root, "assets/js/app.js"), "utf8");
+  expect(configuredAppScript.includes('title.textContent = connected'), "shared workspace must render state-specific headings");
+  expect(configuredAppScript.includes('"Supabase configured"'), "configured signed-out workspace must not be labeled Local Preview");
+  expect(configuredAppScript.includes('"Sign-in Required"'), "configured signed-out workspace must show its required next action");
 
   const migration = await readFile(
     path.join(root, "supabase/migrations/202607270001_employee_potential_customers.sql"),
