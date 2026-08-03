@@ -51,6 +51,9 @@ window.VERNS_STARTER_DATA = {
       status: "upcoming",
       note: "Fishing poles, reels, nets, antlers, vintage electronics, stained-glass supplies, furniture, collectibles, and more. Full photos and final terms will be posted on Vern’s official EstateSales.NET page.",
       image: "assets/img/sale-grand-haven-fishing-antlers.png",
+      promoEyebrow: "Grand Haven Estate Sale",
+      promoHeadline: "Fishing, Antlers & Vintage Finds",
+      promoDate: "Aug 6–8",
       buttonLabel: "Watch official listing",
       lastReviewed: "2026-08-03"
     }

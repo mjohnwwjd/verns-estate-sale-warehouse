@@ -2862,6 +2862,15 @@ function saleImageEl(sale) {
   const wrap = divEl("sale-image-wrap");
   if (sale.image) {
     wrap.append(imageEl(sale.image, `${sale.title} main sale photo`));
+    if (sale.promoEyebrow || sale.promoHeadline || sale.promoDate) {
+      wrap.append(
+        divEl("sale-promo-overlay", [
+          sale.promoEyebrow ? spanEl("sale-promo-eyebrow", sale.promoEyebrow) : null,
+          sale.promoHeadline ? spanEl("sale-promo-headline", sale.promoHeadline) : null,
+          sale.promoDate ? spanEl("sale-promo-date", sale.promoDate) : null
+        ])
+      );
+    }
   } else {
     wrap.append(
       imageEl("assets/img/placeholder-furniture.svg", ""),

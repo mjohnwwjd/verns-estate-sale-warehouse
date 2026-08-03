@@ -1272,6 +1272,52 @@ dd {
   object-fit: cover;
 }
 
+.sale-promo-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  padding: clamp(0.8rem, 3vw, 1.45rem);
+  color: #fff9e8;
+  pointer-events: none;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  background: linear-gradient(90deg, rgba(10, 28, 29, 0.94) 0%, rgba(10, 28, 29, 0.66) 48%, rgba(10, 28, 29, 0.08) 82%, transparent 100%);
+}
+
+.sale-promo-eyebrow,
+.sale-promo-date {
+  border: 1px solid rgba(255, 247, 214, 0.74);
+  border-radius: 999px;
+  background: rgba(10, 28, 29, 0.62);
+  padding: 0.2rem 0.5rem 0.16rem;
+  font-size: clamp(0.62rem, 1.35vw, 0.82rem);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.sale-promo-headline {
+  max-width: 13ch;
+  color: #fff9e8;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 4.2vw, 2.5rem);
+  font-weight: 700;
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+}
+
+.sale-promo-date {
+  border-color: rgba(240, 192, 68, 0.94);
+  background: rgba(240, 192, 68, 0.96);
+  color: #162624;
+  text-shadow: none;
+}
+
 .coming-soon-image-wrap {
   isolation: isolate;
 }
