@@ -149,7 +149,7 @@ th {
 .site-nav {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   flex-wrap: wrap;
   flex: 1 1 auto;
   gap: 0.3rem;
@@ -1285,7 +1285,7 @@ dd {
   color: #fff9e8;
   pointer-events: none;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
-  background: linear-gradient(90deg, rgba(10, 28, 29, 0.94) 0%, rgba(10, 28, 29, 0.66) 48%, rgba(10, 28, 29, 0.08) 82%, transparent 100%);
+  background: linear-gradient(90deg, rgba(10, 28, 29, 0.96) 0%, rgba(10, 28, 29, 0.74) 58%, rgba(10, 28, 29, 0.1) 88%, transparent 100%);
 }
 
 .sale-promo-eyebrow,
@@ -1302,10 +1302,10 @@ dd {
 }
 
 .sale-promo-headline {
-  max-width: 13ch;
+  max-width: 18ch;
   color: #fff9e8;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1.45rem, 4.2vw, 2.5rem);
+  font-size: clamp(1.25rem, 3.4vw, 2.25rem);
   font-weight: 700;
   line-height: 0.94;
   letter-spacing: -0.035em;

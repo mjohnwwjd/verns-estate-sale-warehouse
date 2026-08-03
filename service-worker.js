@@ -1,4 +1,4 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260803-grand-haven-order";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260803-grand-haven-card";
 const APP_SHELL = [
   "./",
   "./index.html",
