@@ -34,7 +34,7 @@ window.VERNS_STARTER_DATA = {
     },
     contactInfoVersion: "2026-06-05-hero-facts",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
-    demoContentVersion: "2026-06-23-wyoming-extraordinary-sale",
+    demoContentVersion: "2026-08-03-grand-haven-sale",
     thriftMarkdownPercent: 50,
     marketplacePercent: 90,
     clearanceMarkdownPercent: 75,
@@ -51,10 +51,24 @@ window.VERNS_STARTER_DATA = {
       status: "upcoming",
       note: "Fishing poles, reels, nets, antlers, vintage electronics, stained-glass supplies, furniture, collectibles, and more. Full photos and final terms will be posted on Vern’s official EstateSales.NET page.",
       image: "assets/img/sale-grand-haven-fishing-antlers.png",
+      imagePosition: "center 28%",
       promoEyebrow: "Grand Haven Estate Sale",
       promoHeadline: "Fishing, Antlers & Vintage Finds",
       promoDate: "Aug 6–8",
       buttonLabel: "Watch official listing",
+      lastReviewed: "2026-08-03"
+    },
+    {
+      id: "estate-sale-twin-lake-wizard-of-oz-4992714",
+      title: "Twin Lake Wizard of Oz",
+      url: "https://www.estatesales.net/MI/Twin-Lake/49457/4992714",
+      city: "Twin Lake, MI",
+      dateSummary: "Jul 30-Aug 1, 2026",
+      hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
+      status: "completed",
+      note: "This estate sale is complete. Open the official EstateSales.NET listing for archived photos and details.",
+      image: "https://picturescdn.estatesales.net/4992714/1-2/59c33a2d-d5b0-428d-90b6-155e9c36d92e.jpg",
+      buttonLabel: "Open archived listing",
       lastReviewed: "2026-08-03"
     }
   ],

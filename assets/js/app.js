@@ -25,7 +25,7 @@ const DEFAULT_ESTATE_SALE_URL = "";
 const ENDED_POPUP_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
 const ENDED_MONA_LAKE_SALE_URL = "https://www.estatesales.net/MI/Norton-Shores/49441/4958901";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-07-25-twin-lake-sale";
+const DEMO_CONTENT_VERSION = "2026-08-03-grand-haven-sale";
 const CONTACT_INFO_VERSION = "2026-06-05-hero-facts";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -2861,7 +2861,9 @@ function renderEstateSaleCard(sale) {
 function saleImageEl(sale) {
   const wrap = divEl("sale-image-wrap");
   if (sale.image) {
-    wrap.append(imageEl(sale.image, `${sale.title} main sale photo`));
+    const image = imageEl(sale.image, `${sale.title} main sale photo`);
+    if (sale.imagePosition) image.style.objectPosition = sale.imagePosition;
+    wrap.append(image);
     if (sale.promoEyebrow || sale.promoHeadline || sale.promoDate) {
       wrap.append(
         divEl("sale-promo-overlay", [
@@ -2902,6 +2904,7 @@ function saleSortValue(sale) {
   const statusOrder = {
     live: 0,
     upcoming: 1,
+    completed: 2,
     ended: 8
   }[sale.status] ?? 5;
   const match = String(sale.dateSummary || "").match(/([A-Z][a-z]{2})\s+(\d{1,2})(?:-\d{1,2})?,?\s+(\d{4})/);
@@ -2927,6 +2930,7 @@ function saleStatusLabel(status) {
   return {
     upcoming: "Upcoming",
     live: "Live now",
+    completed: "Completed",
     ended: "Sale ended",
     past: "Past",
     canceled: "Canceled"
