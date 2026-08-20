@@ -43,6 +43,7 @@ window.VERNS_STARTER_DATA = {
   estateSales: [
     {
       id: "estate-sale-nunica-condo-5032737",
+      displayOrder: 1,
       title: "Nunica Condo Estate Sale",
       url: "https://www.estatesales.net/MI/Nunica/49448/5032737",
       city: "Nunica, MI",
@@ -56,6 +57,7 @@ window.VERNS_STARTER_DATA = {
     },
     {
       id: "estate-sale-grand-haven-fishing-antlers-5022198",
+      displayOrder: 2,
       title: "Grand Haven Estate Sale – Fishing, Antlers & Vintage Finds",
       url: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
       city: "Grand Haven, MI",
@@ -73,6 +75,7 @@ window.VERNS_STARTER_DATA = {
     },
     {
       id: "estate-sale-twin-lake-wizard-of-oz-4992714",
+      displayOrder: 3,
       title: "Twin Lake Wizard of Oz",
       url: "https://www.estatesales.net/MI/Twin-Lake/49457/4992714",
       city: "Twin Lake, MI",

@@ -2901,6 +2901,8 @@ function getPrimaryEstateSaleUrl() {
 }
 
 function saleSortValue(sale) {
+  const displayOrder = Number(sale.displayOrder);
+  if (Number.isFinite(displayOrder)) return displayOrder;
   const statusOrder = {
     live: 0,
     upcoming: 1,
