@@ -47,12 +47,12 @@ window.VERNS_STARTER_DATA = {
       title: "Nunica Condo Estate Sale",
       url: "https://www.estatesales.net/MI/Nunica/49448/5032737",
       city: "Nunica, MI",
-      dateSummary: "Begins August 27, 8:30 A.M.",
-      hours: "",
+      dateSummary: "Aug 27-29, 2026",
+      hours: "Thu 8:30 AM-4 PM; Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
       status: "upcoming",
       note: "Bridge to the Past — Treasures for Today.",
       image: "assets/img/sale-nunica-bridge-to-the-past.png",
-      buttonLabel: "Open official listing",
+      buttonLabel: "View all sale pictures",
       lastReviewed: "2026-08-20"
     },
     {
