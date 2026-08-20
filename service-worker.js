@@ -1,4 +1,4 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260803-grand-haven-card";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260820-nunica-sale";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -24,6 +24,7 @@ const APP_SHELL = [
   "./assets/img/app/verns-app-icon-512.png",
   "./assets/img/app/apple-touch-icon.png",
   "./assets/img/estatesales-net-logo.svg",
+  "./assets/img/sale-nunica-bridge-to-the-past.png",
   "./assets/img/sale-grand-haven-fishing-antlers.png",
   "./assets/img/sale-wyoming-extraordinary-main.jpg",
   "./assets/img/sale-spring-lake-horse.jpeg",
