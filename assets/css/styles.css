@@ -1220,6 +1220,7 @@ dd {
 
 .estate-sale-card,
 .empty-sale-card {
+  position: relative;
   display: grid;
   gap: 0.65rem;
   border: 3px solid var(--ink);
@@ -1228,6 +1229,29 @@ dd {
   color: var(--ink);
   padding: 1rem;
   box-shadow: 6px 6px 0 rgba(24, 25, 24, 0.18);
+}
+
+.estate-sale-card-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: calc(var(--radius) - 3px);
+  font-size: 0;
+}
+
+.estate-sale-card-link:focus-visible {
+  outline: 4px solid var(--gold);
+  outline-offset: 4px;
+}
+
+.estate-sale-card .btn {
+  position: relative;
+  z-index: 2;
+}
+
+.estate-sale-card:has(.estate-sale-card-link:hover) {
+  transform: translateY(-2px);
+  box-shadow: 8px 9px 0 rgba(24, 25, 24, 0.24);
 }
 
 .sale-discount-schedule-card {

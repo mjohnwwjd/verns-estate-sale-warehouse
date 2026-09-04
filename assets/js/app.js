@@ -25,7 +25,7 @@ const DEFAULT_ESTATE_SALE_URL = "";
 const ENDED_POPUP_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
 const ENDED_MONA_LAKE_SALE_URL = "https://www.estatesales.net/MI/Norton-Shores/49441/4958901";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-08-20-nunica-sale";
+const DEMO_CONTENT_VERSION = "2026-09-03-twin-lake-waterfront-sale";
 const CONTACT_INFO_VERSION = "2026-06-05-hero-facts";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -217,7 +217,7 @@ function normalizeState(nextState) {
   if (rawSettings.demoContentVersion !== DEMO_CONTENT_VERSION) {
     featured = mergeSeedById(featured, starter.featured);
     specials = mergeSeedById(specials, starter.specials);
-    estateSales = removeDeprecatedEstateSales(mergeSeedById(estateSales, starter.estateSales));
+    estateSales = removeDeprecatedEstateSales(mergeStarterEstateSales(estateSales, starter.estateSales));
     photoItems = mergeSeedById(photoItems, starter.photoItems);
     photoItems = removeDeprecatedPhotoItems(photoItems);
     if (!getLiveEstateSaleUrl(rawSettings.saleUrl) || isEndedPopUpSaleUrl(rawSettings.saleUrl) || isInactiveStarterSaleUrl(rawSettings.saleUrl, starter.estateSales)) {
@@ -228,7 +228,7 @@ function normalizeState(nextState) {
   if (isInactiveStarterSaleUrl(settings.saleUrl, starter.estateSales)) {
     settings.saleUrl = starter.settings.saleUrl || DEFAULT_ESTATE_SALE_URL;
   }
-  estateSales = removeDeprecatedEstateSales(mergeSeedById(estateSales, starter.estateSales));
+  estateSales = removeDeprecatedEstateSales(mergeStarterEstateSales(estateSales, starter.estateSales));
 
   return {
     settings,
@@ -301,6 +301,16 @@ function mergeSeedById(existingItems, seedItems) {
   const seedIds = new Set((seedItems || []).map((item) => item.id));
   const customItems = (existingItems || []).filter((item) => !seedIds.has(item.id));
   return [...(seedItems || []), ...customItems];
+}
+
+function mergeStarterEstateSales(existingSales, starterSales) {
+  const starterIds = new Set((starterSales || []).map((sale) => sale.id));
+  const starterUrls = new Set((starterSales || []).map((sale) => normalizeUrlForCompare(sale.url)).filter(Boolean));
+  const customSales = (existingSales || []).filter((sale) => (
+    !starterIds.has(sale.id)
+    && !starterUrls.has(normalizeUrlForCompare(sale.url))
+  ));
+  return [...(starterSales || []), ...customSales];
 }
 
 function mergeStarterSaleImages(sales, starterSales) {
@@ -2844,7 +2854,10 @@ function earlyEntryRosterRow(row) {
 
 function renderEstateSaleCard(sale) {
   const card = articleEl(`estate-sale-card status-${sale.status || "upcoming"}`);
+  const cardLink = linkEl("estate-sale-card-link", sale.url, `Open ${sale.title} on EstateSales.NET`);
+  cardLink.setAttribute("aria-label", `Open ${sale.title} on EstateSales.NET`);
   card.append(
+    cardLink,
     saleImageEl(sale),
     spanEl("tag sale-card-badge", saleStatusLabel(sale.status)),
     headingEl("h3", sale.title),

@@ -1,4 +1,4 @@
-const CACHE_NAME = "verns-estate-sale-warehouse-v20260820-nunica-schedule";
+const CACHE_NAME = "verns-estate-sale-warehouse-v20260903-twin-lake-waterfront";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -25,6 +25,7 @@ const APP_SHELL = [
   "./assets/img/app/apple-touch-icon.png",
   "./assets/img/estatesales-net-logo.svg",
   "./assets/img/sale-nunica-bridge-to-the-past.png",
+  "./assets/img/sale-twin-lake-waterfront-opening-card.jpg",
   "./assets/img/sale-grand-haven-fishing-antlers.png",
   "./assets/img/sale-wyoming-extraordinary-main.jpg",
   "./assets/img/sale-spring-lake-horse.jpeg",
