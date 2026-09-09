@@ -3,7 +3,7 @@ const todayPhotoItems = Array.isArray(window.VERNS_TODAY_PHOTO_ITEMS) ? window.V
 window.VERNS_STARTER_DATA = {
   settings: {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
-    saleUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
+    saleUrl: "https://www.estatesales.net/MI/Fruitport/49415/5032704",
     embedUrl: "",
     address: "1663 West Sherman Boulevard, Norton Shores, MI 49441",
     phone: "(616) 638-3873",
@@ -45,15 +45,15 @@ window.VERNS_STARTER_DATA = {
       id: "estate-sale-fruitport-5032704",
       displayOrder: 1,
       title: "Fruitport Estate Sale",
-      url: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
+      url: "https://www.estatesales.net/MI/Fruitport/49415/5032704",
       city: "Fruitport, MI",
       dateSummary: "Sep 17-19, 2026",
       hours: "Thu 8:30 AM-4 PM; Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
       status: "upcoming",
-      note: "Find a reason to smile in Fruitport: Drexel furniture, a vintage Singer sewing machine, Pepsi collectibles, and more. Visit Vern’s EstateSales.NET page for listing updates and sale photos when published.",
+      note: "Find a reason to smile in Fruitport: Drexel furniture, a vintage Singer sewing machine, Pepsi collectibles, and more. See the full photo gallery and sale details on EstateSales.NET.",
       image: "assets/img/sale-fruitport-smiley-tower-v2.png",
       imagePosition: "center",
-      buttonLabel: "Visit Vern’s on EstateSales.NET",
+      buttonLabel: "View all sale pictures",
       lastReviewed: "2026-09-09"
     },
     {
