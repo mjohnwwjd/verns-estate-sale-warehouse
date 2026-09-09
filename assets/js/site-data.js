@@ -3,7 +3,7 @@ const todayPhotoItems = Array.isArray(window.VERNS_TODAY_PHOTO_ITEMS) ? window.V
 window.VERNS_STARTER_DATA = {
   settings: {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
-    saleUrl: "https://www.estatesales.net/MI/Twin-Lake/49457/5032761",
+    saleUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
     embedUrl: "",
     address: "1663 West Sherman Boulevard, Norton Shores, MI 49441",
     phone: "(616) 638-3873",
@@ -34,7 +34,7 @@ window.VERNS_STARTER_DATA = {
     },
     contactInfoVersion: "2026-06-05-hero-facts",
     saleImageAssignmentVersion: "2026-05-31-horse-and-pop-up-tent",
-    demoContentVersion: "2026-09-03-twin-lake-waterfront-sale",
+    demoContentVersion: "2026-09-09-fruitport-sale",
     thriftMarkdownPercent: 50,
     marketplacePercent: 90,
     clearanceMarkdownPercent: 75,
@@ -42,23 +42,38 @@ window.VERNS_STARTER_DATA = {
   },
   estateSales: [
     {
-      id: "estate-sale-5032761",
+      id: "estate-sale-fruitport-5032704",
       displayOrder: 1,
+      title: "Fruitport Estate Sale",
+      url: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
+      city: "Fruitport, MI",
+      dateSummary: "Sep 17-19, 2026",
+      hours: "Thu 8:30 AM-4 PM; Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM",
+      status: "upcoming",
+      note: "Find a reason to smile in Fruitport: Drexel furniture, a vintage Singer sewing machine, Pepsi collectibles, and more. Visit Vern’s EstateSales.NET page for listing updates and sale photos when published.",
+      image: "assets/img/sale-fruitport-smiley-tower-v2.png",
+      imagePosition: "center",
+      buttonLabel: "Visit Vern’s on EstateSales.NET",
+      lastReviewed: "2026-09-09"
+    },
+    {
+      id: "estate-sale-5032761",
+      displayOrder: 2,
       title: "Twin Lake Waterfront Estate Sale",
       url: "https://www.estatesales.net/MI/Twin-Lake/49457/5032761",
       city: "Twin Lake, MI",
       dateSummary: "Sep 3-6, 2026",
       hours: "Thu-Fri 8:30 AM-4 PM; Sat 8:30 AM-3 PM; Sun 8:30 AM-2 PM",
-      status: "live",
-      note: "Part 1 of 2 at a lakefront property packed with water toys, Sea-Doos, an 8-passenger golf cart, a Honda scooter, trailers, vehicles, tools, and outdoor finds.",
+      status: "completed",
+      note: "This estate sale is complete. Open the official EstateSales.NET listing for archived photos and details.",
       image: "assets/img/sale-twin-lake-waterfront-opening-card.jpg",
       imagePosition: "center",
-      buttonLabel: "View all sale pictures",
-      lastReviewed: "2026-09-03"
+      buttonLabel: "Open archived listing",
+      lastReviewed: "2026-09-09"
     },
     {
       id: "estate-sale-nunica-condo-5032737",
-      displayOrder: 2,
+      displayOrder: 3,
       title: "Nunica Condo Estate Sale",
       url: "https://www.estatesales.net/MI/Nunica/49448/5032737",
       city: "Nunica, MI",
@@ -72,7 +87,7 @@ window.VERNS_STARTER_DATA = {
     },
     {
       id: "estate-sale-grand-haven-fishing-antlers-5022198",
-      displayOrder: 3,
+      displayOrder: 4,
       title: "Grand Haven Estate Sale – Fishing, Antlers & Vintage Finds",
       url: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
       city: "Grand Haven, MI",
@@ -90,7 +105,7 @@ window.VERNS_STARTER_DATA = {
     },
     {
       id: "estate-sale-twin-lake-wizard-of-oz-4992714",
-      displayOrder: 4,
+      displayOrder: 5,
       title: "Twin Lake Wizard of Oz",
       url: "https://www.estatesales.net/MI/Twin-Lake/49457/4992714",
       city: "Twin Lake, MI",
