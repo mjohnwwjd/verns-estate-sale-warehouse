@@ -25,7 +25,7 @@ const DEFAULT_ESTATE_SALE_URL = "";
 const ENDED_POPUP_SALE_URL = "https://www.estatesales.net/MI/Muskegon/49442/4940091";
 const ENDED_MONA_LAKE_SALE_URL = "https://www.estatesales.net/MI/Norton-Shores/49441/4958901";
 const SALE_IMAGE_ASSIGNMENT_VERSION = "2026-05-31-horse-and-pop-up-tent";
-const DEMO_CONTENT_VERSION = "2026-09-09-fruitport-sale";
+const DEMO_CONTENT_VERSION = "2026-10-04-october-sales";
 const CONTACT_INFO_VERSION = "2026-06-05-hero-facts";
 const SALE_IMAGE_ASSIGNMENTS = {
   "estate-sale-spring-lake-4932078": "assets/img/sale-spring-lake-horse.jpeg",
@@ -2554,7 +2554,7 @@ function isEndedMonaLakeSaleUrl(value) {
 
 function isInactiveStarterSaleUrl(value, starterSales = []) {
   const matchedSale = starterSales.find((sale) => normalizeUrlForCompare(sale.url) === normalizeUrlForCompare(value));
-  return Boolean(matchedSale && ["past", "ended", "canceled"].includes(matchedSale.status));
+  return Boolean(matchedSale && ["completed", "past", "ended", "canceled"].includes(matchedSale.status));
 }
 
 function normalizeUrlForCompare(value) {
@@ -2898,8 +2898,22 @@ function saleImageEl(sale) {
   return wrap;
 }
 
+function completeEndedEstateSale(sale) {
+  if (!["upcoming", "live"].includes(sale.status)) return sale;
+  const match = String(sale.dateSummary || "").match(/^([A-Z][a-z]{2})\s+(\d{1,2})(?:[-–](?:([A-Z][a-z]{2})\s+)?(\d{1,2}))?,?\s+(\d{4})/);
+  if (!match) return sale;
+  const months = { Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06", Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12" };
+  const month = months[match[3] || match[1]];
+  if (!month) return sale;
+  const endDate = match[5] + "-" + month + "-" + (match[4] || match[2]).padStart(2, "0");
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/Detroit", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date()).map((part) => [part.type, part.value]));
+  const today = parts.year + "-" + parts.month + "-" + parts.day;
+  return endDate < today ? { ...sale, status: "completed", note: "This estate sale is complete. Open the official EstateSales.NET listing for archived photos and details.", buttonLabel: "Open archived listing" } : sale;
+}
+
 function getVisibleEstateSales() {
   return (state.estateSales || [])
+    .map(completeEndedEstateSale)
     .filter((sale) => isEstateSalesUrl(sale.url) && !isEndedMonaLakeSaleUrl(sale.url) && !["past", "ended", "canceled"].includes(sale.status))
     .sort((a, b) => saleSortValue(a) - saleSortValue(b));
 }
@@ -5048,276 +5062,4 @@ function dataUrlToBlob(dataUrl) {
   for (let index = 0; index < binary.length; index += 1) {
     bytes[index] = binary.charCodeAt(index);
   }
-  return new Blob([bytes], { type: match[1] || "image/jpeg" });
-}
-
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    if (file.type.startsWith("image/")) {
-      const img = new Image();
-      img.onload = () => {
-        const maxSide = 1400;
-        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(img.width * scale));
-        canvas.height = Math.max(1, Math.round(img.height * scale));
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        URL.revokeObjectURL(img.src);
-        resolve(canvas.toDataURL("image/jpeg", 0.82));
-      };
-      img.onerror = reject;
-      img.src = URL.createObjectURL(file);
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-
-function copyField(field, button) {
-  const value = field?.value || field?.textContent || "";
-  if (!value) {
-    flashCopyButton(button, "Nothing to copy");
-    return;
-  }
-
-  const fallbackCopy = () => {
-    field.focus?.();
-    field.select?.();
-    const copied = document.execCommand?.("copy");
-    flashCopyButton(button, copied ? "Copied" : "Select + copy");
-  };
-
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(value).then(
-      () => flashCopyButton(button, "Copied"),
-      fallbackCopy
-    );
-    return;
-  }
-
-  fallbackCopy();
-}
-
-function flashCopyButton(button, label) {
-  if (!button) return;
-  button.dataset.defaultLabel = button.dataset.defaultLabel || button.textContent;
-  button.textContent = label;
-  window.setTimeout(() => {
-    button.textContent = button.dataset.defaultLabel;
-  }, 1300);
-}
-
-function createId(prefix) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function wholeNumber(value, fallback, min = 0) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return fallback;
-  return Math.max(min, Math.round(number));
-}
-
-function clampPercent(value, fallback, min = 0, max = 95) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return fallback;
-  return Math.max(min, Math.min(max, number));
-}
-
-function workflowOutputSlug(...values) {
-  const source = values.filter(Boolean).join(" ").trim() || "current-estate-sale";
-  return source
-    .toLowerCase()
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80) || "current-estate-sale";
-}
-
-function shellQuote(value) {
-  const text = String(value || "");
-  if (/^[A-Za-z0-9_./:@=-]+$/.test(text)) return text;
-  return `"${text.replace(/(["\\$`])/g, "\\$1")}"`;
-}
-
-function roundPrice(value) {
-  const number = Number(value);
-  if (!Number.isFinite(number) || number <= 0) return 0;
-  if (number < 20) return Math.max(1, Math.round(number));
-  if (number < 100) return Math.round(number / 5) * 5;
-  return Math.round(number / 10) * 10;
-}
-
-function moneyValue(value) {
-  const number = Number(String(value || "").replace(/[^0-9.]/g, ""));
-  return number > 0 ? `$${roundPrice(number)}` : "";
-}
-
-function numericMoney(value) {
-  return Number(String(value || "").replace(/[^0-9.]/g, "")) || 0;
-}
-
-function normalizedConditionValue(value) {
-  const clean = String(value || "").toLowerCase();
-  if (clean.includes("new")) return "new";
-  if (clean.includes("excellent")) return "excellent";
-  if (clean.includes("fair")) return "fair";
-  if (clean.includes("repair") || clean.includes("poor")) return "repair";
-  return "good";
-}
-
-function todayIsoDate() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function displayDate(value) {
-  const parsed = Date.parse(`${value}T00:00:00`);
-  if (Number.isNaN(parsed)) return value;
-  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(parsed));
-}
-
-function estateSaleIdFromUrl(value) {
-  const numeric = estateSalesNumericIdFromUrl(value);
-  return numeric ? `estate-sale-${numeric}` : "";
-}
-
-function estateSalesNumericIdFromUrl(value) {
-  try {
-    const url = new URL(value);
-    const parts = url.pathname.split("/").filter(Boolean);
-    const numeric = parts.findLast((part) => /^\d{5,}$/.test(part));
-    return numeric || "";
-  } catch {
-    return "";
-  }
-}
-
-function categoryLabel(category) {
-  return window.VERNS_PRICE_GUIDE[category]?.label || category;
-}
-
-function conditionLabel(condition) {
-  return {
-    new: "New",
-    excellent: "Excellent",
-    good: "Good",
-    fair: "Fair",
-    repair: "Needs repair"
-  }[condition] || condition;
-}
-
-function statusLabel(status) {
-  return {
-    pending: "Pending",
-    posted: "Posted manually",
-    sold: "Sold",
-    closed: "Closed out",
-    unsold: "Unsold"
-  }[status] || status;
-}
-
-function labelForPhotoCategory(category) {
-  return {
-    featured: "Featured",
-    clearance: "Last chance",
-    special: "Warehouse special",
-    gallery: "Floor photo"
-  }[category] || "Photo";
-}
-
-function placeholderForPhotoCategory(category) {
-  return {
-    featured: "assets/img/placeholder-furniture.svg",
-    clearance: "assets/img/placeholder-clearance.svg",
-    special: "assets/img/placeholder-tools.svg",
-    gallery: "assets/img/placeholder-furniture.svg"
-  }[category] || "assets/img/placeholder-furniture.svg";
-}
-
-function articleEl(className) {
-  const el = document.createElement("article");
-  el.className = className;
-  return el;
-}
-
-function divEl(className, children = []) {
-  const el = document.createElement("div");
-  if (className) el.className = className;
-  children.forEach((child) => child && el.append(child));
-  return el;
-}
-
-function spanEl(className, text) {
-  const el = document.createElement("span");
-  el.className = className;
-  el.textContent = text || "";
-  return el;
-}
-
-function pEl(className, text) {
-  const el = document.createElement("p");
-  if (className) el.className = className;
-  el.textContent = text || "";
-  return el;
-}
-
-function linkEl(className, href, text) {
-  const el = document.createElement("a");
-  if (className) el.className = className;
-  el.href = href;
-  el.target = "_blank";
-  el.rel = "noopener";
-  el.textContent = text || href;
-  return el;
-}
-
-function headingEl(tag, text) {
-  const el = document.createElement(tag);
-  el.textContent = text || "";
-  return el;
-}
-
-function strongEl(text) {
-  const el = document.createElement("strong");
-  el.textContent = text;
-  return el;
-}
-
-function imageEl(src, alt, className = "") {
-  const img = document.createElement("img");
-  img.src = src;
-  img.alt = alt || "";
-  img.loading = "lazy";
-  if (className) img.className = className;
-  return img;
-}
-
-function optionEl(value, text) {
-  const option = document.createElement("option");
-  option.value = value;
-  option.textContent = text;
-  return option;
-}
-
-function cell(text) {
-  const td = document.createElement("td");
-  td.textContent = text || "";
-  return td;
-}
-
-function activityItem(title, lines = []) {
-  const item = divEl("activity-item");
-  const header = document.createElement("header");
-  header.append(headingEl("h4", title));
-  item.append(header);
-  lines.filter(Boolean).forEach((line) => item.append(pEl("", line)));
-  return item;
-}
+  return new Blo[Truncated]
