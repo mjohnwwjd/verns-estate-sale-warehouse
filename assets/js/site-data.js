@@ -68,7 +68,7 @@ window.VERNS_STARTER_DATA = {
       hours: "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM (Eastern)",
       status: "upcoming",
       note: "Housewares and workshop finds, with more photos being added. Open the official EstateSales.NET listing for the full gallery and final sale details.",
-      image: "https://picturescdn.estatesales.net/5102460/1-2/bae77f8a-2284-40be-8a55-7d57d49235d7.jpg",
+      image: "https://picturescdn.estatesales.net/5102460/1-1/20de37b1-2480-4554-8c29-954245030db6.jpg",
       imagePosition: "center",
       buttonLabel: "Open official listing",
       lastReviewed: "2026-10-04"
