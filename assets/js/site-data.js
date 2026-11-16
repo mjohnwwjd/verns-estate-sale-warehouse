@@ -3,7 +3,7 @@ const todayPhotoItems = Array.isArray(window.VERNS_TODAY_PHOTO_ITEMS) ? window.V
 window.VERNS_STARTER_DATA = {
   settings: {
     companyUrl: "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
-    saleUrl: "https://www.estatesales.net/MI/Grand-Haven/49417/5102469",
+    saleUrl: "https://www.estatesales.net/MI/Muskegon/49442/5141490",
     embedUrl: "",
     address: "1663 West Sherman Boulevard, Norton Shores, MI 49441",
     phone: "(616) 638-3873",
@@ -41,6 +41,22 @@ window.VERNS_STARTER_DATA = {
     defaultPricingBasis: "market"
   },
   estateSales: [
+    {
+      "id": "estate-sale-muskegon-sho-5141490",
+      "displayOrder": 0,
+      "title": "Muskegon Estate Sale - Native American & Horse Collections",
+      "url": "https://www.estatesales.net/MI/Muskegon/49442/5141490",
+      "city": "Muskegon, MI",
+      "address": "Address available on EstateSales.NET after 9 AM Eastern on Nov 18",
+      "dateSummary": "Nov 19-21, 2026",
+      "hours": "Thu-Fri 8:30 AM-5 PM; Sat 8:30 AM-3 PM (Eastern)",
+      "status": "upcoming",
+      "note": "Native American-themed and horse collections, vintage electronics, Elvis collectibles, furniture, and more. Open the official listing for photos and final sale details.",
+      "image": "https://picturescdn.estatesales.net/5141490/1-1/10f4733a-a2c1-4e4b-8195-2bc8a495c60b.jpg",
+      "imagePosition": "center",
+      "buttonLabel": "View all sale pictures",
+      "lastReviewed": "2026-11-16"
+    },
     {
       id: "estate-sale-grand-haven-5102469",
       displayOrder: 1,
