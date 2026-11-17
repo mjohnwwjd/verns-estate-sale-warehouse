@@ -44,7 +44,7 @@ window.VERNS_STARTER_DATA = {
     {
       "id": "estate-sale-north-muskegon-lyh-5141499",
       "displayOrder": 0.5,
-      "title": "North Muskegon Estate Sale",
+      "title": "North Muskegon: Home, Hobbies & Hidden Treasures",
       "url": "https://www.estatesales.net/companies/MI/Muskegon/49441/16076",
       "city": "North Muskegon, MI",
       "address": "Address available on EstateSales.NET after 9 AM Eastern on Dec 2",
